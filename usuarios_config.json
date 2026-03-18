@@ -1,0 +1,24 @@
+{
+  "alexis_pineda": {
+    "user_id": "alexis_pineda",
+    "nombre": "Alexis Pineda",
+    "bancos_activos": [],
+    "carpeta_datos": "C:\\Users\\Alexis Pineda\\Sistema de Analisis Financiero\\datos_bancarios\\alexis_pineda"
+  },
+  "alex_pineda": {
+    "user_id": "alex_pineda",
+    "nombre": "Alex Antonio Pineda",
+    "bancos_activos": [],
+    "carpeta_datos": "C:\\Users\\Alexis Pineda\\Sistema de Analisis Financiero\\datos_bancarios\\alex_pineda"
+  },
+  "lex": {
+    "user_id": "lex",
+    "nombre": "Alexis Pineda",
+    "bancos_activos": [
+      "Banco General",
+      "Banistmo",
+      "BAC Credomatic"
+    ],
+    "carpeta_datos": "C:\\Users\\Alexis Pineda\\Sistema de Analisis Financiero\\datos_bancarios\\lex"
+  }
+}

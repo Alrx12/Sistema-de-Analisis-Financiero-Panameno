@@ -1,0 +1,448 @@
+{
+  "usuario": {
+    "user_id": "alexis_pineda",
+    "nombre": "Alexis Pineda",
+    "bancos_activos": [
+      "Banistmo",
+      "BAC Credomatic",
+      "Banco General"
+    ],
+    "carpeta_datos": "C:\\Users\\Alexis Pineda\\Sistema de Analisis Financiero\\datos_bancarios\\alexis_pineda"
+  },
+  "resumen": {
+    "usuario": "Alexis Pineda",
+    "total_transacciones": 1500,
+    "periodo": "01/09/2025 - 17/03/2026",
+    "ingresos_totales": 26487.56,
+    "egresos_totales": 26121.98,
+    "balance_neto": 365.58,
+    "promedio_diario_gasto": 131.93,
+    "ahorro_potencial_20": 5297.51,
+    "gastos_por_banco": {
+      "Banco General": 5885.04,
+      "Banistmo": 20236.940000000002
+    },
+    "bancos_utilizados": [
+      "Banistmo",
+      "Banco General"
+    ]
+  },
+  "analisis_categorias": {
+    "Total Gastado": {
+      "Transferencias": 8459.4,
+      "Otros": 5582.7,
+      "Gastos Financieros": 2809.94,
+      "Alimentación": 2538.1,
+      "Servicios Públicos": 2354.66,
+      "Compras": 2177.9,
+      "Entretenimiento": 755.12,
+      "Salud": 567.12,
+      "Transporte": 455.6,
+      "Suscripciones": 421.44
+    },
+    "Promedio": {
+      "Transferencias": 24.59,
+      "Otros": 27.37,
+      "Gastos Financieros": 42.57,
+      "Alimentación": 10.15,
+      "Servicios Públicos": 61.96,
+      "Compras": 34.03,
+      "Entretenimiento": 9.94,
+      "Salud": 47.26,
+      "Transporte": 10.35,
+      "Suscripciones": 8.1
+    },
+    "Cantidad": {
+      "Transferencias": 344,
+      "Otros": 204,
+      "Gastos Financieros": 66,
+      "Alimentación": 250,
+      "Servicios Públicos": 38,
+      "Compras": 64,
+      "Entretenimiento": 76,
+      "Salud": 12,
+      "Transporte": 44,
+      "Suscripciones": 52
+    },
+    "Primera Fecha": {
+      "Transferencias": "2025-09-03 00:00:00",
+      "Otros": "2025-09-22 00:00:00",
+      "Gastos Financieros": "2025-09-01 00:00:00",
+      "Alimentación": "2025-09-19 00:00:00",
+      "Servicios Públicos": "2025-10-20 00:00:00",
+      "Compras": "2025-09-20 00:00:00",
+      "Entretenimiento": "2025-09-19 00:00:00",
+      "Salud": "2025-12-15 00:00:00",
+      "Transporte": "2025-09-08 00:00:00",
+      "Suscripciones": "2025-09-26 00:00:00"
+    },
+    "Última Fecha": {
+      "Transferencias": "2026-03-12 00:00:00",
+      "Otros": "2026-03-16 00:00:00",
+      "Gastos Financieros": "2026-03-10 00:00:00",
+      "Alimentación": "2026-03-15 00:00:00",
+      "Servicios Públicos": "2026-03-12 00:00:00",
+      "Compras": "2026-02-27 00:00:00",
+      "Entretenimiento": "2026-03-13 00:00:00",
+      "Salud": "2026-01-05 00:00:00",
+      "Transporte": "2026-03-13 00:00:00",
+      "Suscripciones": "2026-03-17 00:00:00"
+    },
+    "% del Total": {
+      "Transferencias": 32.38,
+      "Otros": 21.37,
+      "Gastos Financieros": 10.76,
+      "Alimentación": 9.72,
+      "Servicios Públicos": 9.01,
+      "Compras": 8.34,
+      "Entretenimiento": 2.89,
+      "Salud": 2.17,
+      "Transporte": 1.74,
+      "Suscripciones": 1.61
+    }
+  },
+  "analisis_por_banco": {
+    "Total Gastado": {
+      "Banistmo": 20236.94,
+      "Banco General": 5885.04
+    },
+    "Transacciones": {
+      "Banistmo": 672,
+      "Banco General": 478
+    },
+    "Promedio": {
+      "Banistmo": 30.11,
+      "Banco General": 12.31
+    },
+    "% del Total": {
+      "Banistmo": 77.47,
+      "Banco General": 22.53
+    }
+  },
+  "analisis_mensual": {
+    "Ingresos": {
+      "2025-09": 1779.54,
+      "2025-10": 3553.7,
+      "2025-11": 2980.08,
+      "2025-12": 9097.82,
+      "2026-01": 3147.1,
+      "2026-02": 2995.78,
+      "2026-03": 2933.54
+    },
+    "Egresos": {
+      "2025-09": 2206.18,
+      "2025-10": 3449.9,
+      "2025-11": 3118.92,
+      "2025-12": 7547.98,
+      "2026-01": 4609.24,
+      "2026-02": 2416.98,
+      "2026-03": 2772.78
+    },
+    "Balance": {
+      "2025-09": -426.64,
+      "2025-10": 103.8,
+      "2025-11": -138.84,
+      "2025-12": 1549.84,
+      "2026-01": -1462.14,
+      "2026-02": 578.8,
+      "2026-03": 160.76
+    },
+    "Transacciones": {
+      "2025-09": 168,
+      "2025-10": 198,
+      "2025-11": 182,
+      "2025-12": 378,
+      "2026-01": 206,
+      "2026-02": 164,
+      "2026-03": 204
+    }
+  },
+  "suscripciones": [
+    {
+      "descripcion": "DB COMPRA E-COMMERCE INTL MCD CTE-USA-NORTON  AP-5",
+      "monto_mensual": 19.99,
+      "frecuencia": 2,
+      "total_ultimos_meses": 39.98,
+      "proximo_pago_estimado": "2026-03-25",
+      "banco": "Banistmo"
+    },
+    {
+      "descripcion": "YAPPY BG A LUIS ALBERTO ORTEGA MOJICA (DISNEYPLUSP",
+      "monto_mensual": 14.97,
+      "frecuencia": 2,
+      "total_ultimos_meses": 29.94,
+      "proximo_pago_estimado": "2026-01-04",
+      "banco": "Banco General"
+    },
+    {
+      "descripcion": "CREDITO TRANSF. DE CC A CC spotify hasta junio 010",
+      "monto_mensual": 13.2,
+      "frecuencia": 2,
+      "total_ultimos_meses": 26.4,
+      "proximo_pago_estimado": "2026-04-08",
+      "banco": "Banistmo"
+    },
+    {
+      "descripcion": "DB COMPRA E-COMMERCE INTL MCD CTE-FRA-SPOTIFY P4-5",
+      "monto_mensual": 12.99,
+      "frecuencia": 2,
+      "total_ultimos_meses": 25.98,
+      "proximo_pago_estimado": "2026-04-10",
+      "banco": "Banistmo"
+    },
+    {
+      "descripcion": "DB COMPRA E-COMMERCE INTL MCD CTE-FRA-SPOTIFY P3-5",
+      "monto_mensual": 12.99,
+      "frecuencia": 2,
+      "total_ultimos_meses": 25.98,
+      "proximo_pago_estimado": "2026-03-13",
+      "banco": "Banistmo"
+    },
+    {
+      "descripcion": "DB COMPRA E-COMMERCE INTL MCD CTE-FRA-SPOTIFY P3-5",
+      "monto_mensual": 12.99,
+      "frecuencia": 2,
+      "total_ultimos_meses": 25.98,
+      "proximo_pago_estimado": "2026-02-11",
+      "banco": "Banistmo"
+    },
+    {
+      "descripcion": "DB COMPRA E-COMMERCE INTL MCD CTE-FRA-SPOTIFY P3-5",
+      "monto_mensual": 12.99,
+      "frecuencia": 2,
+      "total_ultimos_meses": 25.98,
+      "proximo_pago_estimado": "2026-01-08",
+      "banco": "Banistmo"
+    },
+    {
+      "descripcion": "DB COMPRA E-COMMERCE INTL MCD CTE-FRA-SPOTIFY P3-5",
+      "monto_mensual": 12.99,
+      "frecuencia": 2,
+      "total_ultimos_meses": 25.98,
+      "proximo_pago_estimado": "2025-12-07",
+      "banco": "Banistmo"
+    },
+    {
+      "descripcion": "DB COMPRA E-COMMERCE INTL MCD CTE-IRL-SPOTIFY   -5",
+      "monto_mensual": 12.99,
+      "frecuencia": 2,
+      "total_ultimos_meses": 25.98,
+      "proximo_pago_estimado": "2025-11-19",
+      "banco": "Banistmo"
+    },
+    {
+      "descripcion": "DB COMPRA E-COMMERCE INTL MCD CTE-USA-DISNEY PLU-5",
+      "monto_mensual": 12.49,
+      "frecuencia": 2,
+      "total_ultimos_meses": 24.98,
+      "proximo_pago_estimado": "2026-04-16",
+      "banco": "Banistmo"
+    },
+    {
+      "descripcion": "DB COMPRA E-COMMERCE INTL MCD CTE-USA-DISNEY PLU-5",
+      "monto_mensual": 12.49,
+      "frecuencia": 2,
+      "total_ultimos_meses": 24.98,
+      "proximo_pago_estimado": "2026-03-20",
+      "banco": "Banistmo"
+    },
+    {
+      "descripcion": "CREDITO TRANSF. DE CC A CC Spotify 0109311747",
+      "monto_mensual": 11.0,
+      "frecuencia": 4,
+      "total_ultimos_meses": 44.0,
+      "proximo_pago_estimado": "2026-03-20",
+      "banco": "Banistmo"
+    },
+    {
+      "descripcion": "YAPPY BG A LUIS ALBERTO ORTEGA MOJICA (DISNEYPLUSP",
+      "monto_mensual": 7.32,
+      "frecuencia": 6,
+      "total_ultimos_meses": 43.94,
+      "proximo_pago_estimado": "2026-04-03",
+      "banco": "Banco General"
+    },
+    {
+      "descripcion": "DB COMPRA E-COMMERCE INTL MCD CTE-USA-NETFLIX CO-5",
+      "monto_mensual": 5.99,
+      "frecuencia": 2,
+      "total_ultimos_meses": 11.98,
+      "proximo_pago_estimado": "2026-04-09",
+      "banco": "Banistmo"
+    },
+    {
+      "descripcion": "DB COMPRA E-COMMERCE INTL MCD CTE-USA-NETFLIX CO-5",
+      "monto_mensual": 5.99,
+      "frecuencia": 2,
+      "total_ultimos_meses": 11.98,
+      "proximo_pago_estimado": "2026-03-12",
+      "banco": "Banistmo"
+    },
+    {
+      "descripcion": "DB POS COMPRA INTL MCD CTE-USA-NETFLIX CO-5925-169",
+      "monto_mensual": 5.99,
+      "frecuencia": 2,
+      "total_ultimos_meses": 11.98,
+      "proximo_pago_estimado": "2026-02-11",
+      "banco": "Banistmo"
+    },
+    {
+      "descripcion": "DB POS COMPRA INTL MCD CTE-USA-NETFLIX CO-5925-159",
+      "monto_mensual": 5.99,
+      "frecuencia": 2,
+      "total_ultimos_meses": 11.98,
+      "proximo_pago_estimado": "2026-01-09",
+      "banco": "Banistmo"
+    },
+    {
+      "descripcion": "DB POS COMPRA INTL MCD CTE-USA-NETFLIX CO-5925-148",
+      "monto_mensual": 5.99,
+      "frecuencia": 2,
+      "total_ultimos_meses": 11.98,
+      "proximo_pago_estimado": "2025-12-11",
+      "banco": "Banistmo"
+    },
+    {
+      "descripcion": "DB POS COMPRA INTL MCD CTE-USA-NETFLIX CO-5925-138",
+      "monto_mensual": 5.99,
+      "frecuencia": 2,
+      "total_ultimos_meses": 11.98,
+      "proximo_pago_estimado": "2025-11-09",
+      "banco": "Banistmo"
+    },
+    {
+      "descripcion": "DB COMPRA E-COMMERCE INTL MCD CTE-USA-GOOGLE ONE-5",
+      "monto_mensual": 2.99,
+      "frecuencia": 2,
+      "total_ultimos_meses": 5.98,
+      "proximo_pago_estimado": "2025-11-19",
+      "banco": "Banistmo"
+    },
+    {
+      "descripcion": "DB POS COMPRA INTL MCD CTE-USA-MICROSOFT -5925-187",
+      "monto_mensual": 1.99,
+      "frecuencia": 2,
+      "total_ultimos_meses": 3.98,
+      "proximo_pago_estimado": "2026-04-01",
+      "banco": "Banistmo"
+    },
+    {
+      "descripcion": "DB COMPRA E-COMMERCE INTL MCD CTE-USA-MICROSOFT -5",
+      "monto_mensual": 1.99,
+      "frecuencia": 2,
+      "total_ultimos_meses": 3.98,
+      "proximo_pago_estimado": "2026-03-04",
+      "banco": "Banistmo"
+    },
+    {
+      "descripcion": "DB POS COMPRA INTL MCD CTE-USA-MICROSOFT -5925-165",
+      "monto_mensual": 1.99,
+      "frecuencia": 2,
+      "total_ultimos_meses": 3.98,
+      "proximo_pago_estimado": "2026-01-28",
+      "banco": "Banistmo"
+    },
+    {
+      "descripcion": "DB POS COMPRA INTL MCD CTE-USA-MICROSOFT -5925-158",
+      "monto_mensual": 1.99,
+      "frecuencia": 2,
+      "total_ultimos_meses": 3.98,
+      "proximo_pago_estimado": "2026-01-08",
+      "banco": "Banistmo"
+    },
+    {
+      "descripcion": "DB POS COMPRA INTL MCD CTE-USA-MICROSOFT -5925-144",
+      "monto_mensual": 1.99,
+      "frecuencia": 2,
+      "total_ultimos_meses": 3.98,
+      "proximo_pago_estimado": "2025-11-26",
+      "banco": "Banistmo"
+    },
+    {
+      "descripcion": "DB POS COMPRA INTL MCD CTE-USA-MICROSOFT -5925-132",
+      "monto_mensual": 1.99,
+      "frecuencia": 2,
+      "total_ultimos_meses": 3.98,
+      "proximo_pago_estimado": "2025-10-26",
+      "banco": "Banistmo"
+    }
+  ],
+  "comercios_frecuentes": {
+    "Total": {
+      "erika": -2.0,
+      "pueblos": -2.0,
+      "sara": -2.0,
+      "xiumei": -2.8,
+      "eucaris": -3.0,
+      "joshua": -4.0,
+      "huimin": -4.0,
+      "mariano": -4.0,
+      "zoraida": -4.0,
+      "yadira": -4.0
+    },
+    "Visitas": {
+      "erika": 2,
+      "pueblos": 2,
+      "sara": 2,
+      "xiumei": 4,
+      "eucaris": 2,
+      "joshua": 2,
+      "huimin": 2,
+      "mariano": 2,
+      "zoraida": 2,
+      "yadira": 2
+    },
+    "Promedio": {
+      "erika": -1.0,
+      "pueblos": -1.0,
+      "sara": -1.0,
+      "xiumei": -0.7,
+      "eucaris": -1.5,
+      "joshua": -2.0,
+      "huimin": -2.0,
+      "mariano": -2.0,
+      "zoraida": -2.0,
+      "yadira": -2.0
+    },
+    "% del Total": {
+      "erika": 0.01,
+      "pueblos": 0.01,
+      "sara": 0.01,
+      "xiumei": 0.01,
+      "eucaris": 0.01,
+      "joshua": 0.02,
+      "huimin": 0.02,
+      "mariano": 0.02,
+      "zoraida": 0.02,
+      "yadira": 0.02
+    }
+  },
+  "recomendaciones": [
+    {
+      "categoria": "Múltiples Bancos",
+      "nivel": "baja",
+      "mensaje": "Estás utilizando 2 bancos diferentes.",
+      "accion": "Consolida tus finanzas revisando cuál banco ofrece mejores beneficios para tus gastos principales."
+    },
+    {
+      "categoria": "Ahorro",
+      "nivel": "alta",
+      "mensaje": "Estás ahorrando solo el 1.4% de tus ingresos. El ideal es 20%.",
+      "accion": "Automatiza una transferencia del 10% de tu ingreso a una cuenta de ahorro el día de pago."
+    },
+    {
+      "categoria": "Distribución",
+      "nivel": "media",
+      "mensaje": "Transferencias representa el 32.38% de tus gastos.",
+      "accion": "Busca alternativas más económicas en Transferencias o establece un límite mensual."
+    },
+    {
+      "categoria": "Suscripciones",
+      "nivel": "media",
+      "mensaje": "Pagas aproximadamente $220.27 mensuales en suscripciones.",
+      "accion": "Revisa si todas las suscripciones son necesarias. Considera compartir planes familiares."
+    }
+  ],
+  "transacciones_procesadas": 1500,
+  "fecha_generacion": "2026-03-17 15:14:33"
+}

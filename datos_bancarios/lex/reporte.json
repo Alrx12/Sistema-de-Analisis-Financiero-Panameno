@@ -1,0 +1,242 @@
+{
+  "usuario": {
+    "user_id": "lex",
+    "nombre": "Alexis Pineda",
+    "bancos_activos": [
+      "Banco General",
+      "Banistmo",
+      "BAC Credomatic"
+    ],
+    "carpeta_datos": "C:\\Users\\Alexis Pineda\\Sistema de Analisis Financiero\\datos_bancarios\\lex"
+  },
+  "resumen": {
+    "usuario": "Alexis Pineda",
+    "total_transacciones": 374,
+    "periodo": "01/09/2025 - 15/03/2026",
+    "ingresos_totales": 3303.54,
+    "egresos_totales": 3226.44,
+    "balance_neto": 77.1,
+    "promedio_diario_gasto": 16.46,
+    "ahorro_potencial_20": 660.71,
+    "gastos_por_banco": {
+      "BAC Credomatic": 283.91999999999996,
+      "Banco General": 2942.52
+    },
+    "bancos_utilizados": [
+      "Banco General",
+      "BAC Credomatic"
+    ]
+  },
+  "analisis_categorias": {
+    "Total Gastado": {
+      "Transferencias": 1870.25,
+      "Alimentación": 460.76,
+      "Otros": 335.22,
+      "Compras": 281.97,
+      "Servicios Públicos": 83.67,
+      "Transporte": 60.0,
+      "Entretenimiento": 54.24,
+      "Gastos Financieros": 43.39,
+      "Suscripciones": 36.94
+    },
+    "Promedio": {
+      "Transferencias": 12.07,
+      "Alimentación": 7.68,
+      "Otros": 33.52,
+      "Compras": 35.25,
+      "Servicios Públicos": 8.37,
+      "Transporte": 12.0,
+      "Entretenimiento": 27.12,
+      "Gastos Financieros": 3.34,
+      "Suscripciones": 9.24
+    },
+    "Cantidad": {
+      "Transferencias": 155,
+      "Alimentación": 60,
+      "Otros": 10,
+      "Compras": 8,
+      "Servicios Públicos": 10,
+      "Transporte": 5,
+      "Entretenimiento": 2,
+      "Gastos Financieros": 13,
+      "Suscripciones": 4
+    },
+    "Primera Fecha": {
+      "Transferencias": "2025-09-03 00:00:00",
+      "Alimentación": "2025-09-14 00:00:00",
+      "Otros": "2025-09-27 00:00:00",
+      "Compras": "2025-09-20 00:00:00",
+      "Servicios Públicos": "2025-09-13 00:00:00",
+      "Transporte": "2025-09-08 00:00:00",
+      "Entretenimiento": "2025-11-04 00:00:00",
+      "Gastos Financieros": "2025-09-01 00:00:00",
+      "Suscripciones": "2025-10-02 00:00:00"
+    },
+    "Última Fecha": {
+      "Transferencias": "2026-03-12 00:00:00",
+      "Alimentación": "2026-03-15 00:00:00",
+      "Otros": "2026-01-24 00:00:00",
+      "Compras": "2026-01-24 00:00:00",
+      "Servicios Públicos": "2026-03-13 00:00:00",
+      "Transporte": "2026-01-08 00:00:00",
+      "Entretenimiento": "2026-03-05 00:00:00",
+      "Gastos Financieros": "2026-03-09 00:00:00",
+      "Suscripciones": "2026-03-04 00:00:00"
+    },
+    "% del Total": {
+      "Transferencias": 57.97,
+      "Alimentación": 14.28,
+      "Otros": 10.39,
+      "Compras": 8.74,
+      "Servicios Públicos": 2.59,
+      "Transporte": 1.86,
+      "Entretenimiento": 1.68,
+      "Gastos Financieros": 1.34,
+      "Suscripciones": 1.14
+    }
+  },
+  "analisis_por_banco": {
+    "Total Gastado": {
+      "Banco General": 2942.52,
+      "BAC Credomatic": 283.92
+    },
+    "Transacciones": {
+      "Banco General": 239,
+      "BAC Credomatic": 28
+    },
+    "Promedio": {
+      "Banco General": 12.31,
+      "BAC Credomatic": 10.14
+    },
+    "% del Total": {
+      "Banco General": 91.2,
+      "BAC Credomatic": 8.8
+    }
+  },
+  "analisis_mensual": {
+    "Ingresos": {
+      "2025-09": 388.5,
+      "2025-10": 457.94,
+      "2025-11": 281.0,
+      "2025-12": 942.11,
+      "2026-01": 505.25,
+      "2026-02": 399.54,
+      "2026-03": 329.2
+    },
+    "Egresos": {
+      "2025-09": 428.04,
+      "2025-10": 390.79,
+      "2025-11": 387.0,
+      "2025-12": 908.09,
+      "2026-01": 460.18,
+      "2026-02": 279.09,
+      "2026-03": 373.25
+    },
+    "Balance": {
+      "2025-09": -39.54,
+      "2025-10": 67.15,
+      "2025-11": -106.0,
+      "2025-12": 34.02,
+      "2026-01": 45.07,
+      "2026-02": 120.45,
+      "2026-03": -44.05
+    },
+    "Transacciones": {
+      "2025-09": 50,
+      "2025-10": 55,
+      "2025-11": 48,
+      "2025-12": 70,
+      "2026-01": 51,
+      "2026-02": 44,
+      "2026-03": 56
+    }
+  },
+  "suscripciones": [
+    {
+      "descripcion": "YAPPY BG A LUIS ALBERTO ORTEGA MOJICA (DISNEYPLUSP",
+      "monto_mensual": 7.32,
+      "frecuencia": 3,
+      "total_ultimos_meses": 21.97,
+      "proximo_pago_estimado": "2026-04-03",
+      "banco": "Banco General"
+    }
+  ],
+  "comercios_frecuentes": {
+    "Total": {
+      "erika": -1.0,
+      "sara": -1.0,
+      "pueblos": -1.0,
+      "xiumei": -1.4,
+      "eucaris": -1.5,
+      "joshua": -2.0,
+      "mariano": -2.0,
+      "yadira": -2.0,
+      "huimin": -2.0,
+      "zoraida": -2.0
+    },
+    "Visitas": {
+      "erika": 1,
+      "sara": 1,
+      "pueblos": 1,
+      "xiumei": 2,
+      "eucaris": 1,
+      "joshua": 1,
+      "mariano": 1,
+      "yadira": 1,
+      "huimin": 1,
+      "zoraida": 1
+    },
+    "Promedio": {
+      "erika": -1.0,
+      "sara": -1.0,
+      "pueblos": -1.0,
+      "xiumei": -0.7,
+      "eucaris": -1.5,
+      "joshua": -2.0,
+      "mariano": -2.0,
+      "yadira": -2.0,
+      "huimin": -2.0,
+      "zoraida": -2.0
+    },
+    "% del Total": {
+      "erika": 0.03,
+      "sara": 0.03,
+      "pueblos": 0.03,
+      "xiumei": 0.04,
+      "eucaris": 0.05,
+      "joshua": 0.06,
+      "mariano": 0.06,
+      "yadira": 0.06,
+      "huimin": 0.06,
+      "zoraida": 0.06
+    }
+  },
+  "recomendaciones": [
+    {
+      "categoria": "Múltiples Bancos",
+      "nivel": "baja",
+      "mensaje": "Estás utilizando 2 bancos diferentes.",
+      "accion": "Consolida tus finanzas revisando cuál banco ofrece mejores beneficios."
+    },
+    {
+      "categoria": "Ahorro",
+      "nivel": "alta",
+      "mensaje": "Estás ahorrando solo el 2.3% de tus ingresos.",
+      "accion": "Automatiza una transferencia del 10% de tu ingreso a una cuenta de ahorro."
+    },
+    {
+      "categoria": "Distribución",
+      "nivel": "media",
+      "mensaje": "Transferencias representa el 57.97% de tus gastos.",
+      "accion": "Busca alternativas más económicas en Transferencias."
+    },
+    {
+      "categoria": "Métodos de Pago",
+      "nivel": "baja",
+      "mensaje": "Usas YAPPY frecuentemente. Aprovecha las promociones de cashback.",
+      "accion": "Verifica en la app de Banco General las promociones activas."
+    }
+  ],
+  "transacciones_procesadas": 374,
+  "fecha_generacion": "2026-03-18 02:13:35"
+}

@@ -1,0 +1,261 @@
+{
+  "usuario": {
+    "user_id": "alexis_pineda",
+    "nombre": "Alexis Pineda",
+    "cuentas": [
+      {
+        "cuenta_id": "alexis_pineda_banco_general_Ahorros_x",
+        "nombre_cuenta": "Lex BG",
+        "banco": "Banco General",
+        "tipo_cuenta": "Ahorros",
+        "numero_cuenta": ""
+      },
+      {
+        "cuenta_id": "alexis_pineda_bac_credomatic_Ahorros_x",
+        "nombre_cuenta": "Lex BAC",
+        "banco": "BAC Credomatic",
+        "tipo_cuenta": "Ahorros",
+        "numero_cuenta": ""
+      }
+    ],
+    "carpeta_datos": "C:\\Users\\Alexis Pineda\\Sistema de Analisis Financiero\\datos_bancarios\\alexis_pineda",
+    "carpeta_procesados": "C:\\Users\\Alexis Pineda\\Sistema de Analisis Financiero\\datos_bancarios\\alexis_pineda\\procesados"
+  },
+  "resumen": {
+    "usuario": "Alexis Pineda",
+    "total_transacciones": 339,
+    "periodo": "01/09/2025 - 15/03/2026",
+    "ingresos_totales": 3032.01,
+    "egresos_totales": 2942.52,
+    "balance_neto": 89.49,
+    "promedio_diario_gasto": 15.01,
+    "ahorro_potencial_20": 606.4,
+    "gastos_por_banco": {
+      "Banco General": 2942.52
+    },
+    "bancos_utilizados": [
+      "Banco General"
+    ],
+    "cuentas_utilizadas": [
+      "Lex BG"
+    ],
+    "total_cuentas": 1
+  },
+  "analisis_por_cuenta": {
+    "Total Gastado": {
+      "('Banco General', 'Lex BG')": 2942.52
+    },
+    "Promedio": {
+      "('Banco General', 'Lex BG')": 12.31
+    },
+    "Transacciones": {
+      "('Banco General', 'Lex BG')": 239
+    },
+    "% del Total": {
+      "('Banco General', 'Lex BG')": 100.0
+    }
+  },
+  "analisis_categorias": {
+    "Total Gastado": {
+      "Transferencias": 1870.25,
+      "Alimentación": 417.22,
+      "Compras": 281.97,
+      "Otros": 150.0,
+      "Servicios Públicos": 65.26,
+      "Entretenimiento": 54.24,
+      "Transporte": 50.0,
+      "Suscripciones": 36.94,
+      "Gastos Financieros": 16.64
+    },
+    "Promedio": {
+      "Transferencias": 12.07,
+      "Alimentación": 8.51,
+      "Compras": 35.25,
+      "Otros": 75.0,
+      "Servicios Públicos": 21.75,
+      "Entretenimiento": 27.12,
+      "Transporte": 12.5,
+      "Suscripciones": 9.24,
+      "Gastos Financieros": 1.39
+    },
+    "Cantidad": {
+      "Transferencias": 155,
+      "Alimentación": 49,
+      "Compras": 8,
+      "Otros": 2,
+      "Servicios Públicos": 3,
+      "Entretenimiento": 2,
+      "Transporte": 4,
+      "Suscripciones": 4,
+      "Gastos Financieros": 12
+    },
+    "Primera Fecha": {
+      "Transferencias": "2025-09-03 00:00:00",
+      "Alimentación": "2025-09-20 00:00:00",
+      "Compras": "2025-09-20 00:00:00",
+      "Otros": "2025-12-11 00:00:00",
+      "Servicios Públicos": "2025-12-23 00:00:00",
+      "Entretenimiento": "2025-11-04 00:00:00",
+      "Transporte": "2025-09-08 00:00:00",
+      "Suscripciones": "2025-10-02 00:00:00",
+      "Gastos Financieros": "2025-09-01 00:00:00"
+    },
+    "Última Fecha": {
+      "Transferencias": "2026-03-12 00:00:00",
+      "Alimentación": "2026-03-15 00:00:00",
+      "Compras": "2026-01-24 00:00:00",
+      "Otros": "2025-12-29 00:00:00",
+      "Servicios Públicos": "2026-03-04 00:00:00",
+      "Entretenimiento": "2026-03-05 00:00:00",
+      "Transporte": "2025-12-31 00:00:00",
+      "Suscripciones": "2026-03-04 00:00:00",
+      "Gastos Financieros": "2026-03-09 00:00:00"
+    },
+    "% del Total": {
+      "Transferencias": 63.56,
+      "Alimentación": 14.18,
+      "Compras": 9.58,
+      "Otros": 5.1,
+      "Servicios Públicos": 2.22,
+      "Entretenimiento": 1.84,
+      "Transporte": 1.7,
+      "Suscripciones": 1.26,
+      "Gastos Financieros": 0.57
+    }
+  },
+  "analisis_por_banco": {
+    "Total Gastado": {
+      "Banco General": 2942.52
+    },
+    "Transacciones": {
+      "Banco General": 239
+    },
+    "Promedio": {
+      "Banco General": 12.31
+    },
+    "% del Total": {
+      "Banco General": 100.0
+    }
+  },
+  "analisis_mensual": {
+    "Ingresos": {
+      "2025-09": 351.0,
+      "2025-10": 422.91,
+      "2025-11": 281.0,
+      "2025-12": 842.11,
+      "2026-01": 406.25,
+      "2026-02": 399.54,
+      "2026-03": 329.2
+    },
+    "Egresos": {
+      "2025-09": 387.26,
+      "2025-10": 356.03,
+      "2025-11": 351.49,
+      "2025-12": 841.33,
+      "2026-01": 361.46,
+      "2026-02": 274.33,
+      "2026-03": 370.62
+    },
+    "Balance": {
+      "2025-09": -36.26,
+      "2025-10": 66.88,
+      "2025-11": -70.49,
+      "2025-12": 0.78,
+      "2026-01": 44.79,
+      "2026-02": 125.21,
+      "2026-03": -41.42
+    },
+    "Transacciones": {
+      "2025-09": 45,
+      "2025-10": 50,
+      "2025-11": 44,
+      "2025-12": 64,
+      "2026-01": 39,
+      "2026-02": 42,
+      "2026-03": 55
+    }
+  },
+  "suscripciones": [
+    {
+      "descripcion": "YAPPY BG A LUIS ALBERTO ORTEGA MOJICA (DISNEYPLUSP",
+      "monto_mensual": 7.32,
+      "frecuencia": 3,
+      "total_ultimos_meses": 21.97,
+      "proximo_pago_estimado": "2026-04-03",
+      "banco": "Banco General",
+      "cuenta": "Lex BG"
+    }
+  ],
+  "comercios_frecuentes": {
+    "Total": {
+      "erika": -1.0,
+      "sara": -1.0,
+      "pueblos": -1.0,
+      "xiumei": -1.4,
+      "eucaris": -1.5,
+      "joshua": -2.0,
+      "huimin": -2.0,
+      "yadira": -2.0,
+      "mariano": -2.0,
+      "zoraida": -2.0
+    },
+    "Visitas": {
+      "erika": 1,
+      "sara": 1,
+      "pueblos": 1,
+      "xiumei": 2,
+      "eucaris": 1,
+      "joshua": 1,
+      "huimin": 1,
+      "yadira": 1,
+      "mariano": 1,
+      "zoraida": 1
+    },
+    "Promedio": {
+      "erika": -1.0,
+      "sara": -1.0,
+      "pueblos": -1.0,
+      "xiumei": -0.7,
+      "eucaris": -1.5,
+      "joshua": -2.0,
+      "huimin": -2.0,
+      "yadira": -2.0,
+      "mariano": -2.0,
+      "zoraida": -2.0
+    },
+    "% del Total": {
+      "erika": 0.03,
+      "sara": 0.03,
+      "pueblos": 0.03,
+      "xiumei": 0.05,
+      "eucaris": 0.05,
+      "joshua": 0.07,
+      "huimin": 0.07,
+      "yadira": 0.07,
+      "mariano": 0.07,
+      "zoraida": 0.07
+    }
+  },
+  "recomendaciones": [
+    {
+      "categoria": "Ahorro",
+      "nivel": "alta",
+      "mensaje": "Estás ahorrando solo el 3.0% de tus ingresos.",
+      "accion": "Automatiza una transferencia del 10% de tu ingreso a una cuenta de ahorro."
+    },
+    {
+      "categoria": "Distribución",
+      "nivel": "media",
+      "mensaje": "Transferencias representa el 63.56% de tus gastos.",
+      "accion": "Busca alternativas más económicas en Transferencias."
+    },
+    {
+      "categoria": "Métodos de Pago",
+      "nivel": "baja",
+      "mensaje": "Usas YAPPY frecuentemente.",
+      "accion": "Verifica en la app de Banco General las promociones de cashback."
+    }
+  ],
+  "transacciones_procesadas": 339,
+  "fecha_generacion": "2026-03-18 02:07:21"
+}
