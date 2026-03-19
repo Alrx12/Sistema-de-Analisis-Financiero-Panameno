@@ -12,7 +12,6 @@ from sqlalchemy.orm import Session
 from app.models.processing_job import ProcessingJob
 from app.models.user import User
 from app.parsers.factory import ParserFactory
-from app.parsers.shared_utils import infer_bank_name
 from app.services.account_detection_service import AccountDetectionService
 from app.services.analysis_service import AnalysisService
 
@@ -24,7 +23,7 @@ class ProcessingService:
         self.db = db
         self.analysis_service = AnalysisService(db)
         self.account_detection_service = AccountDetectionService(db)
-
+    
     def process_file(self, file_path: str, original_filename: str, current_user: User) -> dict[str, Any]:
         file_type = Path(original_filename).suffix.lower().lstrip(".") or Path(file_path).suffix.lower().lstrip(".")
         job = ProcessingJob(
@@ -51,12 +50,12 @@ class ProcessingService:
             transactions = parse_result["transactions"]
             detected_last4 = parse_result["detected_account_last4"]
 
-            inferred_bank = infer_bank_name(original_filename)
+            detected_bank = parser.bank_name
             account = self.account_detection_service.detect_or_create_account(
                 current_user=current_user,
-                bank_name=inferred_bank,
+                bank_name=detected_bank,
                 account_type="corriente",
-                nickname=f"{inferred_bank} principal",
+                nickname=f"{detected_bank} principal",
                 account_number_last4=detected_last4,
             )
 
@@ -76,6 +75,16 @@ class ProcessingService:
                 }
                 for transaction in transactions
             ]
+            print("\n========== DEBUG TRANSACTIONS ==========")
+            for t in normalized_transactions[:10]:
+                print({
+                    "amount": t["amount"],
+                    "type": type(t["amount"]),
+                    "desc": t["description"][:50]
+                })
+
+            print("TOTAL TX:", len(normalized_transactions))
+            print("AMOUNTS SAMPLE:", [t["amount"] for t in normalized_transactions[:20]])
 
             analysis = self.analysis_service.build_analysis(normalized_transactions)
             self.analysis_service.save_snapshot(analysis, current_user)
@@ -92,7 +101,10 @@ class ProcessingService:
             job.completed_at = datetime.now(timezone.utc)
             self.db.add(job)
             self.db.commit()
-            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Parsing error")
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=str(exc),
+            )
         except HTTPException as exc:
             job.status = "error"
             job.error_message = exc.detail if isinstance(exc.detail, str) else "http_error"

@@ -1,12 +1,7 @@
-from pathlib import Path
+from typing import Any
 
 
-def infer_bank_name(filename: str) -> str:
-    lowered = Path(filename).name.lower()
-    if "banistmo" in lowered:
-        return "Banistmo"
-    if "bac" in lowered:
-        return "BAC Credomatic"
-    if "general" in lowered or "bg" in lowered:
-        return "Banco General"
-    return "Banco no identificado"
+def safe_string(value: Any) -> str:
+    if value is None:
+        return ""
+    return str(value).strip()

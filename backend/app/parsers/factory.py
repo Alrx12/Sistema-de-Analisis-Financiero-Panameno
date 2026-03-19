@@ -1,33 +1,28 @@
-from pathlib import Path
-
 from app.parsers.bac import BacParser
-from app.parsers.base import BaseStatementParser
-from app.parsers.banistmo import BanistmoParser
 from app.parsers.banco_general import BancoGeneralParser
-from app.parsers.shared_utils import infer_bank_name
+from app.parsers.banistmo import BanistmoParser
+from app.parsers.base import BaseStatementParser
 
 
 class ParserFactory:
-    @staticmethod
-    def get_parser(file_path: str) -> BaseStatementParser:
-        extension = Path(file_path).suffix.lower()
-        if extension not in BaseStatementParser.allowed_extensions:
-            raise ValueError("Extensión de archivo no soportada")
+    parsers = [
+        BancoGeneralParser(),
+        BanistmoParser(),
+        BacParser(),
+    ]
 
-        parsers: list[BaseStatementParser] = [
-            BancoGeneralParser(),
-            BanistmoParser(),
-            BacParser(),
-        ]
-        for parser in parsers:
-            if parser.detect_format(file_path):
-                return parser
+    @classmethod
+    def get_parser(cls, file_path: str):
+        scored = []
+        for parser in cls.parsers:
+            score = parser.detect_score(file_path)
+            scored.append((score, parser))
 
-        inferred_bank = infer_bank_name(file_path)
-        if inferred_bank == "Banco General":
-            return BancoGeneralParser()
-        if inferred_bank == "Banistmo":
-            return BanistmoParser()
-        if inferred_bank == "BAC Credomatic":
-            return BacParser()
-        return BaseStatementParser()
+        scored.sort(key=lambda item: item[0], reverse=True)
+        best_score, best_parser = scored[0]
+
+        # Fallback para tests CSV simples y formatos genéricos
+        if best_score < 0.3:
+            return BaseStatementParser()
+
+        return best_parser

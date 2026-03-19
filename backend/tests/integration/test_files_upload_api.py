@@ -71,7 +71,11 @@ def register_and_login(client: TestClient, username: str) -> dict[str, str]:
 def test_upload_csv_processes_analysis_and_persists_job_and_snapshot(client: TestClient) -> None:
     headers = register_and_login(client, "files-user")
 
-    csv_content = b"fecha,descripcion,monto,account_last4\n2026-03-10,Salario,1500,1234\n2026-03-11,Supermercado,-120.5,1234\n"
+    csv_content = (
+        b",,,,,,\n" * 8
+        + b"2026-03-10 12:54:04,,ref1,trx1,YAPPY BG 1234,120.50,\n"
+        + b"2026-03-11 12:54:04,,ref2,trx2,ACH XPRESS NOMINA,,1500.00\n"
+    )
     response = client.post(
         "/api/v1/files/upload",
         files={"file": ("estado_bg.csv", BytesIO(csv_content), "text/csv")},
@@ -124,7 +128,11 @@ def test_upload_without_last4_creates_low_confidence_account(client: TestClient)
 def test_upload_reuses_existing_account_and_does_not_duplicate(client: TestClient) -> None:
     headers = register_and_login(client, "files-reuse")
 
-    csv_content = b"fecha,descripcion,monto,account_last4\n2026-03-10,Salario,1500,5555\n2026-03-11,Supermercado,-120.5,5555\n"
+    csv_content = (
+        b",,,,,,\n" * 8
+        + b"2026-03-10 12:54:04,,ref1,trx1,YAPPY BG 5555,120.50,\n"
+        + b"2026-03-11 12:54:04,,ref2,trx2,ACH XPRESS NOMINA,,1500.00\n"
+    )
     files = {"file": ("estado_bg.csv", BytesIO(csv_content), "text/csv")}
 
     first_response = client.post("/api/v1/files/upload", files=files, headers=headers)
@@ -162,9 +170,9 @@ def test_upload_returns_422_when_multiple_accounts_are_detected(client: TestClie
     headers = register_and_login(client, "files-inconsistent")
 
     csv_content = (
-        b"fecha,descripcion,monto,account_last4\n"
-        b"2026-03-10,Salario,1500,1234\n"
-        b"2026-03-11,Supermercado,-120.5,5678\n"
+        b",,,,,,\n" * 8
+        + b"2026-03-10 12:54:04,,ref1,trx1,YAPPY BG 1234,120.50,\n"
+        + b"2026-03-11 12:54:04,,ref2,trx2,YAPPY BG 5678,95.00,\n"
     )
     response = client.post(
         "/api/v1/files/upload",
