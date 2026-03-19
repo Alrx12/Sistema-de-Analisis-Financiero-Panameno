@@ -167,3 +167,15 @@ def test_update_and_soft_delete_account(client: TestClient) -> None:
     assert delete_response.status_code == 200
     deleted = delete_response.json()
     assert deleted["is_active"] is False
+
+    list_response = client.get("/api/v1/accounts", headers=headers)
+    assert list_response.status_code == 200
+    assert list_response.json() == []
+
+    blocked_update_response = client.patch(
+        f"/api/v1/accounts/{created['account_id']}",
+        json={"nickname": "No permitido"},
+        headers=headers,
+    )
+    assert blocked_update_response.status_code == 404
+    assert blocked_update_response.json()["detail"] == "Cuenta no encontrada"
