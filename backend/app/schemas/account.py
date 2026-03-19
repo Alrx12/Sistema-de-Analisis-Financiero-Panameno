@@ -11,6 +11,13 @@ class AccountCreate(BaseModel):
     account_number_last4: str | None = Field(default=None, max_length=4)
 
 
+class AccountUpdate(BaseModel):
+    nickname: str | None = Field(default=None, min_length=2, max_length=100)
+    account_type: str | None = Field(default=None, min_length=2, max_length=50)
+    account_number_last4: str | None = Field(default=None, max_length=4)
+    is_active: bool | None = None
+
+
 class AccountResponse(BaseModel):
     account_id: UUID
     bank_name: str

@@ -1,4 +1,5 @@
 from collections.abc import Generator
+from uuid import UUID
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -35,7 +36,10 @@ def get_current_user(
         user_id = payload.get("sub")
         if not user_id:
             raise credentials_exception
+        user_id = UUID(user_id)
     except JWTError:
+        raise credentials_exception
+    except ValueError:
         raise credentials_exception
 
     user = db.get(User, user_id)

@@ -1,19 +1,49 @@
 from datetime import datetime, timedelta, timezone
+import hashlib
+import hmac
+import secrets
 from typing import Any
 
 from jose import jwt
 from pwdlib import PasswordHash
+from pwdlib.exceptions import HasherNotAvailable
 
 from app.core.config import settings
 
-password_hash = PasswordHash.recommended()
+
+def _build_password_hash() -> PasswordHash | None:
+    try:
+        return PasswordHash.recommended()
+    except HasherNotAvailable:
+        return None
+
+
+password_hash = _build_password_hash()
+
+
+def _hash_password_fallback(password: str) -> str:
+    salt = secrets.token_hex(16)
+    digest = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt.encode("utf-8"), 100_000)
+    return f"pbkdf2_sha256${salt}${digest.hex()}"
+
+
+def _verify_password_fallback(password: str, hashed_password: str) -> bool:
+    algorithm, salt, expected_digest = hashed_password.split("$", maxsplit=2)
+    if algorithm != "pbkdf2_sha256":
+        return False
+    digest = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt.encode("utf-8"), 100_000).hex()
+    return hmac.compare_digest(digest, expected_digest)
 
 
 def hash_password(password: str) -> str:
+    if password_hash is None:
+        return _hash_password_fallback(password)
     return password_hash.hash(password)
 
 
 def verify_password(password: str, hashed_password: str) -> bool:
+    if password_hash is None:
+        return _verify_password_fallback(password, hashed_password)
     return password_hash.verify(password, hashed_password)
 
 

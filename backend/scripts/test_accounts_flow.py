@@ -14,23 +14,31 @@ def print_title(title):
 
 
 def register_and_login(email):
+    username = email.split("@")[0]
+
     # register
     requests.post(f"{BASE_URL}/auth/register", json={
-        "username": email.split("@")[0],
+        "username": username,
         "email": email,
         "password": PASSWORD,
         "full_name": "Test User"
     })
 
-    # login
+    # login (usar username, NO email)
     res = requests.post(f"{BASE_URL}/auth/login", data={
-        "username": email,
+        "username": username,
         "password": PASSWORD
     })
 
-    token = res.json()["access_token"]
-    return {"Authorization": f"Bearer {token}"}
+    print("LOGIN RESPONSE:", res.status_code, res.text)  # 👈 DEBUG
 
+    data = res.json()
+
+    if "access_token" not in data:
+        raise Exception(f"Login falló: {data}")
+
+    token = data["access_token"]
+    return {"Authorization": f"Bearer {token}"}
 
 def test_accounts():
     headers_user1 = register_and_login(EMAIL_1)
