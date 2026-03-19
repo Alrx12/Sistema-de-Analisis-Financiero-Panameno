@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.models.bank_account import BankAccount
 from app.models.user import User
-from app.repositories.account_repository import *
+from app.repositories.account_repository import AccountRepository
 from app.schemas.account import AccountCreate, AccountUpdate
 
 
@@ -19,7 +19,7 @@ class AccountService:
         self.repository = AccountRepository(db)
 
     def list_accounts(self, current_user: User) -> list[BankAccount]:
-        return self.repository.list_by_user(current_user.user_id)
+        return self.repository.list_active_by_user(current_user.user_id)
 
     def get_account(self, account_id: UUID, current_user: User) -> BankAccount:
         account = self.repository.get_by_id_for_user(account_id, current_user.user_id)
@@ -52,6 +52,8 @@ class AccountService:
 
     def update_account(self, account_id: UUID, payload: AccountUpdate, current_user: User) -> BankAccount:
         account = self.get_account(account_id, current_user)
+        if not account.is_active:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cuenta no encontrada")
 
         account_type = payload.account_type.strip() if payload.account_type is not None else account.account_type
         nickname = payload.nickname.strip() if payload.nickname is not None else account.nickname

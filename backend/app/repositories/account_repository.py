@@ -16,10 +16,13 @@ class AccountRepository:
         self.db.refresh(account)
         return account
 
-    def list_by_user(self, user_id: UUID) -> list[BankAccount]:
+    def list_active_by_user(self, user_id: UUID) -> list[BankAccount]:
         statement = (
             select(BankAccount)
-            .where(BankAccount.user_id == user_id)
+            .where(
+                BankAccount.user_id == user_id,
+                BankAccount.is_active.is_(True),
+            )
             .order_by(BankAccount.created_at.desc())
         )
         return list(self.db.scalars(statement).all())
