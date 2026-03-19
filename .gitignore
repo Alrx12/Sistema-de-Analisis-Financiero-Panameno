@@ -1,0 +1,66 @@
+# ========================
+# Python
+# ========================
+.venv/
+**/.venv/
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# ========================
+# Environment / secrets
+# ========================
+.env
+**/.env
+#.env.*
+*.pem
+*.key
+
+# ========================
+# Logs
+# ========================
+*.log
+
+# ========================
+# Editors / OS
+# ========================
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# ========================
+# Sensitive / local data
+# ========================
+datos_bancarios/
+**/datos_bancarios/
+usuarios_config.json
+*.xlsx
+*.xls
+*.csv
+
+# Ignore json outputs, but keep code/config json if later needed
+reporte*.json
+report*.json
+
+# ========================
+# Backend storage
+# ========================
+backend/storage/uploads/*
+backend/storage/processed/*
+backend/storage/temp/*
+!backend/storage/uploads/.gitkeep
+!backend/storage/processed/.gitkeep
+!backend/storage/temp/.gitkeep
+
+# ========================
+# Alembic / misc old files
+# ========================
+backend/alembic_old/
+
+# ========================
+# Codex / local tooling
+# ========================
+.codex/
