@@ -26,19 +26,12 @@ class BaseStatementParser:
         self.patrones_categoria = self.default_patterns.copy()
 
     def load_dataframe(self, file_path: Union[str, BytesIO], header: int | None = 0) -> pd.DataFrame:
-        """Carga un DataFrame desde una ruta de archivo o un objeto file-like (BytesIO).
-        
-        Soporta:
-        - Rutas de archivo (str/Path)
-        - BytesIO con atributo .name o .filename
-        - FastAPI UploadFile (tiene .file y .filename)
-        """
+        """Carga un DataFrame desde una ruta de archivo o un objeto file-like (BytesIO)."""
         
         # CASO 1: Es un UploadFile de FastAPI (tiene .file y .filename)
         if hasattr(file_path, 'file') and hasattr(file_path, 'filename'):
             extension = Path(str(file_path.filename)).suffix.lower()
             file_obj = file_path.file
-            # Resetear el puntero del archivo
             if hasattr(file_obj, 'seek'):
                 file_obj.seek(0)
             
@@ -54,13 +47,11 @@ class BaseStatementParser:
         
         # CASO 2: Es un objeto BytesIO o file-like simple
         if hasattr(file_path, 'read'):
-            # Determinar extensión desde el nombre si está disponible
             if hasattr(file_path, 'name') and file_path.name:
                 extension = Path(file_path.name).suffix.lower()
             elif hasattr(file_path, 'filename') and file_path.filename:
                 extension = Path(str(file_path.filename)).suffix.lower()
             else:
-                # Por defecto, intentar como Excel
                 extension = ".xlsx"
             
             if extension not in self.allowed_extensions:
@@ -69,7 +60,6 @@ class BaseStatementParser:
             if extension == ".csv":
                 return pd.read_csv(file_path, header=header, dtype=str)
             
-            # Para Excel, usar el engine apropiado
             if extension == ".xlsx":
                 return pd.read_excel(file_path, header=header, dtype=str, engine='openpyxl')
             else:  # .xls
@@ -89,20 +79,18 @@ class BaseStatementParser:
             return pd.read_excel(file_path, header=header, dtype=str, engine='xlrd')
 
     def detect_score(self, file_path: Union[str, BytesIO]) -> float:
-        """Detecta si el archivo corresponde a este banco. 
-        Acepta tanto rutas como objetos file-like."""
+        """Detecta si el archivo corresponde a este banco."""
         return 0.0
 
     def detect_format(self, file_path: Union[str, BytesIO]) -> bool:
         return self.detect_score(file_path) >= 0.7
 
     def parse(self, file_path: Union[str, BytesIO]) -> dict[str, Any]:
-        """Parsea el archivo. Acepta tanto rutas como objetos file-like."""
+        """Parsea el archivo."""
         df = self.load_dataframe(file_path, header=None)
         if df.empty:
             raise ValueError("El archivo no contiene transacciones")
         
-        # Obtener nombre del archivo para metadata
         if hasattr(file_path, 'filename'):
             filename = file_path.filename
         elif hasattr(file_path, 'name'):
@@ -112,25 +100,144 @@ class BaseStatementParser:
         
         return self.procesar(df, filename)
 
+    def _es_posible_header(self, valores_fila: list) -> dict[str, int] | None:
+        """Detecta si una fila parece ser un header y retorna el mapeo de columnas."""
+        if not valores_fila:
+            return None
+        
+        # Normalizar valores de la fila
+        valores_str = [str(v).lower().strip() if v is not None else "" for v in valores_fila]
+        
+        # Buscar patrones de header estándar
+        mapeo = {}
+        
+        # Columna de fecha
+        for i, val in enumerate(valores_str):
+            if val in ["fecha", "date", "fecha_transaccion", "transaction_date", "fecha_txn"]:
+                mapeo["fecha"] = i
+                break
+        
+        # Columna de descripción
+        for i, val in enumerate(valores_str):
+            if val in ["descripcion", "description", "descripción", "detalle", "concepto", "referencia", "desc"]:
+                mapeo["descripcion"] = i
+                break
+        
+        # Columna de monto
+        for i, val in enumerate(valores_str):
+            if val in ["monto", "amount", "valor", "importe", "cantidad", "total", "ammount"]:
+                mapeo["monto"] = i
+                break
+        
+        # Si encontramos al menos fecha y monto, consideramos que es un header válido
+        if "fecha" in mapeo and "monto" in mapeo:
+            return mapeo
+        
+        return None
+
     def extraer_datos(self, df: pd.DataFrame) -> pd.DataFrame:
-        normalized_columns = {str(column).lower().strip(): column for column in df.columns}
-        date_column = self._find_column(normalized_columns, ["date", "fecha"])
-        description_column = self._find_column(normalized_columns, ["description", "descripcion", "detalle"])
-        amount_column = self._find_column(normalized_columns, ["amount", "monto", "valor", "importe"])
+        """Extrae datos de transacciones del DataFrame."""
+        if df.empty:
+            return pd.DataFrame()
         
-        if not (date_column and description_column and amount_column):
-            raise ValueError("No se pudieron identificar columnas suficientes para procesar el archivo")
+        # CASO 1: Verificar si la primera fila parece un header (cuando header=None)
+        primera_fila = df.iloc[0].tolist()
+        mapeo_header = self._es_posible_header(primera_fila)
         
-        rows: list[dict[str, Any]] = []
-        for _, row in df.iterrows():
-            rows.append(
-                {
-                    "fecha": row.get(date_column),
-                    "descripcion": row.get(description_column),
-                    "monto": row.get(amount_column),
-                }
+        if mapeo_header:
+            # La primera fila es el header, usarla para nombrar columnas y saltarla
+            rows = []
+            for idx in range(1, len(df)):  # Empezar desde la segunda fila
+                row = df.iloc[idx]
+                
+                fecha_idx = mapeo_header.get("fecha")
+                desc_idx = mapeo_header.get("descripcion")
+                monto_idx = mapeo_header.get("monto")
+                
+                fecha_val = row.iloc[fecha_idx] if fecha_idx is not None else None
+                desc_val = row.iloc[desc_idx] if desc_idx is not None else ""
+                monto_val = row.iloc[monto_idx] if monto_idx is not None else 0
+                
+                # Skip filas vacías
+                if pd.isna(fecha_val) and pd.isna(desc_val) and (pd.isna(monto_val) or monto_val == 0):
+                    continue
+                
+                rows.append({
+                    "fecha": fecha_val,
+                    "descripcion": desc_val,
+                    "monto": monto_val,
+                })
+            
+            if rows:
+                return pd.DataFrame(rows)
+        
+        # CASO 2: DataFrame con columnas con nombres reales (no integers o Unnamed)
+        if len(df.columns) > 0:
+            col_names = [str(c).lower().strip() for c in df.columns]
+            
+            # Si las columnas tienen nombres significativos (no son solo números o Unnamed)
+            tiene_nombres_significativos = any(
+                not c.startswith("unnamed") and not c.isdigit() 
+                for c in col_names if c
             )
-        return pd.DataFrame(rows)
+            
+            if tiene_nombres_significativos:
+                normalized_columns = {str(col).lower().strip(): col for col in df.columns}
+                
+                date_col = self._find_column(normalized_columns, ["date", "fecha", "transaction_date", "fecha_transaccion"])
+                desc_col = self._find_column(normalized_columns, ["description", "descripcion", "detalle", "concepto", "referencia"])
+                amount_col = self._find_column(normalized_columns, ["amount", "monto", "valor", "importe", "cantidad", "total"])
+                
+                if date_col and desc_col and amount_col:
+                    rows = []
+                    for _, row in df.iterrows():
+                        fecha_val = row.get(date_col)
+                        desc_val = row.get(desc_col)
+                        monto_val = row.get(amount_col)
+                        
+                        if pd.isna(fecha_val) and pd.isna(desc_val) and pd.isna(monto_val):
+                            continue
+                        
+                        rows.append({
+                            "fecha": fecha_val,
+                            "descripcion": desc_val,
+                            "monto": monto_val,
+                        })
+                    
+                    if rows:
+                        return pd.DataFrame(rows)
+        
+        # CASO 3: Fallback - intentar detectar por posición de columnas (archivos bancarios)
+        # Asumir que las columnas están en posiciones estándar: 0=fecha, 1=descripcion, 2=monto
+        if len(df.columns) >= 3:
+            rows = []
+            for _, row in df.iterrows():
+                # Intentar mapeo por posición
+                fecha_val = row.iloc[0] if len(row) > 0 else None
+                desc_val = row.iloc[1] if len(row) > 1 else ""
+                monto_val = row.iloc[2] if len(row) > 2 else 0
+                
+                # Validar que parezcan datos válidos
+                desc_str = str(desc_val).strip() if desc_val is not None else ""
+                
+                # Skip si parece header o está vacío
+                if desc_str.lower() in ["fecha", "date", "descripcion", "description", ""]:
+                    if pd.isna(fecha_val) or str(fecha_val).lower() in ["fecha", "date"]:
+                        continue
+                
+                if pd.isna(fecha_val) and not desc_str and (pd.isna(monto_val) or monto_val == 0):
+                    continue
+                
+                rows.append({
+                    "fecha": fecha_val,
+                    "descripcion": desc_val,
+                    "monto": monto_val,
+                })
+            
+            if rows:
+                return pd.DataFrame(rows)
+        
+        raise ValueError("No se pudieron identificar columnas suficientes para procesar el archivo")
 
     def limpiar_monto(self, valor: Any) -> float:
         if valor is None or pd.isna(valor):
@@ -149,7 +256,6 @@ class BaseStatementParser:
         if "(" in monto_str and ")" in monto_str:
             monto_str = "-" + monto_str.replace("(", "").replace(")", "")
         
-        # Caso "$-12.49"
         monto_str = monto_str.replace("$-", "-").replace("-$", "-")
         
         if "," in monto_str and "." in monto_str:
