@@ -162,6 +162,13 @@ class FinancialClassifier:
             0.93, "builtin:transf_propia_cc",
         ),
         (
+            r"ENTRE CUENTAS",
+            {"Economic Type": "transferencia_propia", "SubType Economic": "interno",
+             "Tipo de transacción": "transferencia", "Categoría de presupuesto": "ahorro",
+             "budget_role": "solo_balance"},
+            0.93, "builtin:entre_cuentas",
+        ),
+        (
             r"^YAPPY BG DE ",
             {"Economic Type": "transferencia_tercero", "SubType Economic": "variable",
              "Tipo de transacción": "ingreso", "Categoría de presupuesto": "otros",

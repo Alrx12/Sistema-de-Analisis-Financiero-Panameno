@@ -38,8 +38,8 @@ class AnalysisService:
 
         for t in transactions:
             amount = float(t["amount"])
-            budget_role = t.get("budget_role") or "revisar"
-            budget_cat  = t.get("budget_category") or t.get("category") or "otros"
+            budget_role = (t.get("budget_role") or "revisar").lower().strip()
+            budget_cat  = (t.get("budget_category") or t.get("category") or "otros").lower().strip()
             confidence  = t.get("confidence", 1.0) or 1.0
 
             # Solo suma a ingresos/gastos lo que no es transferencia propia
