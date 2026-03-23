@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     upload_dir: str = "storage/uploads"
     processed_dir: str = "storage/processed"
     temp_dir: str = "storage/temp"
+    knowledge_bases_dir: str = "storage/knowledge_bases"
 
     model_config = SettingsConfigDict(
         env_file=".env",

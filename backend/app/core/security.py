@@ -61,3 +61,38 @@ def create_access_token(subject: str, expires_delta: timedelta | None = None) ->
 
 def decode_access_token(token: str) -> dict[str, Any]:
     return jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+
+
+_RESET_TOKEN_EXPIRE_MINUTES = 15
+_RESET_PURPOSE = "password_reset"
+
+
+def create_password_reset_token(user_id: str) -> str:
+    """Genera un JWT de uso único para reset de contraseña. Expira en 15 minutos."""
+    expire = datetime.now(timezone.utc) + timedelta(minutes=_RESET_TOKEN_EXPIRE_MINUTES)
+    payload: dict[str, Any] = {
+        "sub": user_id,
+        "exp": expire,
+        "purpose": _RESET_PURPOSE,
+    }
+    return jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
+
+
+def decode_password_reset_token(token: str) -> str:
+    """
+    Valida el reset token y retorna el user_id.
+    Lanza ValueError si el token es inválido, expirado o de otro propósito.
+    """
+    try:
+        payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+    except Exception as exc:
+        raise ValueError("Token inválido o expirado") from exc
+
+    if payload.get("purpose") != _RESET_PURPOSE:
+        raise ValueError("Token no es de reset de contraseña")
+
+    user_id = payload.get("sub")
+    if not user_id:
+        raise ValueError("Token sin subject")
+
+    return str(user_id)

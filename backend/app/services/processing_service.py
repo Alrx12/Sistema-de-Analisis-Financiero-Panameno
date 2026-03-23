@@ -75,18 +75,12 @@ class ProcessingService:
                 }
                 for transaction in transactions
             ]
-            print("\n========== DEBUG TRANSACTIONS ==========")
-            for t in normalized_transactions[:10]:
-                print({
-                    "amount": t["amount"],
-                    "type": type(t["amount"]),
-                    "desc": t["description"][:50]
-                })
-
-            print("TOTAL TX:", len(normalized_transactions))
-            print("AMOUNTS SAMPLE:", [t["amount"] for t in normalized_transactions[:20]])
-
-            analysis = self.analysis_service.build_analysis(normalized_transactions)
+            user_display_name = current_user.full_name or current_user.username
+            analysis = self.analysis_service.build_analysis(
+                normalized_transactions,
+                user_id=str(current_user.user_id),
+                user_name=user_display_name,
+            )
             self.analysis_service.save_snapshot(analysis, current_user)
 
             job.status = "success"
@@ -112,13 +106,20 @@ class ProcessingService:
             self.db.add(job)
             self.db.commit()
             raise
-        except Exception:
+        except Exception as exc:
+            logger.exception(
+                "Error inesperado en process_file — user_id=%s file=%s",
+                current_user.user_id,
+                original_filename,
+            )
             job.status = "error"
-            job.error_message = "internal_error"
+            job.error_message = str(exc)[:500]
             job.completed_at = datetime.now(timezone.utc)
             self.db.add(job)
             self.db.commit()
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error interno")
+            from app.core.config import settings
+            detail = str(exc) if settings.debug else "Error interno"
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=detail)
         finally:
             if os.path.exists(file_path):
                 os.remove(file_path)
