@@ -10,7 +10,7 @@ from app.core.config import settings
 
 
 class FileService:
-    allowed_extensions = {".csv", ".xls", ".xlsx"}
+    allowed_extensions = {".xls", ".xlsx"}  # CSV deshabilitado — añadir de vuelta cuando haya parsers validados para ese formato
     max_file_size_bytes = 5 * 1024 * 1024
 
     def validate_upload(self, upload: UploadFile, file_size: int) -> str:

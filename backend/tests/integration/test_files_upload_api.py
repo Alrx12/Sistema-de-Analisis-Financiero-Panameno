@@ -1,11 +1,20 @@
+"""
+Tests de integración para POST /api/v1/files/upload.
+
+El endpoint ahora retorna HTTP 202 y encola el procesamiento en Celery.
+En tests, reemplazamos process_file_task.delay() con una ejecución síncrona
+contra la DB de prueba (SQLite in-memory), para no necesitar Redis ni un worker.
+"""
 from collections.abc import Generator
 from io import BytesIO
+from unittest.mock import MagicMock, patch
+from uuid import UUID
 
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, select
-from sqlalchemy.pool import StaticPool
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
 from app.api.deps import get_db
 from app.core.database import Base
@@ -42,6 +51,33 @@ def setup_database() -> Generator[None, None, None]:
     app.dependency_overrides.clear()
 
 
+@pytest.fixture(autouse=True)
+def run_celery_tasks_eagerly() -> Generator[None, None, None]:
+    """
+    Reemplaza process_file_task.delay() con una ejecución síncrona
+    contra la DB de test (SQLite). No requiere Redis ni worker Celery.
+    """
+    from app.models.processing_job import ProcessingJob
+    from app.models.user import User
+    from app.services.processing_service import ProcessingService
+
+    def sync_delay(*, file_path: str, original_filename: str, user_id: str, job_id: str) -> None:
+        db = TestingSessionLocal()
+        try:
+            user = db.get(User, UUID(user_id))
+            job = db.get(ProcessingJob, UUID(job_id))
+            svc = ProcessingService(db)
+            svc.run_pipeline(job=job, file_path=file_path, current_user=user)
+        finally:
+            db.close()
+
+    mock_task = MagicMock()
+    mock_task.delay.side_effect = sync_delay
+
+    with patch("app.api.v1.files.process_file_task", mock_task):
+        yield
+
+
 @pytest.fixture
 def client() -> TestClient:
     return TestClient(app)
@@ -68,26 +104,53 @@ def register_and_login(client: TestClient, username: str) -> dict[str, str]:
     return {"Authorization": f"Bearer {token}"}
 
 
-def test_upload_csv_processes_analysis_and_persists_job_and_snapshot(client: TestClient) -> None:
+# ── Formato Banco General: 8 filas vacías + columnas (fecha, _, ref, trx, desc, débito, crédito)
+
+BG_CSV_WITH_LAST4 = (
+    b",,,,,,\n" * 8
+    + b"2026-03-10 12:54:04,,ref1,trx1,YAPPY BG 1234,120.50,\n"
+    + b"2026-03-11 12:54:04,,ref2,trx2,ACH XPRESS NOMINA,,1500.00\n"
+)
+
+BG_CSV_MULTI_ACCOUNT = (
+    b",,,,,,\n" * 8
+    + b"2026-03-10 12:54:04,,ref1,trx1,YAPPY BG 1234,120.50,\n"
+    + b"2026-03-11 12:54:04,,ref2,trx2,YAPPY BG 5678,95.00,\n"
+)
+
+BG_CSV_REUSE = (
+    b",,,,,,\n" * 8
+    + b"2026-03-10 12:54:04,,ref1,trx1,YAPPY BG 5555,120.50,\n"
+    + b"2026-03-11 12:54:04,,ref2,trx2,ACH XPRESS NOMINA,,1500.00\n"
+)
+
+
+def test_upload_returns_202_and_processes_async(client: TestClient) -> None:
+    """El endpoint retorna 202 inmediatamente; la tarea se ejecuta de forma síncrona en tests."""
     headers = register_and_login(client, "files-user")
 
-    csv_content = (
-        b",,,,,,\n" * 8
-        + b"2026-03-10 12:54:04,,ref1,trx1,YAPPY BG 1234,120.50,\n"
-        + b"2026-03-11 12:54:04,,ref2,trx2,ACH XPRESS NOMINA,,1500.00\n"
-    )
     response = client.post(
         "/api/v1/files/upload",
-        files={"file": ("estado_bg.csv", BytesIO(csv_content), "text/csv")},
+        files={"file": ("estado_bg.csv", BytesIO(BG_CSV_WITH_LAST4), "text/csv")},
         headers=headers,
     )
 
-    assert response.status_code == 200
+    assert response.status_code == 202
     payload = response.json()
-    assert payload["status"] == "done"
-    assert payload["analysis"]["total_transactions"] == 2
-    assert payload["analysis"]["total_income"] == 1500.0
-    assert payload["analysis"]["total_expenses"] == 120.5
+    assert payload["status"] == "queued"
+    assert "job_id" in payload
+
+
+def test_upload_persists_job_and_snapshot(client: TestClient) -> None:
+    headers = register_and_login(client, "files-persist")
+
+    response = client.post(
+        "/api/v1/files/upload",
+        files={"file": ("estado_bg.csv", BytesIO(BG_CSV_WITH_LAST4), "text/csv")},
+        headers=headers,
+    )
+
+    assert response.status_code == 202
 
     with TestingSessionLocal() as db:
         jobs = list(db.scalars(select(ProcessingJob)).all())
@@ -98,11 +161,30 @@ def test_upload_csv_processes_analysis_and_persists_job_and_snapshot(client: Tes
     assert jobs[0].status == "success"
     assert jobs[0].original_filename == "estado_bg.csv"
     assert jobs[0].file_type == "csv"
+
     assert len(snapshots) == 1
     assert snapshots[0].summary["total_transactions"] == 2
+
     assert len(accounts) == 1
     assert accounts[0].detection_source == "file"
     assert float(accounts[0].confidence_score) == 0.95
+
+
+def test_upload_analysis_totals(client: TestClient) -> None:
+    headers = register_and_login(client, "files-totals")
+
+    client.post(
+        "/api/v1/files/upload",
+        files={"file": ("estado_bg.csv", BytesIO(BG_CSV_WITH_LAST4), "text/csv")},
+        headers=headers,
+    )
+
+    with TestingSessionLocal() as db:
+        snapshot = db.scalars(select(AnalysisSnapshot)).first()
+
+    assert snapshot is not None
+    assert snapshot.summary["total_income"] == 1500.0
+    assert snapshot.summary["total_expenses"] == 120.5
 
 
 def test_upload_without_last4_creates_low_confidence_account(client: TestClient) -> None:
@@ -115,7 +197,7 @@ def test_upload_without_last4_creates_low_confidence_account(client: TestClient)
         headers=headers,
     )
 
-    assert response.status_code == 200
+    assert response.status_code == 202
 
     with TestingSessionLocal() as db:
         accounts = list(db.scalars(select(BankAccount)).all())
@@ -128,22 +210,19 @@ def test_upload_without_last4_creates_low_confidence_account(client: TestClient)
 def test_upload_reuses_existing_account_and_does_not_duplicate(client: TestClient) -> None:
     headers = register_and_login(client, "files-reuse")
 
-    csv_content = (
-        b",,,,,,\n" * 8
-        + b"2026-03-10 12:54:04,,ref1,trx1,YAPPY BG 5555,120.50,\n"
-        + b"2026-03-11 12:54:04,,ref2,trx2,ACH XPRESS NOMINA,,1500.00\n"
+    first_response = client.post(
+        "/api/v1/files/upload",
+        files={"file": ("estado_bg.csv", BytesIO(BG_CSV_REUSE), "text/csv")},
+        headers=headers,
     )
-    files = {"file": ("estado_bg.csv", BytesIO(csv_content), "text/csv")}
-
-    first_response = client.post("/api/v1/files/upload", files=files, headers=headers)
-    assert first_response.status_code == 200
+    assert first_response.status_code == 202
 
     second_response = client.post(
         "/api/v1/files/upload",
-        files={"file": ("estado_bg.csv", BytesIO(csv_content), "text/csv")},
+        files={"file": ("estado_bg.csv", BytesIO(BG_CSV_REUSE), "text/csv")},
         headers=headers,
     )
-    assert second_response.status_code == 200
+    assert second_response.status_code == 202
 
     with TestingSessionLocal() as db:
         accounts = list(db.scalars(select(BankAccount)).all())
@@ -166,19 +245,25 @@ def test_upload_rejects_invalid_extension(client: TestClient) -> None:
     assert response.json()["detail"] == "Archivo inválido"
 
 
-def test_upload_returns_422_when_multiple_accounts_are_detected(client: TestClient) -> None:
+def test_upload_multiple_accounts_results_in_error_job(client: TestClient) -> None:
+    """
+    Cuando el archivo contiene múltiples cuentas (last4 distintos),
+    el pipeline falla y el job queda en estado 'error'.
+    Con el flujo async, el endpoint retorna 202 y el error ocurre en el worker.
+    """
     headers = register_and_login(client, "files-inconsistent")
 
-    csv_content = (
-        b",,,,,,\n" * 8
-        + b"2026-03-10 12:54:04,,ref1,trx1,YAPPY BG 1234,120.50,\n"
-        + b"2026-03-11 12:54:04,,ref2,trx2,YAPPY BG 5678,95.00,\n"
-    )
     response = client.post(
         "/api/v1/files/upload",
-        files={"file": ("estado_bg.csv", BytesIO(csv_content), "text/csv")},
+        files={"file": ("estado_bg.csv", BytesIO(BG_CSV_MULTI_ACCOUNT), "text/csv")},
         headers=headers,
     )
 
-    assert response.status_code == 422
-    assert response.json()["detail"] == "Archivo inconsistente o múltiples cuentas detectadas"
+    assert response.status_code == 202
+
+    with TestingSessionLocal() as db:
+        jobs = list(db.scalars(select(ProcessingJob)).all())
+
+    assert len(jobs) == 1
+    assert jobs[0].status == "error"
+    assert "múltiples cuentas" in (jobs[0].error_message or "").lower()
