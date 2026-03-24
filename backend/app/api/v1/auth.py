@@ -25,6 +25,7 @@ from app.schemas.auth import (
     TokenResponse,
 )
 from app.schemas.user import UserResponse
+from app.services.email_service import send_reset_email
 
 logger = logging.getLogger(__name__)
 
@@ -96,14 +97,20 @@ def forgot_password(
         return ForgotPasswordResponse(message=_GENERIC_MSG)
 
     reset_token = create_password_reset_token(str(user.user_id))
-
-    # TODO: cuando haya proveedor de email, enviar aquí el correo con el token
-    # send_reset_email(user.email, reset_token)
     logger.info("Reset token generado para user_id=%s", user.user_id)
 
     if settings.debug:
-        # Solo en desarrollo se devuelve el token en la respuesta
+        # En desarrollo: log del token y se devuelve en la respuesta para facilitar pruebas.
+        # En producción esta rama nunca se ejecuta.
+        logger.debug("DEBUG reset_token=%s", reset_token)
         return ForgotPasswordResponse(message=_GENERIC_MSG, reset_token=reset_token)
+
+    # Producción: enviar email y NUNCA exponer el token en la respuesta
+    try:
+        send_reset_email(to_email=user.email, reset_token=reset_token)
+    except Exception:
+        # Loguea el error pero responde genéricamente — nunca revelar si el email existe
+        logger.exception("Error enviando email de reset para user_id=%s", user.user_id)
 
     return ForgotPasswordResponse(message=_GENERIC_MSG)
 
