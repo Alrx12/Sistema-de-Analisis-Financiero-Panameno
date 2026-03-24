@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-03-24T07:05:18.109221+00:00",
+  "last_updated": "2026-03-24T08:16:58.878895+00:00",
   "exact_matches": {
     "BANCA MOVIL RAENCO - 50 Y 6": {
       "Economic Type": "pago_deuda",
@@ -1162,6 +1162,20 @@
       "Tipo de transacción": "gasto",
       "Categoría de presupuesto": "vivienda",
       "budget_role": "presupuestable"
+    },
+    "SUBWAY": {
+      "Economic Type": "gasto",
+      "SubType Economic": "extraordinario",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "alimentacion",
+      "budget_role": "no_presupuestable"
+    },
+    "AMAZON PRIME": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
     }
   },
   "patterns": {
@@ -1670,6 +1684,28 @@
         "budget_role": "presupuestable"
       },
       "source": "learned"
+    },
+    "global_gasto_SUBWAY": {
+      "regex": "\\bSUBWAY\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "SubType Economic": "extraordinario",
+        "Tipo de transacción": "gasto",
+        "Categoría de presupuesto": "alimentacion",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_gasto_AMAZON_PRIME": {
+      "regex": "\\bAMAZON\\s+PRIME\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "SubType Economic": "recurrente",
+        "Tipo de transacción": "gasto",
+        "Categoría de presupuesto": "entretenimiento",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
     }
   },
   "word_weights": {
@@ -2021,7 +2057,52 @@
       "Tipo de transacción=gasto": 4.0,
       "Categoría de presupuesto=vivienda": 4.0,
       "budget_role=presupuestable": 4.0
+    },
+    "SUBWAY": {
+      "Economic Type=gasto": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Tipo de transacción=gasto": 2.0,
+      "Categoría de presupuesto=alimentacion": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "VILLA": {
+      "Economic Type=gasto": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Tipo de transacción=gasto": 2.0,
+      "Categoría de presupuesto=alimentacion": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "LUCRE": {
+      "Economic Type=gasto": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Tipo de transacción=gasto": 2.0,
+      "Categoría de presupuesto=alimentacion": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "XXXX": {
+      "Economic Type=gasto": 4.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Tipo de transacción=gasto": 4.0,
+      "Categoría de presupuesto=alimentacion": 2.0,
+      "budget_role=no_presupuestable": 2.0,
+      "SubType Economic=recurrente": 2.0,
+      "Categoría de presupuesto=entretenimiento": 2.0,
+      "budget_role=presupuestable": 2.0
+    },
+    "AMAZON": {
+      "Economic Type=gasto": 2.0,
+      "SubType Economic=recurrente": 2.0,
+      "Tipo de transacción=gasto": 2.0,
+      "Categoría de presupuesto=entretenimiento": 2.0,
+      "budget_role=presupuestable": 2.0
+    },
+    "PRIME": {
+      "Economic Type=gasto": 2.0,
+      "SubType Economic=recurrente": 2.0,
+      "Tipo de transacción=gasto": 2.0,
+      "Categoría de presupuesto=entretenimiento": 2.0,
+      "budget_role=presupuestable": 2.0
     }
   },
-  "corrections_count": 167
+  "corrections_count": 169
 }

@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-03-24T07:05:18.115044+00:00",
+  "last_updated": "2026-03-24T08:16:58.884717+00:00",
   "exact_matches": {
     "ASADOS GABYDANA PAZUL": {
       "Economic Type": "gasto",
@@ -9,6 +9,48 @@
       "budget_role": "no_presupuestable"
     },
     "TRESCUATES": {
+      "Economic Type": "gasto",
+      "SubType Economic": "extraordinario",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "alimentacion",
+      "budget_role": "no_presupuestable"
+    },
+    "CRUNCHYROLL": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "TACOS DE LA NETA SEL": {
+      "Economic Type": "gasto",
+      "SubType Economic": "extraordinario",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "alimentacion",
+      "budget_role": "no_presupuestable"
+    },
+    "PA VACILAR PANAMA": {
+      "Economic Type": "gasto",
+      "SubType Economic": "extraordinario",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "no_presupuestable"
+    },
+    "OSAKA Y TOSCANA": {
+      "Economic Type": "gasto",
+      "SubType Economic": "extraordinario",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "alimentacion",
+      "budget_role": "no_presupuestable"
+    },
+    "BARRA LA ESTRELLA": {
+      "Economic Type": "gasto",
+      "SubType Economic": "extraordinario",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "no_presupuestable"
+    },
+    "REST FRUTOS DEL MAR 2": {
       "Economic Type": "gasto",
       "SubType Economic": "extraordinario",
       "Tipo de transacción": "gasto",
@@ -30,6 +72,72 @@
     },
     "personal_gasto_TRESCUATES": {
       "regex": "\\bTRESCUATES\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "SubType Economic": "extraordinario",
+        "Tipo de transacción": "gasto",
+        "Categoría de presupuesto": "alimentacion",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "personal_gasto_CRUNCHYROLL": {
+      "regex": "\\bCRUNCHYROLL\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "SubType Economic": "recurrente",
+        "Tipo de transacción": "gasto",
+        "Categoría de presupuesto": "entretenimiento",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    },
+    "personal_gasto_TACOS_NETA_SEL": {
+      "regex": "\\bTACOS\\s+NETA\\s+SEL\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "SubType Economic": "extraordinario",
+        "Tipo de transacción": "gasto",
+        "Categoría de presupuesto": "alimentacion",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "personal_gasto_PA_VACILAR_PANAMA": {
+      "regex": "\\bPA\\s+VACILAR\\s+PANAMA\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "SubType Economic": "extraordinario",
+        "Tipo de transacción": "gasto",
+        "Categoría de presupuesto": "entretenimiento",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "personal_gasto_OSAKA_Y_TOSCANA": {
+      "regex": "\\bOSAKA\\s+Y\\s+TOSCANA\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "SubType Economic": "extraordinario",
+        "Tipo de transacción": "gasto",
+        "Categoría de presupuesto": "alimentacion",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "personal_gasto_BARRA_ESTRELLA": {
+      "regex": "\\bBARRA\\s+ESTRELLA\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "SubType Economic": "extraordinario",
+        "Tipo de transacción": "gasto",
+        "Categoría de presupuesto": "entretenimiento",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "personal_gasto_REST_FRUTOS_DEL_MAR_2": {
+      "regex": "\\bREST\\s+FRUTOS\\s+DEL\\s+MAR\\s+2\\b",
       "categories": {
         "Economic Type": "gasto",
         "SubType Economic": "extraordinario",
@@ -63,12 +171,15 @@
       "budget_role=no_presupuestable": 2.0
     },
     "XXXX": {
-      "Economic Type=gasto": 4.0,
-      "SubType Economic=extraordinario": 4.0,
-      "Tipo de transacción=gasto": 4.0,
+      "Economic Type=gasto": 16.0,
+      "SubType Economic=extraordinario": 14.0,
+      "Tipo de transacción=gasto": 16.0,
       "Categoría de presupuesto=restaurantes": 2.0,
-      "budget_role=no_presupuestable": 4.0,
-      "Categoría de presupuesto=alimentacion": 2.0
+      "budget_role=no_presupuestable": 14.0,
+      "Categoría de presupuesto=alimentacion": 8.0,
+      "SubType Economic=recurrente": 2.0,
+      "Categoría de presupuesto=entretenimiento": 6.0,
+      "budget_role=presupuestable": 2.0
     },
     "TRESCUATES": {
       "Economic Type=gasto": 2.0,
@@ -76,7 +187,112 @@
       "Tipo de transacción=gasto": 2.0,
       "Categoría de presupuesto=alimentacion": 2.0,
       "budget_role=no_presupuestable": 2.0
+    },
+    "CRUNCHYROLL": {
+      "Economic Type=gasto": 2.0,
+      "SubType Economic=recurrente": 2.0,
+      "Tipo de transacción=gasto": 2.0,
+      "Categoría de presupuesto=entretenimiento": 2.0,
+      "budget_role=presupuestable": 2.0
+    },
+    "PAB": {
+      "Economic Type=gasto": 2.0,
+      "SubType Economic=recurrente": 2.0,
+      "Tipo de transacción=gasto": 2.0,
+      "Categoría de presupuesto=entretenimiento": 2.0,
+      "budget_role=presupuestable": 2.0
+    },
+    "TACOS": {
+      "Economic Type=gasto": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Tipo de transacción=gasto": 2.0,
+      "Categoría de presupuesto=alimentacion": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "NETA": {
+      "Economic Type=gasto": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Tipo de transacción=gasto": 2.0,
+      "Categoría de presupuesto=alimentacion": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "SEL": {
+      "Economic Type=gasto": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Tipo de transacción=gasto": 2.0,
+      "Categoría de presupuesto=alimentacion": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "VACILAR": {
+      "Economic Type=gasto": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Tipo de transacción=gasto": 2.0,
+      "Categoría de presupuesto=entretenimiento": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "PANAMA": {
+      "Economic Type=gasto": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Tipo de transacción=gasto": 2.0,
+      "Categoría de presupuesto=entretenimiento": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "OSAKA": {
+      "Economic Type=gasto": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Tipo de transacción=gasto": 2.0,
+      "Categoría de presupuesto=alimentacion": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "TOSCANA": {
+      "Economic Type=gasto": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Tipo de transacción=gasto": 2.0,
+      "Categoría de presupuesto=alimentacion": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "BARRA": {
+      "Economic Type=gasto": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Tipo de transacción=gasto": 2.0,
+      "Categoría de presupuesto=entretenimiento": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "ESTRELLA": {
+      "Economic Type=gasto": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Tipo de transacción=gasto": 2.0,
+      "Categoría de presupuesto=entretenimiento": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "REST": {
+      "Economic Type=gasto": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Tipo de transacción=gasto": 2.0,
+      "Categoría de presupuesto=alimentacion": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "FRUTOS": {
+      "Economic Type=gasto": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Tipo de transacción=gasto": 2.0,
+      "Categoría de presupuesto=alimentacion": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "DEL": {
+      "Economic Type=gasto": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Tipo de transacción=gasto": 2.0,
+      "Categoría de presupuesto=alimentacion": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "MAR": {
+      "Economic Type=gasto": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Tipo de transacción=gasto": 2.0,
+      "Categoría de presupuesto=alimentacion": 2.0,
+      "budget_role=no_presupuestable": 2.0
     }
   },
-  "corrections_count": 2
+  "corrections_count": 8
 }
