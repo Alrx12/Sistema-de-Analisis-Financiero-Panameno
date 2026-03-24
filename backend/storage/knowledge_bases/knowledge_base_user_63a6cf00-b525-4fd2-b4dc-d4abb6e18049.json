@@ -1,7 +1,247 @@
 {
-  "last_updated": "2026-03-23T22:09:58.240685",
-  "exact_matches": {},
-  "patterns": {},
-  "word_weights": {},
-  "corrections_count": 0
+  "last_updated": "2026-03-24T08:36:30.348314+00:00",
+  "exact_matches": {
+    "TH 0007 TIM HORTONS": {
+      "Economic Type": "gasto",
+      "SubType Economic": "extraordinario",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "alimentacion",
+      "budget_role": "no_presupuestable"
+    },
+    "IN OUT": {
+      "Economic Type": "gasto",
+      "SubType Economic": "extraordinario",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "alimentacion",
+      "budget_role": "no_presupuestable"
+    },
+    "DEPOSITO CUENTA DE AHORROS SIN": {
+      "Economic Type": "otros_ingresos",
+      "SubType Economic": "variable",
+      "Tipo de transacción": "ingreso",
+      "Categoría de presupuesto": "ahorro",
+      "budget_role": "presupuestable"
+    },
+    "PUMA VILLA LUCRE": {
+      "Economic Type": "gasto",
+      "SubType Economic": "operativo",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "gasolina",
+      "budget_role": "presupuestable"
+    },
+    "ONZE 12 DE OCTUBRE": {
+      "Economic Type": "gasto",
+      "SubType Economic": "extraordinario",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "alimentacion",
+      "budget_role": "no_presupuestable"
+    },
+    "ATM BANCO GENERAL BG SUCVILLALUCRE": {
+      "Economic Type": "gasto",
+      "SubType Economic": "extraordinario",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "otros",
+      "budget_role": "no_presupuestable"
+    }
+  },
+  "patterns": {
+    "personal_gasto_TH_0007_TIM_HORTONS": {
+      "regex": "\\bTH\\s+0007\\s+TIM\\s+HORTONS\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "SubType Economic": "extraordinario",
+        "Tipo de transacción": "gasto",
+        "Categoría de presupuesto": "alimentacion",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "personal_gasto_IN_OUT": {
+      "regex": "\\bIN\\s+OUT\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "SubType Economic": "extraordinario",
+        "Tipo de transacción": "gasto",
+        "Categoría de presupuesto": "alimentacion",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "personal_otros_ingresos_DEPOSITO_CUENTA_AHORROS_SIN": {
+      "regex": "\\bDEPOSITO\\s+CUENTA\\s+AHORROS\\s+SIN\\b",
+      "categories": {
+        "Economic Type": "otros_ingresos",
+        "SubType Economic": "variable",
+        "Tipo de transacción": "ingreso",
+        "Categoría de presupuesto": "ahorro",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    },
+    "personal_gasto_PUMA_VILLA_LUCRE": {
+      "regex": "\\bPUMA\\s+VILLA\\s+LUCRE\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "SubType Economic": "operativo",
+        "Tipo de transacción": "gasto",
+        "Categoría de presupuesto": "gasolina",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    },
+    "personal_gasto_ONZE_12": {
+      "regex": "\\bONZE\\s+12\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "SubType Economic": "extraordinario",
+        "Tipo de transacción": "gasto",
+        "Categoría de presupuesto": "alimentacion",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "personal_gasto_ATM_SUCVILLALUCRE": {
+      "regex": "\\bATM\\s+SUCVILLALUCRE\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "SubType Economic": "extraordinario",
+        "Tipo de transacción": "gasto",
+        "Categoría de presupuesto": "otros",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    }
+  },
+  "word_weights": {
+    "TIM": {
+      "Economic Type=gasto": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Tipo de transacción=gasto": 2.0,
+      "Categoría de presupuesto=alimentacion": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "HORTONS": {
+      "Economic Type=gasto": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Tipo de transacción=gasto": 2.0,
+      "Categoría de presupuesto=alimentacion": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "XXXX": {
+      "Economic Type=gasto": 8.0,
+      "SubType Economic=extraordinario": 6.0,
+      "Tipo de transacción=gasto": 8.0,
+      "Categoría de presupuesto=alimentacion": 6.0,
+      "budget_role=no_presupuestable": 6.0,
+      "SubType Economic=operativo": 2.0,
+      "Categoría de presupuesto=gasolina": 2.0,
+      "budget_role=presupuestable": 2.0
+    },
+    "OUT": {
+      "Economic Type=gasto": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Tipo de transacción=gasto": 2.0,
+      "Categoría de presupuesto=alimentacion": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "DEPOSITO": {
+      "Economic Type=otros_ingresos": 2.0,
+      "SubType Economic=variable": 2.0,
+      "Tipo de transacción=ingreso": 2.0,
+      "Categoría de presupuesto=ahorro": 2.0,
+      "budget_role=presupuestable": 2.0
+    },
+    "CUENTA": {
+      "Economic Type=otros_ingresos": 2.0,
+      "SubType Economic=variable": 2.0,
+      "Tipo de transacción=ingreso": 2.0,
+      "Categoría de presupuesto=ahorro": 2.0,
+      "budget_role=presupuestable": 2.0
+    },
+    "AHORROS": {
+      "Economic Type=otros_ingresos": 2.0,
+      "SubType Economic=variable": 2.0,
+      "Tipo de transacción=ingreso": 2.0,
+      "Categoría de presupuesto=ahorro": 2.0,
+      "budget_role=presupuestable": 2.0
+    },
+    "SIN": {
+      "Economic Type=otros_ingresos": 2.0,
+      "SubType Economic=variable": 2.0,
+      "Tipo de transacción=ingreso": 2.0,
+      "Categoría de presupuesto=ahorro": 2.0,
+      "budget_role=presupuestable": 2.0
+    },
+    "LIBRETA": {
+      "Economic Type=otros_ingresos": 2.0,
+      "SubType Economic=variable": 2.0,
+      "Tipo de transacción=ingreso": 2.0,
+      "Categoría de presupuesto=ahorro": 2.0,
+      "budget_role=presupuestable": 2.0
+    },
+    "PUMA": {
+      "Economic Type=gasto": 2.0,
+      "SubType Economic=operativo": 2.0,
+      "Tipo de transacción=gasto": 2.0,
+      "Categoría de presupuesto=gasolina": 2.0,
+      "budget_role=presupuestable": 2.0
+    },
+    "VILLA": {
+      "Economic Type=gasto": 2.0,
+      "SubType Economic=operativo": 2.0,
+      "Tipo de transacción=gasto": 2.0,
+      "Categoría de presupuesto=gasolina": 2.0,
+      "budget_role=presupuestable": 2.0
+    },
+    "LUCRE": {
+      "Economic Type=gasto": 2.0,
+      "SubType Economic=operativo": 2.0,
+      "Tipo de transacción=gasto": 2.0,
+      "Categoría de presupuesto=gasolina": 2.0,
+      "budget_role=presupuestable": 2.0
+    },
+    "ONZE": {
+      "Economic Type=gasto": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Tipo de transacción=gasto": 2.0,
+      "Categoría de presupuesto=alimentacion": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "OCTUBRE": {
+      "Economic Type=gasto": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Tipo de transacción=gasto": 2.0,
+      "Categoría de presupuesto=alimentacion": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "ATM": {
+      "Economic Type=gasto": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Tipo de transacción=gasto": 2.0,
+      "Categoría de presupuesto=otros": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "BANCO": {
+      "Economic Type=gasto": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Tipo de transacción=gasto": 2.0,
+      "Categoría de presupuesto=otros": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "GENERAL": {
+      "Economic Type=gasto": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Tipo de transacción=gasto": 2.0,
+      "Categoría de presupuesto=otros": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "SUCVILLALUCRE": {
+      "Economic Type=gasto": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Tipo de transacción=gasto": 2.0,
+      "Categoría de presupuesto=otros": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    }
+  },
+  "corrections_count": 6
 }
