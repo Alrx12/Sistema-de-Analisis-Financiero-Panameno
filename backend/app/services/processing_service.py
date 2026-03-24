@@ -3,7 +3,6 @@ from __future__ import annotations
 import logging
 import os
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Any
 
 from sqlalchemy.orm import Session
@@ -23,18 +22,12 @@ class ProcessingService:
         self.analysis_service = AnalysisService(db)
         self.account_detection_service = AccountDetectionService(db)
 
-    # ── Creación del job ─────────────────────────────────────────────────────
-
     def create_job(
         self,
         current_user: User,
         original_filename: str,
         file_type: str | None = None,
     ) -> ProcessingJob:
-        """
-        Crea un ProcessingJob en estado 'queued'.
-        Llamado por el endpoint de upload ANTES de encolar la tarea Celery.
-        """
         job = ProcessingJob(
             user_id=current_user.user_id,
             status="queued",
@@ -47,24 +40,12 @@ class ProcessingService:
         self.db.refresh(job)
         return job
 
-    # ── Ejecución del pipeline ───────────────────────────────────────────────
-
     def run_pipeline(
         self,
         job: ProcessingJob,
         file_path: str,
         current_user: User,
     ) -> dict[str, Any] | None:
-        """
-        Ejecuta el pipeline completo sobre un job ya creado.
-        Actualiza el job a 'processing' → 'success' | 'error'.
-
-        Retorna el dict de análisis en éxito, None en error.
-        No lanza excepciones HTTP — es llamado tanto desde el endpoint síncrono
-        como desde la tarea Celery.
-
-        La limpieza del archivo temporal es responsabilidad de este método.
-        """
         job.status = "processing"
         job.started_at = datetime.now(timezone.utc)
         self.db.add(job)
@@ -99,17 +80,29 @@ class ProcessingService:
                 )
 
             normalized_transactions = [
-                {**t, "account_id": str(account.account_id), "bank_name": account.bank_name}
+                {
+                    **t,
+                    "account_id": str(account.account_id),
+                    "bank_name": account.bank_name,
+                }
                 for t in transactions
             ]
 
             user_display_name = current_user.full_name or current_user.username
+
             analysis = self.analysis_service.build_analysis(
                 normalized_transactions,
                 user_id=str(current_user.user_id),
                 user_name=user_display_name,
             )
-            self.analysis_service.save_snapshot(analysis, current_user)
+
+            snapshot = self.analysis_service.save_snapshot(analysis, current_user)
+
+            self.analysis_service.save_transactions(
+                snapshot_id=snapshot.snapshot_id,
+                user_id=current_user.user_id,
+                transactions=analysis["transactions"],
+            )
 
             job.status = "success"
             job.completed_at = datetime.now(timezone.utc)

@@ -50,7 +50,7 @@ def learn_transaction(
     prev_personal_exact = len(classifier.personal_rules["exact_matches"])
     prev_global_exact   = len(classifier.global_rules["exact_matches"])
 
-    classifier.learn(
+    canonical_key = classifier.learn(
         detail=body.detail,
         categories=categories,
         weight=body.weight,
@@ -79,7 +79,7 @@ def learn_transaction(
 
     return LearnResponse(
         message=f"KB {kb_target} actualizado correctamente.",
-        detail_learned=body.detail.strip().upper(),
+        detail_learned=canonical_key,
         kb_target=kb_target,
         personal_exact_matches=personal_exact,
         personal_patterns=personal_patterns,

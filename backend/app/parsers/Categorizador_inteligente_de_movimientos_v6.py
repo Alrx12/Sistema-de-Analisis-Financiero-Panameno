@@ -2,8 +2,8 @@
 FinancialClassifier — motor de categorización inteligente de transacciones.
 
 Dos capas de aprendizaje:
-  GLOBAL  (knowledge_base_global.json)      — marcas, comercios, términos universales
-  PERSONAL (knowledge_base_user_{id}.json)  — patrones propios del usuario
+  GLOBAL  (knowledge_base_global.json)  — marcas, comercios, términos bancarios universales
+  PERSONAL (knowledge_base_user_{id}.json) — contactos, patrones propios del usuario
 
 Orden de predicción:
   0. Detección del nombre del usuario (transferencia propia vs tercero)
@@ -13,18 +13,16 @@ Orden de predicción:
   3. Exact match global (canonical_detail)
   3b. Exact match global legacy/raw (compatibilidad)
   4. Patrón regex global
-  5. Patrones builtin
-  6. Fallback por tipo
+  5. Patrones builtin (YAPPY, PLANILLA, ITBMS, etc.)
+  6. Fallback por tipo de movimiento (débito / crédito)
 """
-
 from __future__ import annotations
 
 import json
 import logging
 import re
 from collections import defaultdict
-from datetime import datetime, timezone as _tz
-UTC = _tz.utc
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -39,6 +37,8 @@ from app.services.detail_normalizer import (
 logger = logging.getLogger(__name__)
 
 
+# ── Rutas derivadas de settings ───────────────────────────────────────────────
+
 def _global_kb_path() -> str:
     p = Path(settings.knowledge_bases_dir)
     p.mkdir(parents=True, exist_ok=True)
@@ -51,7 +51,17 @@ def _user_kb_path(user_id: str) -> str:
     return str(p / f"knowledge_base_user_{user_id}.json")
 
 
+# ── Classifier ────────────────────────────────────────────────────────────────
+
 class FinancialClassifier:
+    """
+    Clasifica transacciones financieras con aprendizaje persistente por usuario.
+
+    Args:
+        user_id   : UUID del usuario (requerido en producción).
+        user_name : Nombre completo del usuario para detectar transferencias propias.
+    """
+
     OWN_TRANSFER = {
         "Economic Type": "transferencia_propia",
         "SubType Economic": "interno",
@@ -304,6 +314,8 @@ class FinancialClassifier:
         self._load_kb(self.global_kb_path, self.global_rules, "global")
         self._load_kb(self.user_kb_path, self.personal_rules, "personal")
 
+    # ── Helpers de inicialización ─────────────────────────────────────────────
+
     @staticmethod
     def _empty_rules() -> dict[str, Any]:
         return {
@@ -358,6 +370,8 @@ class FinancialClassifier:
             path,
         )
 
+    # ── Detección de nombre ───────────────────────────────────────────────────
+
     def _contains_user_name(self, detail_upper: str, is_transfer: bool = False) -> bool:
         if not self.user_name_tokens:
             return False
@@ -387,7 +401,18 @@ class FinancialClassifier:
 
         return any(kw in detail or kw in tipo for kw in ["ACH", "XPRESS"])
 
+    # ── Motor de predicción ───────────────────────────────────────────────────
+
     def predict(self, row: dict[str, Any]) -> tuple[dict[str, Any] | None, float, str]:
+        """
+        Predice la categoría de una transacción.
+
+        Args:
+            row: dict con claves 'Detalle', 'Tipos de Movimientos', 'Depósito', 'Retiro'
+
+        Returns:
+            (categories_dict, confidence_float, method_str)
+        """
         raw_detail = str(row.get("Detalle", ""))
         detail = normalize_text(raw_detail)
         canonical_detail = canonicalize_detail(raw_detail)
@@ -411,7 +436,7 @@ class FinancialClassifier:
                 "exact:personal:canonical",
             )
 
-        # 1b. Compatibilidad legacy
+        # 1b. Compatibilidad con KBs legacy
         if detail in self.personal_rules["exact_matches"]:
             return (
                 self.personal_rules["exact_matches"][detail],
@@ -419,7 +444,7 @@ class FinancialClassifier:
                 "exact:personal:raw_compat",
             )
 
-        # 2. Pattern personal
+        # 2. Patrón regex personal
         for name, pat in self.personal_rules["patterns"].items():
             regex = pat.get("regex", "")
             if regex and re.search(regex, detail):
@@ -433,7 +458,7 @@ class FinancialClassifier:
                 "exact:global:canonical",
             )
 
-        # 3b. Compatibilidad legacy
+        # 3b. Compatibilidad con KBs legacy
         if detail in self.global_rules["exact_matches"]:
             return (
                 self.global_rules["exact_matches"][detail],
@@ -441,18 +466,18 @@ class FinancialClassifier:
                 "exact:global:raw_compat",
             )
 
-        # 4. Pattern global
+        # 4. Patrón regex global
         for name, pat in self.global_rules["patterns"].items():
             regex = pat.get("regex", "")
             if regex and re.search(regex, detail):
                 return pat["categories"], 0.90, f"pattern:global:{name}"
 
-        # 5. Builtins
+        # 5. Patrones builtin
         for pattern, categories, conf, method_name in self.BUILTIN_PATTERNS:
             if re.search(pattern, detail):
                 return normalize_categories(categories), conf, method_name
 
-        # 6. Fallback
+        # 6. Fallback por tipo
         if "DEBIT" in tipo or row.get("Retiro", 0) > 0:
             return (
                 {
@@ -481,14 +506,20 @@ class FinancialClassifier:
 
         return None, 0.0, "unknown"
 
+    # ── Aprendizaje ───────────────────────────────────────────────────────────
+
     def learn(
         self,
         detail: str,
         categories: dict[str, Any],
         weight: float = 1.0,
         force_personal: bool = False,
-    ) -> str:
-        """Aprende el ejemplo y retorna la clave canónica que se guardó en el KB."""
+    ) -> None:
+        """
+        Aprende un nuevo ejemplo y persiste ambos KBs.
+
+        Guarda exact_matches usando canonical_detail, no raw detail.
+        """
         raw_detail = detail or ""
         normalized_detail = normalize_text(raw_detail)
         canonical_detail = canonicalize_detail(raw_detail)
@@ -506,7 +537,7 @@ class FinancialClassifier:
         )
         target_label = "global" if target is self.global_rules else "personal"
 
-        # Guardar SOLO la clave canónica
+        # Guardar solo la clave canónica para no volver a inflar exact_matches.
         target["exact_matches"][canonical_detail] = categories
 
         for word in words:
@@ -518,8 +549,6 @@ class FinancialClassifier:
 
         self._save_kb(self.global_kb_path, self.global_rules, "global")
         self._save_kb(self.user_kb_path, self.personal_rules, "personal")
-
-        return canonical_detail
 
     def _create_pattern(
         self,
@@ -534,7 +563,6 @@ class FinancialClassifier:
             return
 
         tokens = [tok for tok in canonical.split() if tok and tok not in self._AMBIGUOUS_WORDS]
-
         if self.user_name_tokens:
             tokens = [tok for tok in tokens if tok not in self.user_name_tokens]
 
@@ -548,7 +576,7 @@ class FinancialClassifier:
         if existing and existing.get("regex") == regex and existing.get("categories") == categories:
             return
 
-        # Evitar duplicados semánticos con otro nombre
+        # Evita reinsertar patterns idénticos con distinto nombre.
         for existing_name, existing_pattern in rules["patterns"].items():
             if (
                 existing_pattern.get("regex") == regex
@@ -568,5 +596,6 @@ class FinancialClassifier:
         }
 
     def save_all(self) -> None:
+        """Persiste ambos KBs sin requerir un nuevo ejemplo."""
         self._save_kb(self.global_kb_path, self.global_rules, "global")
         self._save_kb(self.user_kb_path, self.personal_rules, "personal")

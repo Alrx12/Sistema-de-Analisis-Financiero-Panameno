@@ -1,0 +1,82 @@
+{
+  "last_updated": "2026-03-24T07:05:18.115044+00:00",
+  "exact_matches": {
+    "ASADOS GABYDANA PAZUL": {
+      "Economic Type": "gasto",
+      "SubType Economic": "extraordinario",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "restaurantes",
+      "budget_role": "no_presupuestable"
+    },
+    "TRESCUATES": {
+      "Economic Type": "gasto",
+      "SubType Economic": "extraordinario",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "alimentacion",
+      "budget_role": "no_presupuestable"
+    }
+  },
+  "patterns": {
+    "personal_gasto_ASADOS_GABYDANA_PAZUL": {
+      "regex": "\\bASADOS\\s+GABYDANA\\s+PAZUL\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "SubType Economic": "extraordinario",
+        "Tipo de transacción": "gasto",
+        "Categoría de presupuesto": "restaurantes",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "personal_gasto_TRESCUATES": {
+      "regex": "\\bTRESCUATES\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "SubType Economic": "extraordinario",
+        "Tipo de transacción": "gasto",
+        "Categoría de presupuesto": "alimentacion",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    }
+  },
+  "word_weights": {
+    "ASADOS": {
+      "Economic Type=gasto": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Tipo de transacción=gasto": 2.0,
+      "Categoría de presupuesto=restaurantes": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "GABYDANA": {
+      "Economic Type=gasto": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Tipo de transacción=gasto": 2.0,
+      "Categoría de presupuesto=restaurantes": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "PAZUL": {
+      "Economic Type=gasto": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Tipo de transacción=gasto": 2.0,
+      "Categoría de presupuesto=restaurantes": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "XXXX": {
+      "Economic Type=gasto": 4.0,
+      "SubType Economic=extraordinario": 4.0,
+      "Tipo de transacción=gasto": 4.0,
+      "Categoría de presupuesto=restaurantes": 2.0,
+      "budget_role=no_presupuestable": 4.0,
+      "Categoría de presupuesto=alimentacion": 2.0
+    },
+    "TRESCUATES": {
+      "Economic Type=gasto": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Tipo de transacción=gasto": 2.0,
+      "Categoría de presupuesto=alimentacion": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    }
+  },
+  "corrections_count": 2
+}

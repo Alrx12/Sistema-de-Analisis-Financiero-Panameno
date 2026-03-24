@@ -8,6 +8,8 @@ from app.api.deps import get_current_user, get_db
 from app.models.analysis_snapshot import AnalysisSnapshot
 from app.models.user import User
 from app.schemas.analysis import AnalysisSnapshotResponse
+from app.models.analysis_transaction import AnalysisTransaction
+from app.schemas.analysis_transaction import AnalysisTransactionResponse
 
 logger = logging.getLogger(__name__)
 
@@ -54,3 +56,43 @@ def get_analysis(
         )
 
     return AnalysisSnapshotResponse.model_validate(snapshot)
+
+@router.get(
+    "/{snapshot_id}/transactions",
+    response_model=list[AnalysisTransactionResponse],
+    summary="Listar transacciones de un análisis",
+)
+def get_analysis_transactions(
+    snapshot_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    requires_review: bool | None = None,
+    max_confidence: float | None = None,
+):
+    snapshot = db.get(AnalysisSnapshot, snapshot_id)
+
+    if snapshot is None or snapshot.user_id != current_user.user_id:
+        raise HTTPException(status_code=404, detail="Análisis no encontrado")
+
+    transactions = (
+        db.query(AnalysisTransaction)
+        .filter(AnalysisTransaction.snapshot_id == snapshot_id)
+        .order_by(AnalysisTransaction.created_at.desc())
+        .all()
+    )
+
+    result = []
+    for t in transactions:
+        requires_review_flag = float(t.confidence) < 0.8
+
+        if requires_review is not None and requires_review != requires_review_flag:
+            continue
+
+        if max_confidence is not None and float(t.confidence) > max_confidence:
+            continue
+
+        item = AnalysisTransactionResponse.model_validate(t)
+        item.requires_review = requires_review_flag
+        result.append(item)
+
+    return result

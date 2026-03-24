@@ -7,17 +7,33 @@ class BanistmoParser(BaseStatementParser):
     bank_name = "Banistmo"
 
     def detect_score(self, file_path: str) -> float:
+        # ──────────────────────────────────────────────────────────────────────
+        # Señales del formato Banistmo:
+        #   - 6 columnas (col0=vacío, col1=fecha, col2=detalle, col3=retiro,
+        #     col4=depósito, col5=saldo)
+        #   - Header: fila con "fecha" + "detalle" + "retiro" + "depósito"
+        #     juntos en la MISMA fila (señal muy fuerte)
+        #   - Celda "NÚMERO: XXXXXXXXXX" en la sección de metadatos
+        #   - "Datos de la cuenta" / "banistmo" en metadatos
+        #
+        # IMPORTANTE: NO usar "mcd cte", "banco general", "db pos compra" ni
+        # "db ach xpress" como penalizaciones — aparecen en los DESCRIPTORES
+        # de las propias transacciones de Banistmo.
+        # Solo penalizar señales estructurales que son 100% exclusivas de otro banco.
+        # ──────────────────────────────────────────────────────────────────────
         try:
             raw_df = self.load_dataframe(file_path, header=None)
         except Exception:
             return 0.0
 
         score = 0.0
-        # Revisar más filas (hasta 100) porque el header puede estar lejos
         sample = raw_df.head(100).fillna("").astype(str)
 
-        if raw_df.shape[1] >= 5:
-            score += 0.10
+        # Banistmo exporta 6 columnas
+        if raw_df.shape[1] == 6:
+            score += 0.15
+        elif raw_df.shape[1] >= 5:
+            score += 0.05
 
         header_found = False
 
@@ -25,27 +41,37 @@ class BanistmoParser(BaseStatementParser):
             row_values = [str(v).strip().lower() for v in row.tolist()]
             joined = " | ".join(row_values)
 
-            # Buscar header específico de Banistmo
-            if "fecha" in joined and "detalle" in joined:
-                score += 0.35
+            # Señal más fuerte: header con los 4 labels exactos en la misma fila
+            if (
+                "fecha" in joined
+                and "detalle" in joined
+                and "retiro" in joined
+                and ("depósito" in joined or "deposito" in joined)
+            ):
+                score += 0.50
                 header_found = True
-            if "retiro" in joined:
-                score += 0.20
-            if "depósito" in joined or "deposito" in joined:
-                score += 0.20
-            if "saldo" in joined:
-                score += 0.10
-            if "datos de la cuenta" in joined:
-                score += 0.10
-            # Palabras clave adicionales de Banistmo
-            if "db pos compra" in joined or "db ach xpress" in joined or "banistmo" in joined:
-                score += 0.15
+                if "saldo" in joined:
+                    score += 0.05
+                continue  # No procesar el resto de la fila de header
 
-        # Bonus si encontramos el header
+            # Señales en sección de metadatos (SOLO antes del header de datos)
+            if not header_found:
+                if "datos de la cuenta" in joined:
+                    score += 0.10
+                if "banistmo" in joined:
+                    score += 0.30
+                if "número:" in joined or "numero:" in joined:
+                    score += 0.25  # Firma del label de cuenta Banistmo
+
+            # Penalizar señales ESTRUCTURALES exclusivas de BAC (no de contenido de tx)
+            if "referencia" in joined and "código" in joined and "débitos" in joined:
+                score -= 0.50
+                break
+
         if header_found:
             score += 0.10
 
-        return min(score, 1.0)
+        return max(0.0, min(score, 1.0))
 
     def extraer_datos(self, df: pd.DataFrame) -> pd.DataFrame:
         try:
@@ -56,9 +82,11 @@ class BanistmoParser(BaseStatementParser):
             for idx, row in df.iterrows():
                 row_text = " ".join(str(value).lower() for value in row.tolist())
 
-                # Buscar número de cuenta
+                # Buscar número de cuenta — extraer de col 1 solamente
+                # (extraer de row_text completo concatena saldos y otros números)
                 if "número:" in row_text or "numero:" in row_text:
-                    digits = "".join(ch for ch in row_text if ch.isdigit())
+                    cell = str(row.iloc[1]).strip() if len(row) > 1 else ""
+                    digits = "".join(ch for ch in cell if ch.isdigit())
                     if digits and len(digits) >= 4:
                         account_number = digits
 

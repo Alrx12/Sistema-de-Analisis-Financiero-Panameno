@@ -23,28 +23,51 @@ from __future__ import annotations
 
 import time
 import uuid
+from io import BytesIO
 
 import httpx
+import openpyxl
 import pytest
 
 BASE_URL = "http://127.0.0.1:8001"
 POLL_INTERVAL_S = 1
 POLL_TIMEOUT_S = 30
 
+_XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
-# ── Formato Banco General: 8 filas vacías + columnas (fecha, _, ref, trx, desc, débito, crédito)
-_BG_CSV = (
-    b",,,,,,\n" * 8
-    + b"2026-03-10 12:54:04,,ref1,trx1,YAPPY BG 1234,120.50,\n"
-    + b"2026-03-11 12:54:04,,ref2,trx2,ACH XPRESS NOMINA,,1500.00\n"
-    + b"2026-03-12 09:00:00,,ref3,trx3,ENTRE CUENTAS,,500.00\n"
-    + b"2026-03-13 14:30:00,,ref4,trx4,SUPERMERCADO REY,85.00,\n"
+
+# ── Helper para generar XLSX de prueba en formato Banco General ───────────────
+def _make_bg_xlsx(*transaction_rows: list) -> bytes:
+    """
+    Genera un XLSX mínimo en formato Banco General.
+    8 filas vacías de metadata + filas de transacciones.
+    col0=fecha, col1=vacío, col2=ref, col3=trx, col4=descripcion,
+    col5=débito (gasto), col6=crédito (ingreso).
+    """
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    for _ in range(8):
+        ws.append([None] * 7)
+    for row in transaction_rows:
+        ws.append(row)
+    buf = BytesIO()
+    wb.save(buf)
+    return buf.getvalue()
+
+
+_BG_XLSX = _make_bg_xlsx(
+    ["2026-03-10 12:54:04", None, "ref1", "trx1", "YAPPY BG 1234", 120.50, None],
+    ["2026-03-11 12:54:04", None, "ref2", "trx2", "ACH XPRESS NOMINA", None, 1500.00],
+    ["2026-03-12 09:00:00", None, "ref3", "trx3", "ENTRE CUENTAS", None, 500.00],
+    ["2026-03-13 14:30:00", None, "ref4", "trx4", "SUPERMERCADO REY", 85.00, None],
 )
 
-_BG_CSV_MULTI_ACCOUNT = (
-    b",,,,,,\n" * 8
-    + b"2026-03-10 12:54:04,,ref1,trx1,YAPPY BG 1234,120.50,\n"
-    + b"2026-03-11 12:54:04,,ref2,trx2,YAPPY BG 5678,95.00,\n"
+_BG_XLSX_MULTI_ACCOUNT = _make_bg_xlsx(
+    # Una débito, una crédito: garantiza que col6 tenga al menos un valor
+    # no-nulo para que pandas lea 7 columnas. Sin esto, cuando col6=None en
+    # todas las filas, openpyxl no persiste esa columna → len(row)=6 → skipped.
+    ["2026-03-10 12:54:04", None, "ref1", "trx1", "YAPPY BG 1234", 120.50, None],
+    ["2026-03-11 12:54:04", None, "ref2", "trx2", "YAPPY BG 5678", None, 95.00],
 )
 
 
@@ -128,7 +151,7 @@ def test_upload_returns_202_with_job_id(http_client: httpx.Client, auth_headers:
     """POST /upload debe retornar 202 inmediatamente con job_id y status='queued'."""
     r = http_client.post(
         "/api/v1/files/upload",
-        files={"file": ("estado_bg.csv", _BG_CSV, "text/csv")},
+        files={"file": ("estado_bg.xlsx", _BG_XLSX, _XLSX_MIME)},
         headers=auth_headers,
     )
 
@@ -148,7 +171,7 @@ def test_full_celery_flow_success(http_client: httpx.Client, auth_headers: dict)
     # 1. Subir archivo
     r = http_client.post(
         "/api/v1/files/upload",
-        files={"file": ("estado_bg.csv", _BG_CSV, "text/csv")},
+        files={"file": ("estado_bg.xlsx", _BG_XLSX, _XLSX_MIME)},
         headers=auth_headers,
     )
     assert r.status_code == 202
@@ -162,8 +185,8 @@ def test_full_celery_flow_success(http_client: httpx.Client, auth_headers: dict)
         f"El job terminó en estado '{job['status']}'. "
         f"error_message: {job.get('error_message')}"
     )
-    assert job["original_filename"] == "estado_bg.csv"
-    assert job["file_type"] == "csv"
+    assert job["original_filename"] == "estado_bg.xlsx"
+    assert job["file_type"] == "xlsx"
     assert job["started_at"] is not None
     assert job["completed_at"] is not None
 
@@ -179,7 +202,7 @@ def test_analysis_snapshot_persisted_after_processing(
     # Upload + esperar
     r = http_client.post(
         "/api/v1/files/upload",
-        files={"file": ("estado_bg.csv", _BG_CSV, "text/csv")},
+        files={"file": ("estado_bg.xlsx", _BG_XLSX, _XLSX_MIME)},
         headers=auth_headers,
     )
     assert r.status_code == 202
@@ -205,7 +228,7 @@ def test_job_polling_endpoint(http_client: httpx.Client, auth_headers: dict) -> 
     """GET /jobs/{job_id} retorna el estado correcto durante el ciclo de vida del job."""
     r = http_client.post(
         "/api/v1/files/upload",
-        files={"file": ("estado_bg.csv", _BG_CSV, "text/csv")},
+        files={"file": ("estado_bg.xlsx", _BG_XLSX, _XLSX_MIME)},
         headers=auth_headers,
     )
     assert r.status_code == 202
@@ -227,7 +250,7 @@ def test_jobs_list_includes_new_job(http_client: httpx.Client, auth_headers: dic
     """GET /jobs/ lista los jobs del usuario, incluye el recién creado."""
     r = http_client.post(
         "/api/v1/files/upload",
-        files={"file": ("estado_bg.csv", _BG_CSV, "text/csv")},
+        files={"file": ("estado_bg.xlsx", _BG_XLSX, _XLSX_MIME)},
         headers=auth_headers,
     )
     assert r.status_code == 202
@@ -250,7 +273,7 @@ def test_multiple_accounts_in_file_results_in_error_job(
     """
     r = http_client.post(
         "/api/v1/files/upload",
-        files={"file": ("estado_multi.csv", _BG_CSV_MULTI_ACCOUNT, "text/csv")},
+        files={"file": ("estado_multi.xlsx", _BG_XLSX_MULTI_ACCOUNT, _XLSX_MIME)},
         headers=auth_headers,
     )
     assert r.status_code == 202
@@ -277,7 +300,7 @@ def test_job_not_accessible_by_other_user(http_client: httpx.Client) -> None:
     # Usuario A sube un archivo
     r = http_client.post(
         "/api/v1/files/upload",
-        files={"file": ("estado_bg.csv", _BG_CSV, "text/csv")},
+        files={"file": ("estado_bg.xlsx", _BG_XLSX, _XLSX_MIME)},
         headers=headers_a,
     )
     assert r.status_code == 202

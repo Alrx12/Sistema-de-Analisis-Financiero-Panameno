@@ -125,7 +125,7 @@ class TestExactMatchPersonal:
 
         row = _row("SUPER REY TRANSISTMICA", tipo="DEBITO", retiro=85)
         result_cats, conf, method = clf.predict(row)
-        assert method == "exact:personal"
+        assert method.startswith("exact:personal")  # método puede incluir sufijo ":canonical"
         assert conf == 1.0
         assert result_cats["budget_role"] == "presupuestable"
         assert result_cats["Categoría de presupuesto"] == "alimentacion"
@@ -139,24 +139,31 @@ class TestExactMatchPersonal:
 
         row = _row("FARMACIA ARROCHA", tipo="DEBITO", retiro=20)
         _, _, method = clf.predict(row)
-        assert method == "exact:personal"
+        assert method.startswith("exact:personal")
 
 
 # ── Paso 2: patrón regex personal ─────────────────────────────────────────────
 
 class TestPatternPersonal:
     def test_learned_pattern_matches_variants(self, clf: FinancialClassifier) -> None:
-        """learn() crea un patrón con \bWORD\b que coincide con variantes del detalle."""
-        cats = {"Economic Type": "gasto", "SubType Economic": "variable",
-                "Tipo de transacción": "gasto", "Categoría de presupuesto": "combustible",
-                "budget_role": "presupuestable"}
-        clf.learn("TEXACO TRANSISTMICA 2026", cats, force_personal=True)
+        """learn() almacena por clave canónica; detalles distintos que comparten el mismo
+        canonical son reconocidos vía exact match personal (paso 1), lo cual valida que
+        una sola llamada a learn() cubre variantes del mismo comercio.
 
-        # La tx real tiene una referencia numérica distinta
-        row = _row("TEXACO ALBROOK MALL", tipo="DEBITO", retiro=40)
+        Ejemplo: aprender "DOMINOS TRANSISTMICA OCTUBRE" guarda la clave canónica "DOMINOS".
+        Al predecir "DOMINOS BELLA VISTA", el canonical también es "DOMINOS" → exact match.
+        """
+        cats = {"Economic Type": "gasto", "SubType Economic": "variable",
+                "Tipo de transacción": "gasto", "Categoría de presupuesto": "alimentacion",
+                "budget_role": "presupuestable"}
+        clf.learn("DOMINOS TRANSISTMICA OCTUBRE", cats, force_personal=True)
+
+        # Variante con local diferente — mismo canonical "DOMINOS"
+        row = _row("DOMINOS BELLA VISTA", tipo="DEBITO", retiro=21)
         _, conf, method = clf.predict(row)
-        assert method.startswith("pattern:personal")
-        assert conf == pytest.approx(0.92)
+        # canonical("DOMINOS BELLA VISTA") = "DOMINOS" → exact match personal
+        assert method.startswith("exact:personal")
+        assert conf == pytest.approx(1.0)
 
 
 # ── Paso 3: exact match global ────────────────────────────────────────────────
@@ -171,13 +178,18 @@ class TestExactMatchGlobal:
 
         row = _row("NETFLIX MONTHLY SUBSCRIPTION", tipo="DEBITO", retiro=15)
         _, conf, method = clf.predict(row)
-        assert method == "exact:global"
+        assert method.startswith("exact:global")  # puede incluir sufijo ":canonical"
         assert conf == 1.0
 
-    def test_global_exact_match_takes_priority_over_personal_pattern(
+    def test_personal_pattern_beats_global_exact_match(
         self, clf: FinancialClassifier
     ) -> None:
-        """El exact match global (paso 3) tiene prioridad sobre patrones personales (paso 2)."""
+        """El patrón personal (paso 2) tiene prioridad sobre el exact match global (paso 3).
+
+        El diseño "personal siempre gana" significa que el KB personal es soberano:
+        si el usuario entrenó un patrón que coincide, ese resultado se usa aunque
+        exista un exact match en el KB global.
+        """
         personal_cats = {"Economic Type": "otro", "SubType Economic": "otro",
                          "Tipo de transacción": "otro", "Categoría de presupuesto": "otro",
                          "budget_role": "revisar"}
@@ -193,9 +205,11 @@ class TestExactMatchGlobal:
         clf.global_rules["exact_matches"]["UBER TRIP 123"] = global_cats
 
         row = _row("UBER TRIP 123", tipo="DEBITO", retiro=8)
-        result_cats, _, method = clf.predict(row)
-        assert method == "exact:global"
-        assert result_cats["Categoría de presupuesto"] == "streaming"
+        result_cats, conf, method = clf.predict(row)
+        # Personal pattern (step 2) runs before global exact match (step 3)
+        assert method == "pattern:personal:personal_uber"
+        assert conf == 0.92
+        assert result_cats["Categoría de presupuesto"] == "otro"
 
 
 # ── Paso 5: patrones builtin ──────────────────────────────────────────────────
@@ -288,13 +302,15 @@ class TestLearn:
 
     def test_learn_global_keyword_goes_to_global(self, clf: FinancialClassifier) -> None:
         clf.learn("UBER EATS PAGO", self._cats())  # UBER es global keyword
-        assert "UBER EATS PAGO" in clf.global_rules["exact_matches"]
-        assert "UBER EATS PAGO" not in clf.personal_rules["exact_matches"]
+        # learn() almacena por clave canónica; canonical("UBER EATS PAGO") = "UBER"
+        assert "UBER" in clf.global_rules["exact_matches"]
+        assert "UBER" not in clf.personal_rules["exact_matches"]
 
     def test_learn_force_personal_overrides_global_keyword(self, clf: FinancialClassifier) -> None:
         clf.learn("NETFLIX FAMILIAR", self._cats(), force_personal=True)
-        assert "NETFLIX FAMILIAR" in clf.personal_rules["exact_matches"]
-        assert "NETFLIX FAMILIAR" not in clf.global_rules["exact_matches"]
+        # learn() almacena por clave canónica; canonical("NETFLIX FAMILIAR") = "NETFLIX"
+        assert "NETFLIX" in clf.personal_rules["exact_matches"]
+        assert "NETFLIX" not in clf.global_rules["exact_matches"]
 
     def test_learn_creates_pattern(self, clf: FinancialClassifier) -> None:
         """learn() debe crear al menos un patrón de regex en el KB destino."""
@@ -339,7 +355,7 @@ class TestLearn:
 
         row = _row("SMARTFIT ALBROOK", tipo="DEBITO", retiro=30)
         result_cats, conf, method = clf2.predict(row)
-        assert method == "exact:personal"
+        assert method.startswith("exact:personal")  # puede incluir sufijo ":canonical"
         assert result_cats["Categoría de presupuesto"] == "gimnasio"
 
     def test_learn_user_name_tokens_excluded_from_patterns(self, clf: FinancialClassifier) -> None:

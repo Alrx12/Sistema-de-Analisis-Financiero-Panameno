@@ -32,14 +32,25 @@ class LearnRequest(BaseModel):
         description="Categoría de presupuesto (alimentacion, transporte, servicios, etc.).",
         examples=["alimentacion"],
     )
-    budget_role: Literal["solo_balance", "presupuestable", "revisar", "gasto_financiero"] = Field(
+    budget_role: Literal[
+        "solo_balance",
+        "presupuestable",
+        "no_presupuestable",
+        "gasto_operativo",
+        "gasto_financiero",
+        "ahorro_inversion",
+        "revisar",
+    ] = Field(
         ...,
         description=(
             "Rol en el presupuesto: "
             "'solo_balance' = transferencia propia (excluida de totales); "
-            "'presupuestable' = ingreso/gasto real; "
-            "'revisar' = pendiente de clasificar; "
-            "'gasto_financiero' = comisiones/impuestos."
+            "'presupuestable' = ingreso/gasto planificado; "
+            "'no_presupuestable' = gasto real pero fuera del presupuesto (ej. extraordinario); "
+            "'gasto_operativo' = gasto operativo recurrente; "
+            "'gasto_financiero' = comisiones/impuestos; "
+            "'ahorro_inversion' = ahorro o inversión; "
+            "'revisar' = pendiente de clasificar."
         ),
     )
     weight: float = Field(

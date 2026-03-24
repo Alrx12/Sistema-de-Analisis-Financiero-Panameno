@@ -25,28 +25,40 @@ class BacParser(BaseStatementParser):
             row_values = [str(v).strip().lower() for v in row.tolist()]
             joined = " | ".join(row_values)
 
+            # El header de BAC tiene AMBOS "fecha" Y "referencia" en la misma fila.
+            # BG nunca tiene "referencia" en su header — es una señal exclusiva de BAC.
             if "fecha" in joined and "referencia" in joined:
                 score += 0.35
                 header_found = True
-            if "código" in joined or "codigo" in joined:
-                score += 0.15
-            if "débitos" in joined or "debitos" in joined or "débito" in joined or "debito" in joined:
-                score += 0.15
-            if "créditos" in joined or "creditos" in joined or "crédito" in joined or "credito" in joined:
-                score += 0.15
+
+            # Columnas exclusivas del estado de cuenta BAC (solo cuentan en la fila de header)
+            if header_found:
+                if "código" in joined or "codigo" in joined:
+                    score += 0.15
+                if "débitos" in joined or "debitos" in joined:
+                    score += 0.15
+                if "créditos" in joined or "creditos" in joined:
+                    score += 0.15
+
             if "saldo inicial" in joined or "saldo disponible" in joined:
                 score += 0.10
             if "detalle de movimientos del período" in joined or "detalle de movimientos del periodo" in joined:
                 score += 0.10
-            # Palabras clave adicionales BAC
-            if "compass" in joined or "proteccion robo" in joined or "ach xpr" in joined:
+
+            # Keywords exclusivos de BAC — solo aportan si ya encontramos el header BAC
+            # "compass" y "proteccion robo" son productos BAC, pero "ach xpr" aparece en BG también
+            if header_found and ("compass" in joined or "proteccion robo" in joined):
                 score += 0.10
+
+            # Penalización: "banco general" o "mcd cte" son señales de BG, no de BAC
+            if "banco general" in joined or "mcd cte" in joined or "número:" in joined:
+                score -= 0.30
 
         # Bonus por header
         if header_found:
             score += 0.10
 
-        return min(score, 1.0)
+        return max(0.0, min(score, 1.0))
 
     def extraer_datos(self, df: pd.DataFrame) -> pd.DataFrame:
         try:
@@ -57,9 +69,12 @@ class BacParser(BaseStatementParser):
                 row_values = [str(value).strip() for value in row.tolist()]
                 row_text = " ".join(value.lower() for value in row_values)
 
-                # Buscar número de producto/cuenta
+                # Buscar número de producto/cuenta — solo tomar la celda adyacente a
+                # "Producto", no toda la fila (evita concatenar valores de saldo)
                 if "producto" in row_text:
-                    digits = "".join(ch for ch in row_text if ch.isdigit())
+                    # La celda del número está en col 1 (row.iloc[1])
+                    product_cell = str(row.iloc[1]).strip() if len(row) > 1 else ""
+                    digits = "".join(ch for ch in product_cell if ch.isdigit())
                     if digits and len(digits) >= 4:
                         account_number = digits
 
