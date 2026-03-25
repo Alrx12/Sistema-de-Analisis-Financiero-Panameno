@@ -185,4 +185,7 @@ class ProcessingService:
 
         finally:
             if os.path.exists(file_path):
-                os.remove(file_path)
+                try:
+                    os.remove(file_path)
+                except OSError:
+                    logger.warning("No se pudo eliminar archivo temporal: %s", file_path)
