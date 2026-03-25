@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
 from app.models.analysis_snapshot import AnalysisSnapshot
+from app.models.bank_account import BankAccount
 from app.models.user import User
 from app.schemas.analysis import (
     AnalysisSnapshotResponse,
@@ -42,7 +43,16 @@ def list_analysis(
         .limit(min(limit, 100))
         .all()
     )
-    return [AnalysisSnapshotResponse.model_validate(s) for s in snapshots]
+    # Batch-query para evitar N+1: un solo SELECT para todas las cuentas referenciadas
+    account_ids = {s.bank_account_id for s in snapshots if s.bank_account_id}
+    accounts: dict = {}
+    if account_ids:
+        rows = db.query(BankAccount).filter(BankAccount.account_id.in_(account_ids)).all()
+        accounts = {a.account_id: a for a in rows}
+    return [
+        AnalysisSnapshotResponse.model_validate(s, bank_account=accounts.get(s.bank_account_id))
+        for s in snapshots
+    ]
 
 
 @router.get(
@@ -63,7 +73,12 @@ def get_analysis(
             detail="Análisis no encontrado.",
         )
 
-    return AnalysisSnapshotResponse.model_validate(snapshot)
+    bank_account = (
+        db.get(BankAccount, snapshot.bank_account_id)
+        if snapshot.bank_account_id
+        else None
+    )
+    return AnalysisSnapshotResponse.model_validate(snapshot, bank_account=bank_account)
 
 @router.get(
     "/{snapshot_id}/transactions",

@@ -183,6 +183,32 @@ def test_save_snapshot_persists_snapshot(fake_db: FakeSession) -> None:
     assert snapshot.summary == expected_summary
     assert snapshot.period_start == date(2026, 2, 1)
     assert snapshot.period_end == date(2026, 2, 28)
+    # Sin bank_account_id explícito → None por defecto
+    assert snapshot.bank_account_id is None
+
+
+def test_save_snapshot_stores_bank_account_id(fake_db: FakeSession) -> None:
+    service = AnalysisService(fake_db)
+    account_id = uuid4()
+
+    class DummyUser:
+        user_id = uuid4()
+
+    analysis = {
+        "total_transactions": 1,
+        "total_income": 500.0,
+        "total_expenses": 0.0,
+        "balance": 500.0,
+        "categories": {},
+        "recommendations": [],
+        "period_start": "2026-03-01",
+        "period_end": "2026-03-31",
+        "transactions": [],
+    }
+
+    snapshot = service.save_snapshot(analysis, DummyUser(), bank_account_id=account_id)
+
+    assert snapshot.bank_account_id == account_id
 
 
 def test_save_transactions_persists_enriched_transactions(fake_db: FakeSession) -> None:

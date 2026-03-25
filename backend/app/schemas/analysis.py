@@ -5,6 +5,14 @@ from uuid import UUID
 from pydantic import BaseModel, Field
 
 
+class BankAccountSummary(BaseModel):
+    """Info de la cuenta bancaria asociada a un snapshot. Campos mínimos para el frontend."""
+    account_id: UUID
+    bank_name: str
+    account_last4: str | None = None
+    nickname: str
+
+
 class RecommendationItem(BaseModel):
     """
     Una recomendación financiera estructurada.
@@ -15,7 +23,7 @@ class RecommendationItem(BaseModel):
     data:    dict con datos numéricos opcionales para el frontend
     """
     type: str
-    code: str
+    code: str = "unknown"   # default para snapshots guardados antes de que se agregara este campo
     message: str
     data: dict[str, Any] = Field(default_factory=dict)
 
@@ -39,6 +47,9 @@ class AnalysisSnapshotResponse(BaseModel):
     period_start: date | None = None
     period_end: date | None = None
 
+    # Cuenta bancaria que originó el análisis (None si el snapshot es pre-migración)
+    bank_account: BankAccountSummary | None = None
+
     # Campos aplanados desde summary JSON para facilitar el consumo del frontend
     total_transactions: int
     total_income: float
@@ -50,17 +61,27 @@ class AnalysisSnapshotResponse(BaseModel):
     model_config = {"from_attributes": True}
 
     @classmethod
-    def model_validate(cls, obj, **kwargs):  # type: ignore[override]
+    def model_validate(cls, obj, *, bank_account=None, **kwargs):  # type: ignore[override]
         """
         Aplana el campo `summary` del AnalysisSnapshot en los campos del schema.
+        `bank_account`: instancia BankAccount ORM opcional para enriquecer la respuesta.
         """
         if hasattr(obj, "summary"):
             summary = obj.summary or {}
+            bank_account_data: BankAccountSummary | None = None
+            if bank_account is not None:
+                bank_account_data = BankAccountSummary(
+                    account_id=bank_account.account_id,
+                    bank_name=bank_account.bank_name,
+                    account_last4=bank_account.account_number_last4,
+                    nickname=bank_account.nickname,
+                )
             data = {
                 "snapshot_id": obj.snapshot_id,
                 "created_at": obj.created_at,
                 "period_start": obj.period_start,
                 "period_end": obj.period_end,
+                "bank_account": bank_account_data,
                 "total_transactions": summary.get("total_transactions", 0),
                 "total_income": summary.get("total_income", 0.0),
                 "total_expenses": summary.get("total_expenses", 0.0),

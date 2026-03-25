@@ -175,6 +175,7 @@ class AnalysisService:
         self,
         analysis: dict[str, Any],
         current_user: User,
+        bank_account_id: UUID | None = None,
     ) -> AnalysisSnapshot:
         # Excluir "transactions" del summary JSON:
         # 1) Los datetime objects no son JSON-serializables → TypeError en PostgreSQL.
@@ -182,6 +183,7 @@ class AnalysisService:
         summary_data = {k: v for k, v in analysis.items() if k != "transactions"}
         snapshot = AnalysisSnapshot(
             user_id=current_user.user_id,
+            bank_account_id=bank_account_id,
             summary=summary_data,
             category_analysis=analysis.get("categories"),
             recommendations=analysis.get("recommendations"),

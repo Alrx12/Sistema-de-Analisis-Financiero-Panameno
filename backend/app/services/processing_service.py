@@ -140,7 +140,9 @@ class ProcessingService:
                 user_name=user_display_name,
             )
 
-            snapshot = self.analysis_service.save_snapshot(analysis, current_user)
+            snapshot = self.analysis_service.save_snapshot(
+                analysis, current_user, bank_account_id=account.account_id
+            )
 
             self.analysis_service.save_transactions(
                 snapshot_id=snapshot.snapshot_id,

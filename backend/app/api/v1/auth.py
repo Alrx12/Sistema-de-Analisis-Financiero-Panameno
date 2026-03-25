@@ -67,7 +67,8 @@ def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db),
 ) -> TokenResponse:
-    user = db.scalar(select(User).where(User.username == form_data.username))
+    # form_data.username contiene el email (OAuth2PasswordRequestForm usa el campo "username" por spec)
+    user = db.scalar(select(User).where(User.email == form_data.username))
     if not user or not verify_password(form_data.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

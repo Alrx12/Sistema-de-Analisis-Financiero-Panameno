@@ -57,7 +57,8 @@ def register_and_login(client: TestClient, username: str) -> dict[str, str]:
 
     login_response = client.post(
         "/api/v1/auth/login",
-        data={"username": username, "password": "supersecret123"},
+        # El endpoint de login espera el EMAIL en el campo "username" (OAuth2PasswordRequestForm spec)
+        data={"username": f"{username}@example.com", "password": "supersecret123"},
     )
     assert login_response.status_code == 200
     token = login_response.json()["access_token"]
