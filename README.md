@@ -1,4 +1,4 @@
-# CLAUDE.md — Guía Completa de SAFPRO
+# Guía Completa de SAFPRO
 
 **Última actualización:** 2026-03-25 (sesión 14)
 **Estado general:** Pipeline E2E validado. Backend completo para MVP. **Frontend en desarrollo activo (sesión 14):** React + Vite + TypeScript + shadcn/ui. Auth completo (login/register/forgot/reset), dashboard, upload + polling, lista/detalle de análisis, transacciones con reclasificación inline. Tests backend 183 passed, 3 warnings.
