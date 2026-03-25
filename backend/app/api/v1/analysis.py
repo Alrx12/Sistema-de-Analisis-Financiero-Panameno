@@ -15,7 +15,9 @@ from app.schemas.analysis import (
 )
 from app.models.analysis_transaction import AnalysisTransaction
 from app.schemas.analysis_transaction import AnalysisTransactionResponse
+from app.schemas.features import SnapshotFeaturesResponse
 from app.services.analysis_service import AnalysisService
+from app.services.feature_engineering_service import compute_features
 
 logger = logging.getLogger(__name__)
 
@@ -178,6 +180,61 @@ def get_confidence_stats(
         fallback_pct=pct(fallback_count),
         avg_confidence=avg_confidence,
         by_method=by_method,
+    )
+
+
+@router.get(
+    "/{snapshot_id}/features",
+    response_model=SnapshotFeaturesResponse,
+    summary="Features de ingeniería financiera de un análisis",
+    description=(
+        "Computa agregaciones avanzadas sobre las transacciones del snapshot: "
+        "gasto por semana, por día de la semana, velocidad de gasto, ratios por categoría, "
+        "concentración por merchant y breakdown de recurrencia. "
+        "Pipeline de entrenamiento separado del pipeline de procesamiento."
+    ),
+)
+def get_snapshot_features(
+    snapshot_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> SnapshotFeaturesResponse:
+    snapshot = db.get(AnalysisSnapshot, snapshot_id)
+
+    if snapshot is None or snapshot.user_id != current_user.user_id:
+        raise HTTPException(status_code=404, detail="Análisis no encontrado.")
+
+    transactions = (
+        db.query(AnalysisTransaction)
+        .filter(AnalysisTransaction.snapshot_id == snapshot_id)
+        .all()
+    )
+
+    # Convertir ORM objects a dicts para el módulo puro de feature engineering
+    tx_dicts = [
+        {
+            "amount": float(tx.amount),
+            "date": tx.date,
+            "budget_role": tx.budget_role,
+            "budget_category": tx.budget_category,
+            "subtype_economic": tx.subtype_economic,
+            "economic_type_detail": tx.economic_type_detail,
+            "detail": tx.detail,
+        }
+        for tx in transactions
+    ]
+
+    features = compute_features(
+        tx_dicts,
+        period_start=snapshot.period_start,
+        period_end=snapshot.period_end,
+    )
+
+    return SnapshotFeaturesResponse(
+        snapshot_id=snapshot_id,
+        period_start=snapshot.period_start,
+        period_end=snapshot.period_end,
+        **features,
     )
 
 

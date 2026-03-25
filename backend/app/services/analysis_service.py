@@ -4,6 +4,7 @@ import unicodedata
 from collections import Counter, defaultdict
 from datetime import date, datetime
 from typing import Any
+from uuid import UUID
 
 from sqlalchemy.orm import Session
 
@@ -13,6 +14,7 @@ from app.models.user import User
 from app.services.categorization_service import get_classifier, transaction_to_classifier_row
 from app.services.categorization_service import categorize_transactions
 from app.services.detail_normalizer import canonicalize_detail
+from app.services.recommendation_engine import generate_recommendations
 
 
 _BALANCE_ONLY_ROLES = {"solo_balance"}
@@ -144,34 +146,16 @@ class AnalysisService:
                 if period_end is None or txn_date > period_end:
                     period_end = txn_date
 
-        recommendations: list[dict[str, Any]] = []
-
-        if total_expenses > total_income:
-            recommendations.append(
-                {
-                    "type": "warning",
-                    "message": "Tus gastos superan tus ingresos en el período analizado.",
-                }
-            )
-
-        if low_confidence:
-            recommendations.append(
-                {
-                    "type": "info",
-                    "message": (
-                        f"{len(low_confidence)} transacción(es) quedaron con baja confianza "
-                        "y requieren revisión manual."
-                    ),
-                }
-            )
-
-        if not recommendations:
-            recommendations.append(
-                {
-                    "type": "info",
-                    "message": "No se detectaron alertas críticas en el análisis.",
-                }
-            )
+        merchant_history = self._get_merchant_history(user_id)
+        recommendations = generate_recommendations(
+            total_income=round(total_income, 2),
+            total_expenses=round(total_expenses, 2),
+            categories={k: round(v, 2) for k, v in categories.items()},
+            budget_roles={k: round(v, 2) for k, v in budget_roles.items()},
+            low_confidence_count=len(low_confidence),
+            categorized_transactions=categorized_transactions,
+            merchant_history=merchant_history,
+        )
 
         return {
             "total_transactions": len(categorized_transactions),
@@ -309,31 +293,33 @@ class AnalysisService:
         categories_rounded = {k: round(v, 2) for k, v in categories.items()}
         budget_roles_rounded = {k: round(v, 2) for k, v in budget_roles.items()}
 
-        recommendations: list[dict[str, Any]] = []
-        if total_expenses > total_income:
-            recommendations.append(
-                {
-                    "type": "warning",
-                    "message": "Tus gastos superan tus ingresos en el período analizado.",
-                }
-            )
-        if low_confidence:
-            recommendations.append(
-                {
-                    "type": "info",
-                    "message": (
-                        f"{len(low_confidence)} transacción(es) quedaron con baja confianza "
-                        "y requieren revisión manual."
-                    ),
-                }
-            )
-        if not recommendations:
-            recommendations.append(
-                {
-                    "type": "info",
-                    "message": "No se detectaron alertas críticas en el análisis.",
-                }
-            )
+        # Reconstruir lista de transacciones como dicts para pasarla al engine
+        tx_dicts: list[dict[str, Any]] = [
+            {
+                "amount": float(tx.amount),
+                "description": tx.detail,
+                "detail": tx.detail,
+                "budget_role": tx.budget_role,
+                "budget_category": tx.budget_category,
+                "subtype_economic": tx.subtype_economic,
+                "economic_type": tx.economic_type,
+                "confidence": float(tx.confidence),
+                "method": tx.method,
+            }
+            for tx in txns
+        ]
+        merchant_history = self._get_merchant_history(
+            snapshot.user_id, exclude_snapshot_id=snapshot.snapshot_id
+        )
+        recommendations = generate_recommendations(
+            total_income=total_income,
+            total_expenses=total_expenses,
+            categories=categories_rounded,
+            budget_roles=budget_roles_rounded,
+            low_confidence_count=len(low_confidence),
+            categorized_transactions=tx_dicts,
+            merchant_history=merchant_history,
+        )
 
         snapshot.summary = {
             "total_transactions": len(txns),
@@ -355,6 +341,64 @@ class AnalysisService:
             snapshot.period_end = period_end
 
         self.db.commit()
+
+    def _get_merchant_history(
+        self,
+        user_id: str | UUID,
+        exclude_snapshot_id: UUID | None = None,
+        limit: int = 3,
+    ) -> dict[str, list[float]]:
+        """
+        Devuelve el historial de montos promedio por merchant recurrente en los últimos
+        N snapshots del usuario (excluyendo el snapshot actual si se indica).
+
+        Retorna: {merchant_canonical_key: [avg_snapshot_más_viejo, ..., avg_más_reciente]}
+        El último elemento de cada lista es el período inmediatamente anterior al actual.
+        Se usa en generate_recommendations() para detectar aumentos de precio.
+        """
+        try:
+            uid = UUID(str(user_id)) if not isinstance(user_id, UUID) else user_id
+        except (ValueError, AttributeError):
+            return {}
+
+        try:
+            snapshots = (
+                self.db.query(AnalysisSnapshot)
+                .filter(AnalysisSnapshot.user_id == uid)
+                .order_by(AnalysisSnapshot.created_at.desc())
+                .limit(limit + 1)
+                .all()
+            )
+            if exclude_snapshot_id:
+                snapshots = [s for s in snapshots if s.snapshot_id != exclude_snapshot_id]
+            snapshots = snapshots[:limit]
+
+            history: dict[str, list[float]] = defaultdict(list)
+            # Invertir para ordenar de más antiguo a más reciente
+            for snapshot in reversed(snapshots):
+                txns = (
+                    self.db.query(AnalysisTransaction)
+                    .filter(
+                        AnalysisTransaction.snapshot_id == snapshot.snapshot_id,
+                        AnalysisTransaction.subtype_economic == "recurrente",
+                    )
+                    .all()
+                )
+                merchant_amounts: dict[str, list[float]] = defaultdict(list)
+                for tx in txns:
+                    if tx.detail:
+                        key = canonicalize_detail(tx.detail)
+                        if key:
+                            merchant_amounts[key].append(abs(float(tx.amount)))
+
+                for key, amounts in merchant_amounts.items():
+                    history[key].append(sum(amounts) / len(amounts))
+
+            return dict(history)
+        except Exception:  # noqa: BLE001
+            # Si el DB mock no soporta la query, o hay error de conexión, retornar vacío
+            # para no romper el pipeline principal
+            return {}
 
     def reclassify_snapshot(
         self,

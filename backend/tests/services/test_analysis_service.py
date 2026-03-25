@@ -149,8 +149,10 @@ def test_build_analysis_adds_warning_when_expenses_exceed_income(monkeypatch, fa
         user_name="Lex",
     )
 
-    messages = [r["message"] for r in analysis["recommendations"]]
-    assert any("gastos superan tus ingresos" in m for m in messages)
+    # Con income=0 y expenses=120 el engine dispara "no_income_detected" (critical),
+    # no "expenses_exceed_income" (que solo aplica cuando income > 0 pero expenses lo superan).
+    codes = [r["code"] for r in analysis["recommendations"]]
+    assert "no_income_detected" in codes
 
 
 def test_save_snapshot_persists_snapshot(fake_db: FakeSession) -> None:

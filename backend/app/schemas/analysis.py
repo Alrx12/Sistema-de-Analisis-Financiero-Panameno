@@ -5,6 +5,21 @@ from uuid import UUID
 from pydantic import BaseModel, Field
 
 
+class RecommendationItem(BaseModel):
+    """
+    Una recomendación financiera estructurada.
+
+    type:    severidad — "critical" | "warning" | "info" | "success"
+    code:    identificador de máquina (el frontend puede mapear a íconos/colores)
+    message: texto legible para el usuario
+    data:    dict con datos numéricos opcionales para el frontend
+    """
+    type: str
+    code: str
+    message: str
+    data: dict[str, Any] = Field(default_factory=dict)
+
+
 class AnalysisResponse(BaseModel):
     """Schema interno usado por AnalysisService.build_analysis()."""
     total_transactions: int
@@ -30,7 +45,7 @@ class AnalysisSnapshotResponse(BaseModel):
     total_expenses: float
     balance: float
     categories: dict[str, float]
-    recommendations: list[dict[str, Any]]
+    recommendations: list[RecommendationItem]
 
     model_config = {"from_attributes": True}
 
