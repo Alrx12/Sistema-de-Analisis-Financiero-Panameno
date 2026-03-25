@@ -183,6 +183,7 @@ GENERIC_MERCHANT_RULES: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"\bPAYPAL\b", re.IGNORECASE), "PAYPAL"),
     (re.compile(r"\bSUPERMERCADO\s+REY\b|\bREY\s+\d+\s+DE\b|\bREY\b(?=\s+\d)", re.IGNORECASE), "SUPERMERCADO REY"),
     (re.compile(r"\bTEMU\b", re.IGNORECASE), "TEMU"),
+    (re.compile(r"\bCOMPASS\b", re.IGNORECASE), "COMPASS"),
 ]
 
 
@@ -239,6 +240,15 @@ COUNTRY_TAG_PATTERN = re.compile(
 
 MULTISPACE_PATTERN = re.compile(r"\s+")
 NON_ALNUM_KEEP_SPACE_PATTERN = re.compile(r"[^A-Z0-9 ]+")
+
+# Pre-check: PAGO + número de tarjeta enmascarado (BAC: 5200-57**-****-3193)
+# Debe evaluarse ANTES de strip_variable_suffixes porque ese paso elimina el número,
+# dejando solo "PAGO" — clave demasiado ambigua para ser útil.
+# Formato detectado: 4d - (2d+2*) - 4* - 4-5d  (al menos un asterisco en el número)
+_TDC_PAYMENT_DETECT = re.compile(
+    r"\bPAGO\b\s+\d{4}[-\s]*[\d*]{2,4}[*]{1,4}[-\s]*[*]{4}[-\s]*\d{4,5}\b",
+    re.IGNORECASE,
+)
 
 
 # ============================================================================
@@ -322,8 +332,16 @@ def canonicalize_detail(raw_detail: str) -> str:
     - DB COMPRA E-COMMERCE INTL MCD CTE-USA-GOOGLE GRI -> GOOGLE GRI
     - GRINDR -> GRINDR
     - DB POS COMPRA MCD CTE-XTRA MARKE -> SUPERMERCADO XTRA
+    - PT: PAGO 5200-57**-****-3193 -> PAGO TDC
     """
     detail = normalize_text(raw_detail)
+
+    # Pre-check: PAGO + número de tarjeta enmascarado → "PAGO TDC"
+    # Debe ir ANTES de strip_variable_suffixes porque ese paso elimina el número,
+    # dejando solo "PAGO" — clave ambigua que queda en AMBIGUOUS_CANONICAL_KEYS.
+    if _TDC_PAYMENT_DETECT.search(detail):
+        return "PAGO TDC"
+
     detail = strip_variable_suffixes(detail)
 
     merchant = detect_canonical_merchant(detail)

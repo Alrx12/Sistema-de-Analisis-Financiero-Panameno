@@ -36,6 +36,8 @@ def process_file_task(
     original_filename: str,
     user_id: str,
     job_id: str,
+    content_hash: str | None = None,
+    file_size: int | None = None,
 ) -> dict:
     """
     Ejecuta el pipeline de procesamiento de archivo en un worker Celery.
@@ -70,7 +72,13 @@ def process_file_task(
             return {"job_id": job_id, "status": "error", "detail": "job_no_encontrado"}
 
         svc = ProcessingService(db)
-        analysis = svc.run_pipeline(job=job, file_path=file_path, current_user=user)
+        analysis = svc.run_pipeline(
+            job=job,
+            file_path=file_path,
+            current_user=user,
+            content_hash=content_hash,
+            file_size=file_size,
+        )
 
         status = "success" if analysis is not None else "error"
         logger.info("process_file_task finalizado — job_id=%s status=%s", job_id, status)

@@ -8,6 +8,7 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from app.models.processing_job import ProcessingJob
+from app.models.uploaded_file import UploadedFile
 from app.models.user import User
 from app.parsers.factory import ParserFactory
 from app.services.account_detection_service import AccountDetectionService
@@ -40,11 +41,54 @@ class ProcessingService:
         self.db.refresh(job)
         return job
 
+    def record_uploaded_file(
+        self,
+        *,
+        user_id,
+        original_filename: str,
+        file_path: str,
+        content_hash: str,
+        file_size: int | None,
+        bank_name: str | None = None,
+        account_last4: str | None = None,
+        account_id=None,
+    ) -> None:
+        """
+        Registra el archivo en `uploaded_files` tras un pipeline exitoso.
+        La UniqueConstraint (user_id, checksum) garantiza que no haya duplicados silenciosos.
+        Si por alguna razón ya existe (carrera de condición), simplemente no hace nada.
+        """
+        from sqlalchemy.exc import IntegrityError
+
+        try:
+            record = UploadedFile(
+                user_id=user_id,
+                account_id=account_id,
+                original_filename=original_filename,
+                storage_path=file_path,
+                file_size_bytes=file_size,
+                checksum=content_hash,
+                detected_bank_name=bank_name,
+                detected_account_last4=account_last4,
+                status="processed",
+            )
+            self.db.add(record)
+            self.db.commit()
+        except IntegrityError:
+            # Duplicado — ya existía (carrera de condición muy improbable). Ignorar.
+            self.db.rollback()
+            logger.warning(
+                "record_uploaded_file: checksum ya existía (carrera de condición) — user_id=%s hash=%s",
+                user_id, content_hash[:16],
+            )
+
     def run_pipeline(
         self,
         job: ProcessingJob,
         file_path: str,
         current_user: User,
+        content_hash: str | None = None,
+        file_size: int | None = None,
     ) -> dict[str, Any] | None:
         job.status = "processing"
         job.started_at = datetime.now(timezone.utc)
@@ -108,6 +152,20 @@ class ProcessingService:
             job.completed_at = datetime.now(timezone.utc)
             self.db.add(job)
             self.db.commit()
+
+            # Registrar el archivo para deduplicación futura.
+            # Solo si se recibió el hash (uploads vía API normal siempre lo pasan).
+            if content_hash:
+                self.record_uploaded_file(
+                    user_id=current_user.user_id,
+                    original_filename=job.original_filename or "",
+                    file_path=file_path,
+                    content_hash=content_hash,
+                    file_size=file_size,
+                    bank_name=detected_bank,
+                    account_last4=detected_last4,
+                    account_id=account.account_id,
+                )
 
             return analysis
 

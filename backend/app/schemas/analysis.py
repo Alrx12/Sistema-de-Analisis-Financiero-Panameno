@@ -2,7 +2,7 @@ from datetime import date, datetime
 from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class AnalysisResponse(BaseModel):
@@ -55,3 +55,48 @@ class AnalysisSnapshotResponse(BaseModel):
             }
             return cls(**data)
         return super().model_validate(obj, **kwargs)
+
+
+class ConfidenceStatsResponse(BaseModel):
+    """
+    Distribución de confianza de las transacciones de un snapshot.
+    Sirve para medir qué tan bien está funcionando el KB y si vale la pena seguir entrenando.
+    """
+    snapshot_id: UUID
+    total: int = Field(description="Total de transacciones en el snapshot")
+
+    # Transacciones que el usuario debería revisar
+    requires_review_count: int = Field(description="Transacciones con confidence < 0.8")
+    requires_review_pct: float = Field(description="Porcentaje de transacciones con confidence < 0.8")
+
+    # Fallback puro: el clasificador no encontró nada y usó el valor por defecto
+    fallback_count: int = Field(description="Transacciones clasificadas por fallback (confidence ≤ 0.35)")
+    fallback_pct: float = Field(description="Porcentaje de transacciones por fallback")
+
+    avg_confidence: float = Field(description="Confianza promedio de todas las transacciones")
+
+    # Desglose por método de clasificación — útil para saber de dónde viene el conocimiento
+    by_method: dict[str, int] = Field(
+        description=(
+            "Conteo por método: 'kb_personal', 'kb_global', 'builtin', "
+            "'user_reclassified', 'fallback', 'other'"
+        )
+    )
+
+
+class BulkReclassifyRequest(BaseModel):
+    skip_user_reclassified: bool = Field(
+        default=True,
+        description=(
+            "Si True (default), las transacciones corregidas manualmente con /reclassify "
+            "quedan intactas. False las re-categoriza también con el KB actual."
+        ),
+    )
+
+
+class BulkReclassifyResponse(BaseModel):
+    snapshot_id: UUID
+    total: int = Field(description="Total de transacciones en el snapshot")
+    updated: int = Field(description="Transacciones re-categorizadas con el KB actual")
+    skipped: int = Field(description="Transacciones omitidas (corregidas manualmente)")
+    requires_review: int = Field(description="Transacciones con confidence < 0.8 tras la reclasificación")

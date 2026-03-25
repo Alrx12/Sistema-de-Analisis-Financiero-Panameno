@@ -1,10 +1,12 @@
 from datetime import date
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class AnalysisTransactionResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     transaction_id: UUID
     snapshot_id: UUID
     date: date | None
@@ -22,6 +24,3 @@ class AnalysisTransactionResponse(BaseModel):
     method: str
 
     requires_review: bool = False
-
-    class Config:
-        from_attributes = True

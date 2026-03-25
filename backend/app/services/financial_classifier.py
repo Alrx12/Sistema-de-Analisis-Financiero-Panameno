@@ -177,16 +177,19 @@ class FinancialClassifier:
             0.95,
             "builtin:itbms",
         ),
-        # Banistmo: pago desde cuenta corriente a tarjeta de crédito propia → solo_balance
-        # No es un gasto real — es una transferencia interna entre productos del mismo usuario
+        # Pago de deuda de tarjeta de crédito → cargo financiero (sí cuenta en totales)
+        # Cubre dos formatos:
+        #   Banistmo: "PAGO DE TARJETA DE CREDITO", "PAGO DEBITADO PARA TDC"
+        #   BAC:      "PT: PAGO 5200-57**-****-3193"  (PAGO + número enmascarado)
         (
-            r"PAGO DE TARJETA DE CREDITO|PAGO DEBITADO PARA TDC",
+            r"PAGO DE TARJETA DE CREDITO|PAGO DEBITADO PARA TDC"
+            r"|\bPAGO\b\s+\d{4}[-\s]*[\d*]{2,4}[*]{1,4}[-\s]*[*]{4}[-\s]*\d{4,5}",
             {
-                "Economic Type": "transferencia_propia",
-                "Economic Type Detail": "transferencia_propia",
-                "SubType Economic": "interno",
-                "Categoría de presupuesto": "otros",
-                "budget_role": "solo_balance",
+                "Economic Type": "cargo_financiero",
+                "Economic Type Detail": "cargo_bancario",
+                "SubType Economic": "recurrente",
+                "Categoría de presupuesto": "servicios",
+                "budget_role": "gasto_financiero",
             },
             0.95,
             "builtin:pago_tdc",
@@ -242,6 +245,20 @@ class FinancialClassifier:
             },
             0.90,
             "builtin:cargo_tarjeta",
+        ),
+        # COMPASS: comisión BAC por dispositivo (cobro mensual recurrente) → cargo financiero
+        # Formatos BAC: "CP: COMPASS BAC", "CP: COMPASS PACIFIC CENTER", "CP: COMPASS MULTIPLAZA"
+        (
+            r"\bCOMPASS\b",
+            {
+                "Economic Type": "cargo_financiero",
+                "Economic Type Detail": "cargo_bancario",
+                "SubType Economic": "recurrente",
+                "Categoría de presupuesto": "servicios",
+                "budget_role": "gasto_financiero",
+            },
+            0.90,
+            "builtin:compass",
         ),
     ]
 
@@ -649,3 +666,52 @@ class FinancialClassifier:
     def save_all(self) -> None:
         self._save_kb(self.global_kb_path, self.global_rules, "global")
         self._save_kb(self.user_kb_path, self.personal_rules, "personal")
+
+    # ── KB management ─────────────────────────────────────────────────────────
+
+    def list_personal_kb(self) -> dict[str, Any]:
+        """
+        Retorna el contenido del KB personal para inspección via API.
+        Incluye todas las entradas exact_matches, patrones y metadatos.
+        """
+        return {
+            "exact_matches": dict(self.personal_rules["exact_matches"]),
+            "patterns": dict(self.personal_rules["patterns"]),
+            "corrections_count": self.personal_rules["corrections_count"],
+        }
+
+    def list_global_kb_summary(self) -> dict[str, Any]:
+        """Retorna solo el resumen del KB global (read-only para el usuario)."""
+        return {
+            "exact_matches_count": len(self.global_rules["exact_matches"]),
+            "patterns_count": len(self.global_rules["patterns"]),
+            "corrections_count": self.global_rules["corrections_count"],
+        }
+
+    def delete_personal_entry(self, key: str) -> int:
+        """
+        Elimina una entrada del KB personal por clave canónica.
+        Borra de exact_matches y los patrones cuyo nombre fue generado para esa clave.
+
+        Retorna el número de patrones eliminados (0 si la entrada no existía en
+        exact_matches, aunque elimina patrones huérfanos si los hubiera).
+        Lanza KeyError si la clave no existe en exact_matches.
+        """
+        if key not in self.personal_rules["exact_matches"]:
+            raise KeyError(key)
+
+        del self.personal_rules["exact_matches"][key]
+
+        # Borrar patrones asociados: los generados por _create_pattern usan
+        # el nombre "personal_{economic_type}_{token1_token2...}" donde los
+        # tokens provienen de la clave canónica (espacios → _).
+        key_suffix = "_".join(key.split())
+        patterns_to_remove = [
+            pname for pname in self.personal_rules["patterns"]
+            if pname.endswith(f"_{key_suffix}") or f"_{key_suffix}_" in pname
+        ]
+        for pname in patterns_to_remove:
+            del self.personal_rules["patterns"][pname]
+
+        self._save_kb(self.user_kb_path, self.personal_rules, "personal")
+        return len(patterns_to_remove)

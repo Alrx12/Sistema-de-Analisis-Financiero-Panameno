@@ -1,12 +1,14 @@
 import logging
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, File, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
+from app.models.uploaded_file import UploadedFile
 from app.models.user import User
 from app.schemas.job import JobQueuedResponse
+from app.services.file_fingerprint_service import compute_checksum
 from app.services.file_service import FileService
 from app.services.processing_service import ProcessingService
 from app.workers.tasks import process_file_task
@@ -42,22 +44,46 @@ async def upload_file(
     extension = file_service.validate_upload(file, len(content))
     file_type = Path(original_filename).suffix.lower().lstrip(".")
 
-    # 2. Guardar en storage/temp/
+    # 2. Deduplicación: calcular hash y verificar si ya fue procesado
+    content_hash = compute_checksum(content)
+    existing = (
+        db.query(UploadedFile)
+        .filter(
+            UploadedFile.user_id == current_user.user_id,
+            UploadedFile.checksum == content_hash,
+        )
+        .first()
+    )
+    if existing is not None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "error": "duplicate_file",
+                "message": "Este archivo ya fue procesado anteriormente.",
+                "original_filename": existing.original_filename,
+                "uploaded_at": existing.uploaded_at.isoformat(),
+                "detected_bank": existing.detected_bank_name,
+            },
+        )
+
+    # 3. Guardar en storage/temp/
     temp_file_path = file_service.save_temp_file(content, extension)
 
-    # 3. Crear job en estado "queued" (fuente de verdad en PostgreSQL)
+    # 4. Crear job en estado "queued" (fuente de verdad en PostgreSQL)
     job = processing_service.create_job(
         current_user=current_user,
         original_filename=original_filename,
         file_type=file_type,
     )
 
-    # 4. Encolar tarea Celery
+    # 5. Encolar tarea Celery (con hash para que registre en uploaded_files al terminar)
     process_file_task.delay(
         file_path=temp_file_path,
         original_filename=original_filename,
         user_id=str(current_user.user_id),
         job_id=str(job.job_id),
+        content_hash=content_hash,
+        file_size=len(content),
     )
 
     logger.info(

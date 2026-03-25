@@ -62,13 +62,27 @@ def run_celery_tasks_eagerly() -> Generator[None, None, None]:
     from app.models.user import User
     from app.services.processing_service import ProcessingService
 
-    def sync_delay(*, file_path: str, original_filename: str, user_id: str, job_id: str) -> None:
+    def sync_delay(
+        *,
+        file_path: str,
+        original_filename: str,
+        user_id: str,
+        job_id: str,
+        content_hash: str | None = None,
+        file_size: int | None = None,
+    ) -> None:
         db = TestingSessionLocal()
         try:
             user = db.get(User, UUID(user_id))
             job = db.get(ProcessingJob, UUID(job_id))
             svc = ProcessingService(db)
-            svc.run_pipeline(job=job, file_path=file_path, current_user=user)
+            svc.run_pipeline(
+                job=job,
+                file_path=file_path,
+                current_user=user,
+                content_hash=content_hash,
+                file_size=file_size,
+            )
         finally:
             db.close()
 
@@ -251,6 +265,11 @@ def test_upload_without_last4_creates_low_confidence_account(client: TestClient)
 
 
 def test_upload_reuses_existing_account_and_does_not_duplicate(client: TestClient) -> None:
+    """
+    El primer upload procesa correctamente.
+    El segundo upload del MISMO archivo retorna 409 (deduplicación por SHA-256)
+    y no crea un nuevo job — el pipeline nunca llega a ejecutarse.
+    """
     headers = register_and_login(client, "files-reuse")
 
     first_response = client.post(
@@ -265,14 +284,15 @@ def test_upload_reuses_existing_account_and_does_not_duplicate(client: TestClien
         files={"file": ("estado_bg.xlsx", BytesIO(BG_XLSX_REUSE), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
         headers=headers,
     )
-    assert second_response.status_code == 202
+    assert second_response.status_code == 409
 
     with TestingSessionLocal() as db:
         accounts = list(db.scalars(select(BankAccount)).all())
         jobs = list(db.scalars(select(ProcessingJob)).all())
 
+    # Solo se creó un job (el del primer upload); el segundo fue rechazado antes de encolar.
     assert len(accounts) == 1
-    assert len(jobs) == 2
+    assert len(jobs) == 1
 
 
 def test_upload_rejects_invalid_extension(client: TestClient) -> None:
@@ -310,3 +330,34 @@ def test_upload_multiple_accounts_results_in_error_job(client: TestClient) -> No
     assert len(jobs) == 1
     assert jobs[0].status == "error"
     assert "múltiples cuentas" in (jobs[0].error_message or "").lower()
+
+
+def test_upload_duplicate_returns_409(client: TestClient) -> None:
+    """
+    Subir el mismo archivo dos veces devuelve 409 en el segundo intento.
+    El body del error debe incluir: error='duplicate_file', original_filename,
+    uploaded_at y detected_bank.
+    """
+    headers = register_and_login(client, "files-dup409")
+
+    # Primer upload — debe procesarse normalmente
+    r1 = client.post(
+        "/api/v1/files/upload",
+        files={"file": ("estado_bg.xlsx", BytesIO(BG_XLSX_WITH_LAST4), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
+        headers=headers,
+    )
+    assert r1.status_code == 202
+
+    # Segundo upload — mismo contenido, diferente nombre de archivo
+    r2 = client.post(
+        "/api/v1/files/upload",
+        files={"file": ("copia_del_estado.xlsx", BytesIO(BG_XLSX_WITH_LAST4), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
+        headers=headers,
+    )
+    assert r2.status_code == 409
+
+    detail = r2.json()["detail"]
+    assert detail["error"] == "duplicate_file"
+    assert detail["original_filename"] == "estado_bg.xlsx"   # nombre del upload original
+    assert "uploaded_at" in detail
+    assert "detected_bank" in detail

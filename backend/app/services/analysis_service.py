@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from app.models.analysis_snapshot import AnalysisSnapshot
 from app.models.analysis_transaction import AnalysisTransaction
 from app.models.user import User
+from app.services.categorization_service import get_classifier, transaction_to_classifier_row
 from app.services.categorization_service import categorize_transactions
 from app.services.detail_normalizer import canonicalize_detail
 
@@ -247,3 +248,224 @@ class AnalysisService:
         if objs:
             self.db.add_all(objs)
             self.db.commit()
+
+    def _recalculate_snapshot_kpis(
+        self,
+        snapshot: AnalysisSnapshot,
+        txns: list[AnalysisTransaction],
+    ) -> None:
+        """
+        Recalcula los KPIs del snapshot a partir del estado actual de sus transacciones
+        en DB y actualiza los campos summary, category_analysis, recommendations,
+        period_start y period_end.
+        """
+        total_income = 0.0
+        total_expenses = 0.0
+        categories: dict[str, float] = defaultdict(float)
+        budget_roles: dict[str, float] = defaultdict(float)
+        low_confidence: list[dict[str, Any]] = []
+        period_start: date | None = None
+        period_end: date | None = None
+
+        for tx in txns:
+            amount = float(tx.amount)
+            budget_role = (tx.budget_role or "revisar").lower().strip()
+            raw_cat = (tx.budget_category or "otros").lower().strip()
+            budget_cat = (
+                unicodedata.normalize("NFD", raw_cat)
+                .encode("ascii", "ignore")
+                .decode("ascii")
+            )
+            confidence = float(tx.confidence)
+
+            if budget_role not in _BALANCE_ONLY_ROLES:
+                if amount >= 0:
+                    total_income += amount
+                else:
+                    total_expenses += abs(amount)
+                categories[budget_cat] += abs(amount)
+
+            budget_roles[budget_role] += abs(amount)
+
+            if confidence < 0.6:
+                low_confidence.append(
+                    {
+                        "description": tx.detail,
+                        "amount": amount,
+                        "confidence": round(confidence, 2),
+                        "method": tx.method,
+                    }
+                )
+
+            if tx.date is not None:
+                if period_start is None or tx.date < period_start:
+                    period_start = tx.date
+                if period_end is None or tx.date > period_end:
+                    period_end = tx.date
+
+        total_income = round(total_income, 2)
+        total_expenses = round(total_expenses, 2)
+        balance = round(total_income - total_expenses, 2)
+        categories_rounded = {k: round(v, 2) for k, v in categories.items()}
+        budget_roles_rounded = {k: round(v, 2) for k, v in budget_roles.items()}
+
+        recommendations: list[dict[str, Any]] = []
+        if total_expenses > total_income:
+            recommendations.append(
+                {
+                    "type": "warning",
+                    "message": "Tus gastos superan tus ingresos en el período analizado.",
+                }
+            )
+        if low_confidence:
+            recommendations.append(
+                {
+                    "type": "info",
+                    "message": (
+                        f"{len(low_confidence)} transacción(es) quedaron con baja confianza "
+                        "y requieren revisión manual."
+                    ),
+                }
+            )
+        if not recommendations:
+            recommendations.append(
+                {
+                    "type": "info",
+                    "message": "No se detectaron alertas críticas en el análisis.",
+                }
+            )
+
+        snapshot.summary = {
+            "total_transactions": len(txns),
+            "total_income": total_income,
+            "total_expenses": total_expenses,
+            "balance": balance,
+            "categories": categories_rounded,
+            "budget_roles": budget_roles_rounded,
+            "low_confidence": low_confidence,
+            "recommendations": recommendations,
+            "period_start": period_start.isoformat() if period_start else None,
+            "period_end": period_end.isoformat() if period_end else None,
+        }
+        snapshot.category_analysis = categories_rounded
+        snapshot.recommendations = recommendations
+        if period_start:
+            snapshot.period_start = period_start
+        if period_end:
+            snapshot.period_end = period_end
+
+        self.db.commit()
+
+    def reclassify_snapshot(
+        self,
+        snapshot: AnalysisSnapshot,
+        user: User,
+        skip_user_reclassified: bool = True,
+    ) -> dict[str, Any]:
+        """
+        Re-categoriza todas las transacciones del snapshot usando el KB actual.
+
+        Flujo:
+          1. Carga todas las transacciones del snapshot.
+          2. Corre el clasificador sobre cada una (necesario para frecuencias correctas).
+          3. Aplica _apply_subtype_auto_detection con el batch completo.
+          4. Actualiza en DB solo las no protegidas.
+          5. Recalcula los KPIs del snapshot.
+          6. Retorna resumen: total, updated, skipped, requires_review.
+
+        Args:
+            snapshot              : El AnalysisSnapshot a re-procesar.
+            user                  : El usuario dueño del snapshot.
+            skip_user_reclassified: Si True, omite transacciones con method="user_reclassified".
+        """
+        # 1. Cargar transacciones
+        txns: list[AnalysisTransaction] = (
+            self.db.query(AnalysisTransaction)
+            .filter(AnalysisTransaction.snapshot_id == snapshot.snapshot_id)
+            .all()
+        )
+
+        if not txns:
+            return {
+                "snapshot_id": snapshot.snapshot_id,
+                "total": 0,
+                "updated": 0,
+                "skipped": 0,
+                "requires_review": 0,
+            }
+
+        # 2. Instanciar clasificador una sola vez para todo el batch
+        clf = get_classifier(str(user.user_id), user.full_name or "")
+
+        classified: list[dict[str, Any]] = []
+        for tx in txns:
+            row = transaction_to_classifier_row(
+                {"description": tx.detail, "amount": float(tx.amount)}
+            )
+            cats, confidence, method = clf.predict(row)
+            classified.append(
+                {
+                    # Campos que _apply_subtype_auto_detection necesita
+                    "detail": tx.detail,
+                    "description": tx.detail,
+                    "amount": float(tx.amount),
+                    "economic_type": cats.get("Economic Type") if cats else tx.economic_type,
+                    "economic_type_detail": (
+                        cats.get("Economic Type Detail") if cats else tx.economic_type_detail
+                    ),
+                    "subtype_economic": (
+                        cats.get("SubType Economic") if cats else tx.subtype_economic
+                    ),
+                    "budget_category": (
+                        cats.get("Categoría de presupuesto") if cats else tx.budget_category
+                    ),
+                    "budget_role": cats.get("budget_role") if cats else tx.budget_role,
+                    "confidence": confidence,
+                    "method": method,
+                    # Referencia al objeto ORM para actualizar luego
+                    "_tx_obj": tx,
+                    "_is_manual": tx.method == "user_reclassified",
+                }
+            )
+
+        # 3. Auto-detección de subtype por frecuencia en el batch completo
+        classified = self._apply_subtype_auto_detection(classified)
+
+        # 4. Actualizar DB
+        updated = 0
+        skipped = 0
+        for item in classified:
+            tx: AnalysisTransaction = item["_tx_obj"]
+            if skip_user_reclassified and item["_is_manual"]:
+                skipped += 1
+                continue
+            tx.economic_type = item["economic_type"]
+            tx.economic_type_detail = item["economic_type_detail"]
+            tx.subtype_economic = item["subtype_economic"]
+            tx.budget_category = item["budget_category"]
+            tx.budget_role = item["budget_role"]
+            tx.confidence = item["confidence"]
+            tx.method = item["method"]
+            updated += 1
+
+        self.db.commit()
+
+        # 5. Recalcular KPIs del snapshot con el estado final de todas las transacciones
+        # Re-consultar para que los objetos skipped reflejen sus valores reales en DB
+        txns_final: list[AnalysisTransaction] = (
+            self.db.query(AnalysisTransaction)
+            .filter(AnalysisTransaction.snapshot_id == snapshot.snapshot_id)
+            .all()
+        )
+        self._recalculate_snapshot_kpis(snapshot, txns_final)
+
+        # 6. Contar cuántas siguen requiriendo revisión tras la reclasificación
+        requires_review = sum(1 for tx in txns_final if float(tx.confidence) < 0.8)
+
+        return {
+            "snapshot_id": snapshot.snapshot_id,
+            "total": len(txns_final),
+            "updated": updated,
+            "skipped": skipped,
+            "requires_review": requires_review,
+        }
