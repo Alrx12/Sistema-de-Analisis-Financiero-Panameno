@@ -35,8 +35,8 @@ class DummyAnalysisTransaction:
         confidence,
         method,
         economic_type="gasto",
-        subtype_economic="operativo",
-        transaction_category="gasto",
+        economic_type_detail="gasto_variable",
+        subtype_economic="extraordinario",
         budget_category="vivienda",
         budget_role="presupuestable",
         movement_type="debit",
@@ -50,8 +50,8 @@ class DummyAnalysisTransaction:
         self.amount = Decimal(str(amount))
         self.movement_type = movement_type
         self.economic_type = economic_type
+        self.economic_type_detail = economic_type_detail
         self.subtype_economic = subtype_economic
-        self.transaction_category = transaction_category
         self.budget_category = budget_category
         self.budget_role = budget_role
         self.confidence = Decimal(str(confidence))

@@ -13,8 +13,8 @@ def test_normalize_text_removes_accents_and_uppercases() -> None:
 def test_normalize_categories_normalizes_known_fields() -> None:
     categories = {
         "Economic Type": "Gasto",
+        "Economic Type Detail": "Gasto_Variable",
         "SubType Economic": "Operativo",
-        "Tipo de transacción": "GASTO",
         "Categoría de presupuesto": "Alimentación",
         "budget_role": "Presupuestable",
     }
@@ -23,11 +23,29 @@ def test_normalize_categories_normalizes_known_fields() -> None:
 
     assert normalized == {
         "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_variable",
         "SubType Economic": "operativo",
-        "Tipo de transacción": "gasto",
         "Categoría de presupuesto": "alimentacion",
         "budget_role": "presupuestable",
     }
+
+
+def test_normalize_categories_drops_tipo_de_transaccion() -> None:
+    """'Tipo de transacción' ya no forma parte del esquema — debe ser ignorado silenciosamente."""
+    categories = {
+        "Economic Type": "gasto",
+        "Tipo de transacción": "GASTO",
+        "Categoría de presupuesto": "otros",
+        "budget_role": "presupuestable",
+    }
+
+    normalized = normalize_categories(categories)
+
+    # El campo obsoleto no debe aparecer en el output
+    assert "Tipo de transacción" not in normalized
+    # Los campos actuales deben estar presentes (Economic Type Detail vacío → "")
+    assert normalized["Economic Type"] == "gasto"
+    assert normalized["Economic Type Detail"] == ""
 
 
 def test_canonicalize_detail_spotify_long_descriptor() -> None:
@@ -63,6 +81,32 @@ def test_canonicalize_detail_netflix() -> None:
 def test_canonicalize_detail_google_one() -> None:
     raw = "DB COMPRA E-COMMERCE INTL MCD CTE-USA-GOOGLE ONE P3-5925-15858680"
     assert canonicalize_detail(raw) == "GOOGLE ONE"
+
+
+def test_canonicalize_detail_google_mob_stays_distinct() -> None:
+    """GOOGLE MOB es una suscripción de Play Store — no debe colapsar a GOOGLE."""
+    raw = "DB COMPRA E-COMMERCE INTL MCD CTE-USA-GOOGLE MOB"
+    assert canonicalize_detail(raw) == "GOOGLE MOB"
+
+
+def test_canonicalize_detail_google_play_suffix_preserved() -> None:
+    """Cualquier GOOGLE + sufijo de 2-6 letras se preserva como clave distinta."""
+    # YouTube Music en Banistmo podría aparecer así:
+    assert canonicalize_detail("GOOGLE YTU") == "GOOGLE YTU"
+    # Google Drive:
+    assert canonicalize_detail("GOOGLE DRI") == "GOOGLE DRI"
+
+
+def test_canonicalize_detail_google_cru_still_maps_to_crunchyroll() -> None:
+    """GOOGLE CRU tiene precedencia explícita → sigue siendo CRUNCHYROLL."""
+    raw = "DB COMPRA E-COMMERCE INTL MCD CTE-USA-GOOGLE CRU"
+    assert canonicalize_detail(raw) == "CRUNCHYROLL"
+
+
+def test_canonicalize_detail_plain_google_maps_to_google() -> None:
+    """GOOGLE sin sufijo (pago directo) sigue colapsando a GOOGLE."""
+    raw = "DB COMPRA E-COMMERCE INTL MCD CTE-USA-GOOGLE"
+    assert canonicalize_detail(raw) == "GOOGLE"
 
 
 def test_canonicalize_detail_falls_back_to_cleaned_descriptor_when_no_rule_matches() -> None:

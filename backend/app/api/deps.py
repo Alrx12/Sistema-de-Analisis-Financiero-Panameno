@@ -3,7 +3,7 @@ from uuid import UUID
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError
+import jwt
 from sqlalchemy.orm import Session
 
 from app.core.database import SessionLocal
@@ -37,7 +37,7 @@ def get_current_user(
         if not user_id:
             raise credentials_exception
         user_id = UUID(user_id)
-    except JWTError:
+    except jwt.PyJWTError:
         raise credentials_exception
     except ValueError:
         raise credentials_exception

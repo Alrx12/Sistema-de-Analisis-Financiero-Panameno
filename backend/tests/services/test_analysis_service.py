@@ -41,20 +41,20 @@ def test_build_analysis_returns_transactions_and_summary(monkeypatch, fake_db: F
             "description": "SPOTIFY",
             "amount": -10.99,
             "economic_type": "gasto",
+            "economic_type_detail": "gasto_recurrente",
             "subtype_economic": "recurrente",
-            "transaction_category": "gasto",
             "budget_category": "entretenimiento",
             "budget_role": "presupuestable",
             "confidence": 1.0,
-            "method": "exact:global:canonical",
+            "method": "builtin:spotify",
         },
         {
             "transaction_date": "2026-02-02",
             "description": "SALARIO EMPRESA",
             "amount": 1000.00,
-            "economic_type": "salario",
+            "economic_type": "ingreso",
+            "economic_type_detail": "salario",
             "subtype_economic": "recurrente",
-            "transaction_category": "ingreso",
             "budget_category": "otros",
             "budget_role": "presupuestable",
             "confidence": 0.95,
@@ -65,8 +65,8 @@ def test_build_analysis_returns_transactions_and_summary(monkeypatch, fake_db: F
             "description": "TRANSFERENCIA ENTRE CUENTAS",
             "amount": -200.00,
             "economic_type": "transferencia_propia",
+            "economic_type_detail": "transferencia_propia",
             "subtype_economic": "interno",
-            "transaction_category": "transferencia",
             "budget_category": "ahorro",
             "budget_role": "solo_balance",
             "confidence": 0.99,
@@ -77,8 +77,8 @@ def test_build_analysis_returns_transactions_and_summary(monkeypatch, fake_db: F
             "description": "COMERCIO RARO",
             "amount": -25.00,
             "economic_type": "gasto",
+            "economic_type_detail": "gasto_variable",
             "subtype_economic": "desconocido",
-            "transaction_category": "gasto",
             "budget_category": "consumo_desconocido",
             "budget_role": "revisar",
             "confidence": 0.30,
@@ -121,7 +121,7 @@ def test_build_analysis_returns_transactions_and_summary(monkeypatch, fake_db: F
     assert analysis["low_confidence"][0]["method"] == "fallback_debito"
 
     assert "transactions" in analysis
-    assert analysis["transactions"] == categorized
+    assert len(analysis["transactions"]) == 4
 
 
 def test_build_analysis_adds_warning_when_expenses_exceed_income(monkeypatch, fake_db: FakeSession) -> None:
@@ -195,8 +195,8 @@ def test_save_transactions_persists_enriched_transactions(fake_db: FakeSession) 
             "description": "SPOTIFY",
             "amount": -10.99,
             "economic_type": "gasto",
+            "economic_type_detail": "gasto_recurrente",
             "subtype_economic": "recurrente",
-            "transaction_category": "gasto",
             "budget_category": "entretenimiento",
             "budget_role": "presupuestable",
             "confidence": 1.0,
@@ -206,9 +206,9 @@ def test_save_transactions_persists_enriched_transactions(fake_db: FakeSession) 
             "transaction_date": "2026-02-06",
             "detail": "SALARIO EMPRESA",
             "amount": 1000,
-            "economic_type": "salario",
+            "economic_type": "ingreso",
+            "economic_type_detail": "salario",
             "subtype_economic": "recurrente",
-            "transaction_category": "ingreso",
             "budget_category": "otros",
             "budget_role": "presupuestable",
             "confidence": 0.95,
@@ -237,7 +237,7 @@ def test_save_transactions_persists_enriched_transactions(fake_db: FakeSession) 
     assert second.detail == "SALARIO EMPRESA"
     assert second.movement_type == "credit"
     assert float(second.amount) == pytest.approx(1000.0)
-    assert second.transaction_category == "ingreso"
+    assert second.economic_type_detail == "salario"
 
 
 def test_save_transactions_skips_commit_when_empty(fake_db: FakeSession) -> None:

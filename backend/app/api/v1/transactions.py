@@ -1,11 +1,20 @@
 import logging
+from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, get_db
 from app.models.user import User
-from app.schemas.transaction import LearnRequest, LearnResponse
+from app.schemas.analysis_transaction import AnalysisTransactionResponse
+from app.schemas.transaction import (
+    LearnRequest,
+    LearnResponse,
+    ReclassifyRequest,
+    ReclassifyResponse,
+)
 from app.services.financial_classifier import FinancialClassifier
+from app.services.transaction_service import reclassify_transaction
 
 logger = logging.getLogger(__name__)
 
@@ -38,8 +47,8 @@ def learn_transaction(
 
     categories = {
         "Economic Type": body.economic_type,
+        "Economic Type Detail": body.economic_type_detail,
         "SubType Economic": body.subtype_economic,
-        "Tipo de transacción": body.transaction_type,
         "Categoría de presupuesto": body.budget_category,
         "budget_role": body.budget_role,
     }
@@ -83,4 +92,74 @@ def learn_transaction(
         kb_target=kb_target,
         personal_exact_matches=personal_exact,
         personal_patterns=personal_patterns,
+    )
+
+
+@router.post(
+    "/{transaction_id}/reclassify",
+    response_model=ReclassifyResponse,
+    summary="Reclasificar una transacción existente",
+    description=(
+        "Corrige la categorización de una transacción ya guardada en la base de datos. "
+        "La transacción queda con confidence=1.0 y method='user_reclassified'. "
+        "Si `also_learn=True` (default), también guarda la corrección en el KB para que "
+        "futuras transacciones con el mismo descriptor se clasifiquen correctamente de forma automática. "
+        "Útil cuando el usuario revisa GET /analysis/{snapshot_id}/transactions y "
+        "encuentra una categorización incorrecta."
+    ),
+)
+def reclassify_transaction_endpoint(
+    transaction_id: UUID,
+    body: ReclassifyRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> ReclassifyResponse:
+    """
+    Reclasifica una transacción existente y opcionalmente actualiza el KB.
+
+    - Verifica que la transacción exista y pertenezca al usuario actual.
+    - Actualiza los campos de clasificación en la DB.
+    - Si also_learn=True, llama a FinancialClassifier.learn() con el detalle raw
+      de la transacción para que el sistema aprenda el ejemplo.
+    """
+    result = reclassify_transaction(
+        db=db,
+        transaction_id=transaction_id,
+        user=current_user,
+        economic_type=body.economic_type,
+        economic_type_detail=body.economic_type_detail,
+        subtype_economic=body.subtype_economic,
+        budget_category=body.budget_category,
+        budget_role=body.budget_role,
+        also_learn=body.also_learn,
+        force_personal=body.force_personal,
+        weight=body.weight,
+    )
+
+    if result is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Transacción no encontrada.",
+        )
+
+    tx = result["transaction"]
+    learn_result = result["learn_result"]
+
+    # Construir AnalysisTransactionResponse con requires_review calculado
+    tx_response = AnalysisTransactionResponse.model_validate(tx)
+    tx_response.requires_review = float(tx.confidence) < 0.8  # siempre False tras reclassify (confidence=1.0)
+
+    if learn_result:
+        return ReclassifyResponse(
+            transaction=tx_response,
+            learned=True,
+            detail_learned=learn_result["detail_learned"],
+            kb_target=learn_result["kb_target"],
+            personal_exact_matches=learn_result["personal_exact_matches"],
+            personal_patterns=learn_result["personal_patterns"],
+        )
+
+    return ReclassifyResponse(
+        transaction=tx_response,
+        learned=False,
     )

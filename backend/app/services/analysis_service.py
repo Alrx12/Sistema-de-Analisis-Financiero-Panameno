@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import unicodedata
-from collections import defaultdict
+from collections import Counter, defaultdict
 from datetime import date, datetime
 from typing import Any
 
@@ -11,9 +11,16 @@ from app.models.analysis_snapshot import AnalysisSnapshot
 from app.models.analysis_transaction import AnalysisTransaction
 from app.models.user import User
 from app.services.categorization_service import categorize_transactions
+from app.services.detail_normalizer import canonicalize_detail
 
 
 _BALANCE_ONLY_ROLES = {"solo_balance"}
+
+# Tipos cuyo SubType no se sobreescribe por frecuencia (ya tienen un valor semántico fijo)
+_SUBTYPE_KEEP_AS_IS = {"transferencia_propia", "transferencia_tercero"}
+
+# Umbral de ocurrencias para considerar una transacción como recurrente dentro del archivo
+_RECURRENTE_THRESHOLD = 3
 
 
 class AnalysisService:
@@ -32,13 +39,64 @@ class AnalysisService:
                 return None
         return None
 
+    def _apply_subtype_auto_detection(
+        self, categorized: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
+        """
+        Segunda pasada sobre las transacciones ya categorizadas para asignar
+        SubType Economic basado en frecuencia dentro del mismo archivo.
+
+        Reglas:
+          - cargo_financiero              → "financiero" (siempre, sin importar frecuencia)
+          - transferencia_propia/tercero  → se conserva el valor del clasificador
+          - Todo lo demás (gasto, ingreso, reembolso):
+              · count >= _RECURRENTE_THRESHOLD → "recurrente"
+              · count < _RECURRENTE_THRESHOLD  → "extraordinario"
+            Excepción: si el método es builtin: y el SubType original no es
+            "desconocido" ni "variable", se conserva (el builtin sabe más que
+            la frecuencia, e.g. PLANILLA siempre es recurrente).
+        """
+        # Contar ocurrencias de cada clave canónica en el archivo
+        freq: Counter[str] = Counter()
+        for t in categorized:
+            raw = (t.get("description") or t.get("detail") or "").strip()
+            if raw:
+                freq[canonicalize_detail(raw)] += 1
+
+        result = []
+        for t in categorized:
+            tx = {**t}
+            etype = (tx.get("economic_type") or "").lower()
+            method = (tx.get("method") or "").lower()
+
+            if etype == "cargo_financiero":
+                tx["subtype_economic"] = "financiero"
+            elif etype in _SUBTYPE_KEEP_AS_IS:
+                pass  # conservar valor del clasificador
+            else:
+                # Solo sobreescribir subtypes "blandos"
+                current_subtype = (tx.get("subtype_economic") or "").lower()
+                is_soft = current_subtype in ("desconocido", "variable", "operativo", "")
+                is_builtin = method.startswith("builtin:")
+                if is_soft or not is_builtin:
+                    raw = (tx.get("description") or tx.get("detail") or "").strip()
+                    count = freq.get(canonicalize_detail(raw), 1) if raw else 1
+                    tx["subtype_economic"] = (
+                        "recurrente" if count >= _RECURRENTE_THRESHOLD else "extraordinario"
+                    )
+
+            result.append(tx)
+        return result
+
     def build_analysis(
         self,
         transactions: list[dict[str, Any]],
         user_id: str,
         user_name: str,
     ) -> dict[str, Any]:
-        categorized_transactions = categorize_transactions(transactions, user_id, user_name)
+        categorized_transactions = self._apply_subtype_auto_detection(
+            categorize_transactions(transactions, user_id, user_name)
+        )
 
         total_income = 0.0
         total_expenses = 0.0
@@ -177,8 +235,8 @@ class AnalysisService:
                 amount=amount,
                 movement_type="credit" if amount >= 0 else "debit",
                 economic_type=t.get("economic_type"),
+                economic_type_detail=t.get("economic_type_detail"),
                 subtype_economic=t.get("subtype_economic"),
-                transaction_category=t.get("transaction_category"),
                 budget_category=t.get("budget_category"),
                 budget_role=t.get("budget_role"),
                 confidence=float(t.get("confidence", 0) or 0),

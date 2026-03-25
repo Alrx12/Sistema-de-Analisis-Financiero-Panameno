@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 import unicodedata
-from typing import Any
+from typing import Any, Callable
 
 
 # ============================================================================
@@ -33,8 +33,8 @@ AMBIGUOUS_CANONICAL_KEYS = {
 # ============================================================================
 CATEGORY_FIELDS = [
     "Economic Type",
+    "Economic Type Detail",
     "SubType Economic",
-    "Tipo de transacción",
     "Categoría de presupuesto",
     "budget_role",
 ]
@@ -45,19 +45,32 @@ CATEGORY_FIELDS = [
 # Ajusta aquí cuando tu taxonomía evolucione.
 # ============================================================================
 STRICT_VALUE_MAPS = {
+    # Tipo general — 6 valores canónicos
     "Economic Type": {
-        "gasto": "gasto",
         "ingreso": "ingreso",
-        "transferencia": "transferencia",
+        "gasto": "gasto",
+        "cargo_financiero": "cargo_financiero",
         "transferencia_propia": "transferencia_propia",
         "transferencia_tercero": "transferencia_tercero",
-        "ahorro": "ahorro",
-        "comision": "comision",
-        "comisión": "comision",
-        "impuesto": "impuesto",
-        "salario": "salario",
         "reembolso": "reembolso",
+    },
+    # Tipo extendido — preserva granularidad del tipo de operación
+    "Economic Type Detail": {
+        # Ingresos
+        "salario": "salario",
         "otros_ingresos": "otros_ingresos",
+        # Gastos
+        "gasto_variable": "gasto_variable",
+        "gasto_recurrente": "gasto_recurrente",
+        # Cargos financieros
+        "comision": "comision",
+        "impuesto": "impuesto",
+        "cargo_bancario": "cargo_bancario",
+        # Transferencias
+        "transferencia_propia": "transferencia_propia",
+        "transferencia_tercero": "transferencia_tercero",
+        # Reembolsos
+        "reembolso": "reembolso",
     },
     "SubType Economic": {
         "operativo": "operativo",
@@ -65,24 +78,9 @@ STRICT_VALUE_MAPS = {
         "extraordinario": "extraordinario",
         "variable": "variable",
         "fijo": "fijo",
-        "salario": "salario",
-        "comision": "comision",
-        "comisión": "comision",
-        "impuesto": "impuesto",
-        "otros": "otros",
         "interno": "interno",
         "financiero": "financiero",
         "desconocido": "desconocido",
-    },
-    "Tipo de transacción": {
-        "gasto": "gasto",
-        "ingreso": "ingreso",
-        "transferencia": "transferencia",
-        "ahorro": "ahorro",
-        "comision": "comision",
-        "comisión": "comision",
-        "impuesto": "impuesto",
-        "reembolso": "reembolso",
     },
     "Categoría de presupuesto": {
         "vivienda": "vivienda",
@@ -119,12 +117,16 @@ STRICT_VALUE_MAPS = {
 }
 
 
+# Tipo para el campo de reemplazo: string fijo o callable que recibe el Match
+_MerchantReplacement = str | Callable[[re.Match[str]], str]
+
+
 # ============================================================================
 # Reglas específicas primero
 # Mantienen precedencia sobre alias genéricos.
-# Importante: GOOGLE GRI y GRINDR se preservan como merchants distintos.
+# Reglas con callable permiten reemplazos dinámicos (ej: preservar sufijo GOOGLE XXX).
 # ============================================================================
-SPECIFIC_MERCHANT_RULES: list[tuple[re.Pattern[str], str]] = [
+SPECIFIC_MERCHANT_RULES: list[tuple[re.Pattern[str], _MerchantReplacement]] = [
     # Casos explícitos de negocio
     (re.compile(r"\bGOOGLE\s+GRI\b", re.IGNORECASE), "GOOGLE GRI"),
     (re.compile(r"\bGRINDR\b", re.IGNORECASE), "GRINDR"),
@@ -138,7 +140,17 @@ SPECIFIC_MERCHANT_RULES: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"\bDISNEY\s*PLU\b", re.IGNORECASE), "DISNEY PLUS"),
     (re.compile(r"\bGOOGLE\s+ONE\b", re.IGNORECASE), "GOOGLE ONE"),
     (re.compile(r"\bGOOGLE\s+CRU\b", re.IGNORECASE), "CRUNCHYROLL"),   # Banistmo: GOOGLE CRU = Crunchyroll
-    (re.compile(r"\bGOOGLE\s+MOB\b", re.IGNORECASE), "GOOGLE"),
+
+    # Suscripciones de Google Play Store: Banistmo trunca el nombre del app como "GOOGLE XXX"
+    # donde XXX son 2–6 letras del app (MOB, YTU, DRI, etc.).
+    # Esta regla preserva cada sufijo como clave distinta en lugar de colapsarlos todos en "GOOGLE".
+    # IMPORTANTE: las reglas GOOGLE ONE, GOOGLE CRU, GOOGLE GRI (arriba) tienen precedencia —
+    # solo llegan aquí los sufijos no reconocidos explícitamente.
+    (
+        re.compile(r"\bGOOGLE\s+([A-Z]{2,6})\b", re.IGNORECASE),
+        lambda m: "GOOGLE " + m.group(1).upper(),
+    ),
+
     (re.compile(r"\bAPPLE\s+COM\b", re.IGNORECASE), "APPLE"),
     (re.compile(r"\bUBER\s+R\b", re.IGNORECASE), "UBER"),
 ]
@@ -159,13 +171,18 @@ GENERIC_MERCHANT_RULES: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"\bGOOGLE\b", re.IGNORECASE), "GOOGLE"),
     (re.compile(r"\bUBER\b", re.IGNORECASE), "UBER"),
     (re.compile(r"\bTIGO\b", re.IGNORECASE), "TIGO"),
-    (re.compile(r"\bPEDIDOSYA\b", re.IGNORECASE), "PEDIDOSYA"),
+    (re.compile(r"\bPEDIDOS(?:\s*YA)?\b", re.IGNORECASE), "PEDIDOSYA"),
     (re.compile(r"\bKFC\b", re.IGNORECASE), "KFC"),
     (re.compile(r"\bSTARBUCKS\b", re.IGNORECASE), "STARBUCKS"),
     (re.compile(r"\bSUBWAY\b", re.IGNORECASE), "SUBWAY"),
     (re.compile(r"\bDOMINOS?\b", re.IGNORECASE), "DOMINOS"),
     (re.compile(r"\bSUPER\s+99\b", re.IGNORECASE), "SUPERMERCADO 99"),
     (re.compile(r"\bXTRA\b", re.IGNORECASE), "SUPERMERCADO XTRA"),
+    (re.compile(r"\bTIM\s+HORTON\b", re.IGNORECASE), "TIM HORTONS"),
+    (re.compile(r"\bNORTON\b", re.IGNORECASE), "NORTON"),
+    (re.compile(r"\bPAYPAL\b", re.IGNORECASE), "PAYPAL"),
+    (re.compile(r"\bSUPERMERCADO\s+REY\b|\bREY\s+\d+\s+DE\b|\bREY\b(?=\s+\d)", re.IGNORECASE), "SUPERMERCADO REY"),
+    (re.compile(r"\bTEMU\b", re.IGNORECASE), "TEMU"),
 ]
 
 
@@ -186,6 +203,11 @@ NOISE_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\bDLC\b", re.IGNORECASE),
     re.compile(r"\bAPP\b", re.IGNORECASE),
     re.compile(r"\bAJUSTE\b", re.IGNORECASE),
+    # BAC: códigos de tipo de transacción — token standalone antes del detalle del merchant
+    # CP = Compra/Cargo Payment, PT = Pago Tarjeta, CM = Cargo Mensual
+    re.compile(r"\bCP\b"),
+    re.compile(r"\bPT\b"),
+    re.compile(r"\bCM\b"),
 ]
 
 
@@ -193,9 +215,12 @@ NOISE_PATTERNS: list[re.Pattern[str]] = [
 # Sufijos variables, IDs y ruido transaccional
 # ============================================================================
 VARIABLE_SUFFIX_PATTERNS: list[re.Pattern[str]] = [
-    # Número de tarjeta enmascarado (BG y BAC): -4187-94XX-XXXX-6798
+    # Número de tarjeta enmascarado (BG): -4187-94XX-XXXX-6798
     # Formato: -4d - (2d+2X) - (4X) - 4d  con o sin espacios alrededor de guiones
     re.compile(r"\s*-\s*\d{4}\s*-\s*[0-9A-Z]{4}\s*-\s*[0-9A-Z]{4}\s*-\s*\d{4}\b", re.IGNORECASE),
+    # Número de tarjeta enmascarado (BAC): 4143-27**-****-63219
+    # Formato: 4d - (2d+2*) - 4* - 4-5d  (asteriscos, a diferencia de XX en BG)
+    re.compile(r"\s*\b\d{4}\s*-\s*[\d*]{4}\s*-\s*[*]{4}\s*-\s*\d{4,5}\b"),
     # ID de referencia alfanumérico al final: 7006M4Z73, AB12CD3
     # Token de 6+ chars con mezcla de letras y dígitos (no palabras puras)
     re.compile(r"\s+(?=[A-Z0-9]*[0-9][A-Z0-9]*[A-Z][A-Z0-9]*|[A-Z0-9]*[A-Z][A-Z0-9]*[0-9][A-Z0-9]*)[A-Z0-9]{6,}\b"),
@@ -276,12 +301,14 @@ def remove_noise_tokens(text: str) -> str:
 # ============================================================================
 def detect_canonical_merchant(detail: str) -> str:
     for pattern, merchant in SPECIFIC_MERCHANT_RULES:
-        if pattern.search(detail):
-            return merchant
+        m = pattern.search(detail)
+        if m:
+            return merchant(m) if callable(merchant) else merchant
 
     for pattern, merchant in GENERIC_MERCHANT_RULES:
-        if pattern.search(detail):
-            return merchant
+        m = pattern.search(detail)
+        if m:
+            return merchant(m) if callable(merchant) else merchant
 
     return ""
 

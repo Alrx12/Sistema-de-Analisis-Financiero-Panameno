@@ -152,6 +152,15 @@ BG_XLSX_REUSE = _make_bg_xlsx(
     ["2026-03-11 12:54:04", None, "ref2", "trx2", "ACH XPRESS NOMINA", None, 1500.00],
 )
 
+# Fixture sin ningún número de 4 dígitos en ningún campo.
+# _find_last4 retorna None en todos → account_signatures vacío → detected_last4=None
+# → _compute_confidence_score("Banco General", None) = 0.35
+# Regla: necesita al menos una fila con col6 != None para que openpyxl persista esa columna.
+BG_XLSX_NO_LAST4 = _make_bg_xlsx(
+    ["2026-03-10 12:54:04", None, "ref-abc", "trx-xyz", "SALARIO EMPRESA", None, 1500.00],
+    ["2026-03-11 12:54:04", None, "ref-def", "trx-uvw", "SUPERMERCADO REY", 90.50, None],
+)
+
 
 def test_upload_returns_202_and_processes_async(client: TestClient) -> None:
     """El endpoint retorna 202 inmediatamente; la tarea se ejecuta de forma síncrona en tests."""
@@ -215,17 +224,19 @@ def test_upload_analysis_totals(client: TestClient) -> None:
     assert snapshot.summary["total_expenses"] == 120.5
 
 
-@pytest.mark.skip(
-    reason="Roto: usa CSV genérico (fecha/descripcion/monto) que ningún parser reconoce. "
-    "Requiere un XLSX en formato Banistmo real o implementar un parser de fallback."
-)
 def test_upload_without_last4_creates_low_confidence_account(client: TestClient) -> None:
+    """
+    Cuando el banco es identificado pero no hay últimos 4 dígitos en ninguna
+    transacción, la cuenta se crea con confidence_score=0.35.
+
+    Esto ejercita el path de _compute_confidence_score con last4=None:
+        bank_name conocido + no last4 → 0.35
+    """
     headers = register_and_login(client, "files-low-confidence")
 
-    csv_content = b"fecha,descripcion,monto\n2026-03-10,Salario,1500\n2026-03-11,Supermercado,-120.5\n"
     response = client.post(
         "/api/v1/files/upload",
-        files={"file": ("estado_banistmo.csv", BytesIO(csv_content), "text/csv")},
+        files={"file": ("estado_bg.xlsx", BytesIO(BG_XLSX_NO_LAST4), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
         headers=headers,
     )
 

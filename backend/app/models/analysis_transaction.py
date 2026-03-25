@@ -34,8 +34,8 @@ class AnalysisTransaction(Base):
     movement_type: Mapped[str] = mapped_column(String, nullable=False)
 
     economic_type: Mapped[str | None] = mapped_column(String)
+    economic_type_detail: Mapped[str | None] = mapped_column(String)
     subtype_economic: Mapped[str | None] = mapped_column(String)
-    transaction_category: Mapped[str | None] = mapped_column(String)
     budget_category: Mapped[str | None] = mapped_column(String)
     budget_role: Mapped[str | None] = mapped_column(String)
 

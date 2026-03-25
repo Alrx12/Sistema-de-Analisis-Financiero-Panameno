@@ -51,8 +51,8 @@ def categorize_transactions(
         enriched = {**t}
         if cats:
             enriched["economic_type"] = cats.get("Economic Type")
+            enriched["economic_type_detail"] = cats.get("Economic Type Detail")
             enriched["subtype_economic"] = cats.get("SubType Economic")
-            enriched["transaction_category"] = cats.get("Tipo de transacción")
             enriched["budget_category"] = cats.get("Categoría de presupuesto")
             enriched["budget_role"] = cats.get("budget_role")
         enriched["confidence"] = confidence

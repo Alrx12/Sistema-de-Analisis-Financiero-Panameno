@@ -13,8 +13,8 @@ class AnalysisTransactionResponse(BaseModel):
     movement_type: str
 
     economic_type: str | None
+    economic_type_detail: str | None
     subtype_economic: str | None
-    transaction_category: str | None
     budget_category: str | None
     budget_role: str | None
 

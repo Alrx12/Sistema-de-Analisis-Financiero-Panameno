@@ -54,16 +54,16 @@ def _user_kb_path(user_id: str) -> str:
 class FinancialClassifier:
     OWN_TRANSFER = {
         "Economic Type": "transferencia_propia",
+        "Economic Type Detail": "transferencia_propia",
         "SubType Economic": "interno",
-        "Tipo de transacción": "transferencia",
         "Categoría de presupuesto": "ahorro",
         "budget_role": "solo_balance",
     }
 
     THIRD_TRANSFER = {
         "Economic Type": "transferencia_tercero",
-        "SubType Economic": "operativo",
-        "Tipo de transacción": "transferencia",
+        "Economic Type Detail": "transferencia_tercero",
+        "SubType Economic": "variable",
         "Categoría de presupuesto": "otros",
         "budget_role": "presupuestable",
     }
@@ -72,9 +72,9 @@ class FinancialClassifier:
         (
             r"PLANILLA|SALARIO|NOMINA|PAYROLL",
             {
-                "Economic Type": "salario",
+                "Economic Type": "ingreso",
+                "Economic Type Detail": "salario",
                 "SubType Economic": "recurrente",
-                "Tipo de transacción": "ingreso",
                 "Categoría de presupuesto": "otros",
                 "budget_role": "presupuestable",
             },
@@ -85,8 +85,8 @@ class FinancialClassifier:
             r"CR DEVOLUCION|REV DB POS|REVERSO|AJUSTE CTE",
             {
                 "Economic Type": "reembolso",
+                "Economic Type Detail": "reembolso",
                 "SubType Economic": "variable",
-                "Tipo de transacción": "reembolso",
                 "Categoría de presupuesto": "otros",
                 "budget_role": "solo_balance",
             },
@@ -96,9 +96,9 @@ class FinancialClassifier:
         (
             r"INTERES.*CUENTA|INTERES.*AHORROS",
             {
-                "Economic Type": "otros_ingresos",
+                "Economic Type": "ingreso",
+                "Economic Type Detail": "otros_ingresos",
                 "SubType Economic": "financiero",
-                "Tipo de transacción": "ingreso",
                 "Categoría de presupuesto": "otros",
                 "budget_role": "presupuestable",
             },
@@ -109,8 +109,8 @@ class FinancialClassifier:
             r"CREDITO TRANSF\. DE (CC|AH) A (CC|AH)",
             {
                 "Economic Type": "transferencia_propia",
+                "Economic Type Detail": "transferencia_propia",
                 "SubType Economic": "interno",
-                "Tipo de transacción": "transferencia",
                 "Categoría de presupuesto": "ahorro",
                 "budget_role": "solo_balance",
             },
@@ -121,8 +121,8 @@ class FinancialClassifier:
             r"ENTRE CUENTAS",
             {
                 "Economic Type": "transferencia_propia",
+                "Economic Type Detail": "transferencia_propia",
                 "SubType Economic": "interno",
-                "Tipo de transacción": "transferencia",
                 "Categoría de presupuesto": "ahorro",
                 "budget_role": "solo_balance",
             },
@@ -133,8 +133,8 @@ class FinancialClassifier:
             r"^YAPPY BG DE ",
             {
                 "Economic Type": "transferencia_tercero",
+                "Economic Type Detail": "transferencia_tercero",
                 "SubType Economic": "variable",
-                "Tipo de transacción": "ingreso",
                 "Categoría de presupuesto": "otros",
                 "budget_role": "presupuestable",
             },
@@ -144,10 +144,10 @@ class FinancialClassifier:
         (
             r"^PAGO YAPPY BG A |^YAPPY BG A ",
             {
-                "Economic Type": "gasto",
+                "Economic Type": "transferencia_tercero",
+                "Economic Type Detail": "transferencia_tercero",
                 "SubType Economic": "variable",
-                "Tipo de transacción": "gasto",
-                "Categoría de presupuesto": "consumo_desconocido",
+                "Categoría de presupuesto": "otros",
                 "budget_role": "revisar",
             },
             0.82,
@@ -156,9 +156,9 @@ class FinancialClassifier:
         (
             r"COMISION|CARGO ANUAL|CARGO MENSUAL",
             {
-                "Economic Type": "comision",
+                "Economic Type": "cargo_financiero",
+                "Economic Type Detail": "comision",
                 "SubType Economic": "recurrente",
-                "Tipo de transacción": "comision",
                 "Categoría de presupuesto": "servicios",
                 "budget_role": "gasto_financiero",
             },
@@ -168,14 +168,80 @@ class FinancialClassifier:
         (
             r"\bITBMS\b",
             {
-                "Economic Type": "impuesto",
+                "Economic Type": "cargo_financiero",
+                "Economic Type Detail": "impuesto",
                 "SubType Economic": "recurrente",
-                "Tipo de transacción": "impuesto",
                 "Categoría de presupuesto": "servicios",
                 "budget_role": "gasto_financiero",
             },
             0.95,
             "builtin:itbms",
+        ),
+        # Banistmo: pago desde cuenta corriente a tarjeta de crédito propia → solo_balance
+        # No es un gasto real — es una transferencia interna entre productos del mismo usuario
+        (
+            r"PAGO DE TARJETA DE CREDITO|PAGO DEBITADO PARA TDC",
+            {
+                "Economic Type": "transferencia_propia",
+                "Economic Type Detail": "transferencia_propia",
+                "SubType Economic": "interno",
+                "Categoría de presupuesto": "otros",
+                "budget_role": "solo_balance",
+            },
+            0.95,
+            "builtin:pago_tdc",
+        ),
+        # Banistmo: débito por transferencia entre cuenta corriente y tarjeta de crédito
+        (
+            r"DEBITO\s+TRANSF\b.*\bCC\b",
+            {
+                "Economic Type": "transferencia_propia",
+                "Economic Type Detail": "transferencia_propia",
+                "SubType Economic": "interno",
+                "Categoría de presupuesto": "otros",
+                "budget_role": "solo_balance",
+            },
+            0.95,
+            "builtin:debito_transf_cc",
+        ),
+        # Retiro en cajero ATM → gasto operativo en efectivo
+        (
+            r"\bATM\b.*\bRET\b|\bRETIRO\b.*\bATM\b",
+            {
+                "Economic Type": "gasto",
+                "Economic Type Detail": "gasto_variable",
+                "SubType Economic": "operativo",
+                "Categoría de presupuesto": "otros",
+                "budget_role": "gasto_operativo",
+            },
+            0.85,
+            "builtin:atm_retiro",
+        ),
+        # BAC: seguro de protección contra robo de tarjeta → cargo financiero
+        (
+            r"PROTECCION\s+ROBO|PROTECCION.*TARJETA",
+            {
+                "Economic Type": "cargo_financiero",
+                "Economic Type Detail": "cargo_bancario",
+                "SubType Economic": "recurrente",
+                "Categoría de presupuesto": "servicios",
+                "budget_role": "gasto_financiero",
+            },
+            0.90,
+            "builtin:seguro_proteccion",
+        ),
+        # BAC: cargo de tarjeta (anual/mensual/titular) → cargo financiero
+        (
+            r"VALOR DE TARJETA|TARJETA TITULAR",
+            {
+                "Economic Type": "cargo_financiero",
+                "Economic Type Detail": "cargo_bancario",
+                "SubType Economic": "recurrente",
+                "Categoría de presupuesto": "servicios",
+                "budget_role": "gasto_financiero",
+            },
+            0.90,
+            "builtin:cargo_tarjeta",
         ),
     ]
 
@@ -457,8 +523,8 @@ class FinancialClassifier:
             return (
                 {
                     "Economic Type": "gasto",
+                    "Economic Type Detail": "gasto_variable",
                     "SubType Economic": "desconocido",
-                    "Tipo de transacción": "gasto",
                     "Categoría de presupuesto": "consumo_desconocido",
                     "budget_role": "revisar",
                 },
@@ -469,9 +535,9 @@ class FinancialClassifier:
         if is_credit:
             return (
                 {
-                    "Economic Type": "otros_ingresos",
+                    "Economic Type": "ingreso",
+                    "Economic Type Detail": "otros_ingresos",
                     "SubType Economic": "desconocido",
-                    "Tipo de transacción": "ingreso",
                     "Categoría de presupuesto": "otros",
                     "budget_role": "revisar",
                 },
@@ -498,11 +564,24 @@ class FinancialClassifier:
         if self.user_name_tokens:
             words = [w for w in words if w not in self.user_name_tokens]
 
-        has_global_word = any(w in self.GLOBAL_KEYWORDS for w in words)
+        # Regla de routing:
+        #   Global  → cualquier comercio, servicio o transacción regular.
+        #             Default para todo lo que no sea transferencia.
+        #   Personal → tres casos:
+        #     1. budget_role="solo_balance": transferencia entre cuentas propias
+        #        del mismo usuario (ENTRE CUENTAS, ACH XPRESS a sí mismo).
+        #     2. Economic Type="transferencia_tercero": pago a una persona
+        #        específica (YAPPY A CARLOS, ACH XPRESS A MARIA). No tiene
+        #        sentido compartir en global porque el nombre es personal.
+        #     3. force_personal=True: override explícito del usuario.
+        economic_type       = (categories.get("Economic Type") or "").lower().strip()
+        is_own_transfer     = categories.get("budget_role") == "solo_balance"
+        # transferencia_tercero ahora es valor canónico del campo general Economic Type
+        is_third_party_xfer = economic_type == "transferencia_tercero"
         target = (
-            self.global_rules
-            if (has_global_word and not force_personal)
-            else self.personal_rules
+            self.personal_rules
+            if (force_personal or is_own_transfer or is_third_party_xfer)
+            else self.global_rules
         )
         target_label = "global" if target is self.global_rules else "personal"
 

@@ -1,0 +1,2108 @@
+{
+  "last_updated": "2026-03-24T18:16:24.871086+00:00",
+  "exact_matches": {
+    "BANCA MOVIL RAENCO - 50 Y 6": {
+      "Economic Type": "pago_deuda",
+      "SubType Economic": "financiero",
+      "Tipo de transacción": "deuda",
+      "Categoría de presupuesto": "deuda",
+      "budget_role": "presupuestable"
+    },
+    "BANCA MOVIL RECARGA TRANSPORTE": {
+      "Economic Type": "gasto",
+      "SubType Economic": "operativo",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "transporte",
+      "budget_role": "presupuestable"
+    },
+    "COMISION ANUAL BANCA EN LINEA": {
+      "Economic Type": "comision",
+      "SubType Economic": "financiero",
+      "Tipo de transacción": "impuesto",
+      "Categoría de presupuesto": "Otros",
+      "budget_role": "presupuestable"
+    },
+    "DB COMPRA E-COMMERCE INTL MCD CTE-CRI-DLC UBER": {
+      "Economic Type": "Gasto",
+      "SubType Economic": "Extraordinario",
+      "Tipo de transacción": "Gasto",
+      "Categoría de presupuesto": "transporte",
+      "budget_role": "no_presupuestable"
+    },
+    "DB COMPRA E-COMMERCE INTL MCD CTE-FRA-SPOTIFY": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB COMPRA E-COMMERCE INTL MCD CTE-FRA-SPOTIFY P3-5925-15858680": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB COMPRA E-COMMERCE INTL MCD CTE-FRA-SPOTIFY P3-5925-16959788": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB COMPRA E-COMMERCE INTL MCD CTE-FRA-SPOTIFY P3-5925-18182058": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB COMPRA E-COMMERCE INTL MCD CTE-FRA-SPOTIFY P4-5925-19176720": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB COMPRA E-COMMERCE INTL MCD CTE-IRL-SPOTIFY   -5925-14158702": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB COMPRA E-COMMERCE INTL MCD CTE-USA-APPLE COM -5925-18779251": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB COMPRA E-COMMERCE INTL MCD CTE-USA-DISNEY PLU-5925-18331121": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB COMPRA E-COMMERCE INTL MCD CTE-USA-DISNEY PLU-5925-19373924": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB COMPRA E-COMMERCE INTL MCD CTE-USA-GOOGLE CRU-5925-13188492": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB COMPRA E-COMMERCE INTL MCD CTE-USA-GOOGLE GRI-5925-14852734": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB COMPRA E-COMMERCE INTL MCD CTE-USA-GOOGLE MOB-5925-13046523": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB COMPRA E-COMMERCE INTL MCD CTE-USA-GOOGLE MOB-5925-13048251": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB COMPRA E-COMMERCE INTL MCD CTE-USA-GOOGLE MOB-5925-13048260": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB COMPRA E-COMMERCE INTL MCD CTE-USA-GOOGLE ONE-5925-14158759": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB COMPRA E-COMMERCE INTL MCD CTE-USA-MICROSOFT -5925-17800426": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB COMPRA E-COMMERCE INTL MCD CTE-USA-NETFLIX CO-5925-18121691": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB COMPRA E-COMMERCE INTL MCD CTE-USA-NETFLIX CO-5925-19116383": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB COMPRA E-COMMERCE MCD CTE-DLC UBER R-5925-13352810": {
+      "Economic Type": "gasto",
+      "SubType Economic": "variable",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "transporte",
+      "budget_role": "presupuestable"
+    },
+    "DB COMPRA E-COMMERCE MCD CTE-KFC APP   -5925-17480144": {
+      "Economic Type": "gasto",
+      "SubType Economic": "extraordinario",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "alimentacion",
+      "budget_role": "presupuestable"
+    },
+    "DB COMPRA E-COMMERCE MCD CTE-TIGO FACTU-5925-14862591": {
+      "Economic Type": "gasto",
+      "SubType Economic": "operativo",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "vivienda",
+      "budget_role": "presupuestable"
+    },
+    "DB COMPRA E-COMMERCE MCD CTE-TIGO FACTU-5925-16401655": {
+      "Economic Type": "gasto",
+      "SubType Economic": "operativo",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "vivienda",
+      "budget_role": "presupuestable"
+    },
+    "DB COMPRA E-COMMERCE MCD CTE-TIGO FACTU-5925-17503749": {
+      "Economic Type": "gasto",
+      "SubType Economic": "operativo",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "vivienda",
+      "budget_role": "presupuestable"
+    },
+    "DB COMPRA E-COMMERCE MCD CTE-TIGO FACTU-5925-18848665": {
+      "Economic Type": "gasto",
+      "SubType Economic": "operativo",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "vivienda",
+      "budget_role": "presupuestable"
+    },
+    "DB COMPRA E-COMMERCE MCD CTE-TIGO PAQUE-5925-14378015": {
+      "Economic Type": "gasto",
+      "SubType Economic": "operativo",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "vivienda",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA INTL MCD CTE-USA-GOOGLE  BO-5925-18778052": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA INTL MCD CTE-USA-GOOGLE  CR-5925-14386650": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA INTL MCD CTE-USA-GOOGLE  CR-5925-16430768": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA INTL MCD CTE-USA-GOOGLE  CR-5925-17476393": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA INTL MCD CTE-USA-GOOGLE  CR-5925-18533014": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA INTL MCD CTE-USA-GOOGLE  GO-5925-16056959": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA INTL MCD CTE-USA-GOOGLE  GO-5925-17080620": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA INTL MCD CTE-USA-GOOGLE  GO-5925-18245276": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA INTL MCD CTE-USA-GOOGLE  GO-5925-19235255": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA INTL MCD CTE-USA-GOOGLE  GR-5925-15866332": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA INTL MCD CTE-USA-GOOGLE  GR-5925-17074045": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA INTL MCD CTE-USA-GOOGLE  GR-5925-18237552": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA INTL MCD CTE-USA-GOOGLE  GR-5925-19227557": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA INTL MCD CTE-USA-GOOGLE  HE-5925-16324342": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA INTL MCD CTE-USA-GOOGLE  HE-5925-17296162": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA INTL MCD CTE-USA-GOOGLE  HE-5925-18411091": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA INTL MCD CTE-USA-GOOGLE  ME-5925-15824700": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA INTL MCD CTE-USA-GOOGLE  ME-5925-17070678": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA INTL MCD CTE-USA-MICROSOFT -5925-13284706": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA INTL MCD CTE-USA-MICROSOFT -5925-14411480": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA INTL MCD CTE-USA-MICROSOFT -5925-15835637": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA INTL MCD CTE-USA-MICROSOFT -5925-16551206": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA INTL MCD CTE-USA-MICROSOFT -5925-18782986": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA INTL MCD CTE-USA-NETFLIX CO-5925-13847383": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA INTL MCD CTE-USA-NETFLIX CO-5925-14853007": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA INTL MCD CTE-USA-NETFLIX CO-5925-15914668": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA INTL MCD CTE-USA-NETFLIX CO-5925-16963275": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA LOCAL MCD CTE-CINNABON M-5925-16338619": {
+      "Economic Type": "gasto",
+      "SubType Economic": "extraordinario",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "alimentacion",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA LOCAL MCD CTE-CLINICA HO-5925-16462538": {
+      "Economic Type": "gasto",
+      "SubType Economic": "extraordinario",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "salud",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA LOCAL MCD CTE-DELTA VILL-5925-16338885": {
+      "Economic Type": "gasto",
+      "SubType Economic": "operativo",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "Gasolina",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA LOCAL MCD CTE-DELTA VILL-5925-19135374": {
+      "Economic Type": "gasto",
+      "SubType Economic": "operativo",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "transporte",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA LOCAL MCD CTE-DLC UBER R-5925-15824403": {
+      "Economic Type": "gasto",
+      "SubType Economic": "variable",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "transporte",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA LOCAL MCD CTE-DLC UBER R-5925-15824993": {
+      "Economic Type": "gasto",
+      "SubType Economic": "variable",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "transporte",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA LOCAL MCD CTE-DLC UBER R-5925-16078135": {
+      "Economic Type": "gasto",
+      "SubType Economic": "variable",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "transporte",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA LOCAL MCD CTE-DLC UBER R-5925-16078142": {
+      "Economic Type": "gasto",
+      "SubType Economic": "variable",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "transporte",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA LOCAL MCD CTE-DLC UBER R-5925-16078343": {
+      "Economic Type": "gasto",
+      "SubType Economic": "variable",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "transporte",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA LOCAL MCD CTE-DLC UBER R-5925-16078744": {
+      "Economic Type": "gasto",
+      "SubType Economic": "variable",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "transporte",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA LOCAL MCD CTE-DLC UBER R-5925-16078764": {
+      "Economic Type": "gasto",
+      "SubType Economic": "variable",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "transporte",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA LOCAL MCD CTE-DLC UBER R-5925-16534341": {
+      "Economic Type": "gasto",
+      "SubType Economic": "variable",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "transporte",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA LOCAL MCD CTE-DLC UBER R-5925-16541141": {
+      "Economic Type": "gasto",
+      "SubType Economic": "variable",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "transporte",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA LOCAL MCD CTE-DLC UBER R-5925-19280274": {
+      "Economic Type": "gasto",
+      "SubType Economic": "variable",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "transporte",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA LOCAL MCD CTE-FARMACIA A-5925-16215766": {
+      "Economic Type": "gasto",
+      "SubType Economic": "extraordinario",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "salud",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA LOCAL MCD CTE-FARMACIA A-5925-16464002": {
+      "Economic Type": "gasto",
+      "SubType Economic": "extraordinario",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "salud",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA LOCAL MCD CTE-FARMACIA A-5925-16464295": {
+      "Economic Type": "gasto",
+      "SubType Economic": "extraordinario",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "salud",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA LOCAL MCD CTE-FARMACIA A-5925-16772849": {
+      "Economic Type": "gasto",
+      "SubType Economic": "extraordinario",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "salud",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA LOCAL MCD CTE-FITLAB LIB-5925-15867036": {
+      "Economic Type": "gasto",
+      "SubType Economic": "extraordinario",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "salud",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA LOCAL MCD CTE-KFC 12 DE -5925-16464402": {
+      "Economic Type": "gasto",
+      "SubType Economic": "extraordinario",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "alimentacion",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA LOCAL MCD CTE-KFC CINCUE-5925-16434739": {
+      "Economic Type": "gasto",
+      "SubType Economic": "extraordinario",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "alimentacion",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA LOCAL MCD CTE-KFC TRANSI-5925-17506955": {
+      "Economic Type": "gasto",
+      "SubType Economic": "extraordinario",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "alimentacion",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA LOCAL MCD CTE-MCDONALDS -5925-16234482": {
+      "Economic Type": "gasto",
+      "SubType Economic": "extraordinario",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "alimentacion",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA LOCAL MCD CTE-METRO ALTA-5925-16381980": {
+      "Economic Type": "gasto",
+      "SubType Economic": "extraordinario",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "salud",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA LOCAL MCD CTE-NOVEY CENT-5925-16691483": {
+      "Economic Type": "gasto",
+      "SubType Economic": "extraordinario",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "vivienda",
+      "budget_role": "no_presupuestable"
+    },
+    "DB POS COMPRA LOCAL MCD CTE-NOVEY OBAR-5925-14924178": {
+      "Economic Type": "gasto",
+      "SubType Economic": "extraordinario",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "vivienda",
+      "budget_role": "no_presupuestable"
+    },
+    "DB POS COMPRA LOCAL MCD CTE-NOVEY OBAR-5925-18718483": {
+      "Economic Type": "gasto",
+      "SubType Economic": "extraordinario",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "vivienda",
+      "budget_role": "no_presupuestable"
+    },
+    "DB POS COMPRA LOCAL MCD CTE-SUPER 7 PU-5925-16693451": {
+      "Economic Type": "gasto",
+      "SubType Economic": "extraordinario",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "alimentacion",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA LOCAL MCD CTE-SUPER 99 V-5925-16707009": {
+      "Economic Type": "gasto",
+      "SubType Economic": "operativo",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "vivienda",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA LOCAL MCD CTE-TIGO KCO D-5925-16762131": {
+      "Economic Type": "gasto",
+      "SubType Economic": "extraordinario",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "servicios",
+      "budget_role": "no_presupuestable"
+    },
+    "DB POS COMPRA MCD CTE-DOMINOS PI-5925-19227310": {
+      "Economic Type": "gasto",
+      "SubType Economic": "extraordinario",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "alimentacion",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA MCD CTE-STARBUCKS -5925-18355129": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "alimentacion",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA MCD CTE-TEXACO BET-5925-19088909": {
+      "Economic Type": "gasto",
+      "SubType Economic": "operativo",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "transporte",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA MCD CTE-XTRA MARKE-5925-16770404": {
+      "Economic Type": "gasto",
+      "SubType Economic": "operativo",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "vivienda",
+      "budget_role": "presupuestable"
+    },
+    "DB SERVICIO 35 PAGO X APP ENSA ENSA": {
+      "Economic Type": "gasto",
+      "SubType Economic": "operativo",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "vivienda",
+      "budget_role": "presupuestable"
+    },
+    "DB TRANSACCIÓN DÉBITO CARTERA ND-PRESTAMO. 0000589785": {
+      "Economic Type": "pago_deuda",
+      "SubType Economic": "financiero",
+      "Tipo de transacción": "deuda",
+      "Categoría de presupuesto": "deuda",
+      "budget_role": "presupuestable"
+    },
+    "PAGO YAPPY BG A ALBROOK": {
+      "Economic Type": "gasto",
+      "SubType Economic": "extraordinario",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "no_presupuestable"
+    },
+    "PAGO YAPPY BG A EPIKCREDITO": {
+      "Economic Type": "pago_deuda",
+      "SubType Economic": "financiero",
+      "Tipo de transacción": "deuda",
+      "Categoría de presupuesto": "deuda",
+      "budget_role": "presupuestable"
+    },
+    "PAGO YAPPY BG A FITLAB LIBERTY": {
+      "Economic Type": "gasto",
+      "SubType Economic": "extraordinario",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "salud",
+      "budget_role": "presupuestable"
+    },
+    "PAGO YAPPY BG A KFC PTY": {
+      "Economic Type": "gasto",
+      "SubType Economic": "extraordinario",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "alimentacion",
+      "budget_role": "presupuestable"
+    },
+    "PAGO YAPPY BG A PANATICKETS WEB": {
+      "Economic Type": "gasto",
+      "SubType Economic": "extraordinario",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "no_presupuestable"
+    },
+    "PAGO YAPPY BG A PREMIERGENERAL": {
+      "Economic Type": "pago_deuda",
+      "SubType Economic": "financiero",
+      "Tipo de transacción": "deuda",
+      "Categoría de presupuesto": "deuda",
+      "budget_role": "presupuestable"
+    },
+    "PAGO YAPPY BG A SMARTFIT LIBERTY": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "salud",
+      "budget_role": "presupuestable"
+    },
+    "COMPASS BAC     DICIEMBRE 2025": {
+      "Economic Type": "Comision",
+      "SubType Economic": "Recurrente",
+      "Tipo de transacción": "impuesto",
+      "Categoría de presupuesto": "Otros",
+      "budget_role": "presupuestable"
+    },
+    "COMPASS BAC     ENERO2026": {
+      "Economic Type": "Comision",
+      "SubType Economic": "Recurrente",
+      "Tipo de transacción": "impuesto",
+      "Categoría de presupuesto": "Otros",
+      "budget_role": "presupuestable"
+    },
+    "COMPASS BAC     FEBRERO 2026": {
+      "Economic Type": "Comision",
+      "SubType Economic": "Recurrente",
+      "Tipo de transacción": "impuesto",
+      "Categoría de presupuesto": "Otros",
+      "budget_role": "presupuestable"
+    },
+    "COMPASS BAC     NOVIEMBRE 2025": {
+      "Economic Type": "Comision",
+      "SubType Economic": "Recurrente",
+      "Tipo de transacción": "Impuesto",
+      "Categoría de presupuesto": "Otros",
+      "budget_role": "presupuestable"
+    },
+    "COMPASS BAC     OCTUBRE 2025": {
+      "Economic Type": "Comision",
+      "SubType Economic": "Recurrente",
+      "Tipo de transacción": "Impuesto",
+      "Categoría de presupuesto": "Otros",
+      "budget_role": "presupuestable"
+    },
+    "COMPASS MULTIPLAZA": {
+      "Economic Type": "Comision",
+      "SubType Economic": "Recurrente",
+      "Tipo de transacción": "Impuesto",
+      "Categoría de presupuesto": "Otros",
+      "budget_role": "presupuestable"
+    },
+    "COMPASS PACIFIC CENTER": {
+      "Economic Type": "Comision",
+      "SubType Economic": "Recurrente",
+      "Tipo de transacción": "Impuesto",
+      "Categoría de presupuesto": "Otros",
+      "budget_role": "presupuestable"
+    },
+    "DB ATM COMISION INTL-MASTERCARD CTE-COL-0000000000-5925-14409716": {
+      "Economic Type": "Comision",
+      "SubType Economic": "Extraordinario",
+      "Tipo de transacción": "impuesto",
+      "Categoría de presupuesto": "Otros",
+      "budget_role": "no_presupuestable"
+    },
+    "DB COMPRA E-COMMERCE MCD CTE-PEDIDOSYA -5925-14879803": {
+      "Economic Type": "Gasto",
+      "SubType Economic": "Extraordinario",
+      "Tipo de transacción": "Gasto",
+      "Categoría de presupuesto": "Alimentación",
+      "budget_role": "no_presupuestable"
+    },
+    "DB COMPRA E-COMMERCE MCD CTE-PEDIDOSYA -5925-14880242": {
+      "Economic Type": "Gasto",
+      "SubType Economic": "Extraordinario",
+      "Tipo de transacción": "Gasto",
+      "Categoría de presupuesto": "Alimentación",
+      "budget_role": "no_presupuestable"
+    },
+    "DB COMPRA E-COMMERCE MCD CTE-PEDIDOSYA -5925-14943678": {
+      "Economic Type": "Gasto",
+      "SubType Economic": "Extraordinario",
+      "Tipo de transacción": "Gasto",
+      "Categoría de presupuesto": "Alimentación",
+      "budget_role": "no_presupuestable"
+    },
+    "DB COMPRA E-COMMERCE MCD CTE-PEDIDOSYA -5925-15808335": {
+      "Economic Type": "Gasto",
+      "SubType Economic": "Extraordinario",
+      "Tipo de transacción": "Gasto",
+      "Categoría de presupuesto": "Alimentación",
+      "budget_role": "no_presupuestable"
+    },
+    "DB COMPRA E-COMMERCE MCD CTE-PEDIDOSYA -5925-15855844": {
+      "Economic Type": "Gasto",
+      "SubType Economic": "Extraordinario",
+      "Tipo de transacción": "Gasto",
+      "Categoría de presupuesto": "Alimentación",
+      "budget_role": "no_presupuestable"
+    },
+    "DB COMPRA E-COMMERCE MCD CTE-PEDIDOSYA -5925-15857258": {
+      "Economic Type": "Gasto",
+      "SubType Economic": "Extraordinario",
+      "Tipo de transacción": "Gasto",
+      "Categoría de presupuesto": "Alimentación",
+      "budget_role": "no_presupuestable"
+    },
+    "DB COMPRA E-COMMERCE MCD CTE-PEDIDOSYA -5925-15858405": {
+      "Economic Type": "Gasto",
+      "SubType Economic": "Extraordinario",
+      "Tipo de transacción": "Gasto",
+      "Categoría de presupuesto": "Alimentación",
+      "budget_role": "no_presupuestable"
+    },
+    "DB COMPRA E-COMMERCE MCD CTE-PEDIDOSYA -5925-15982562": {
+      "Economic Type": "Gasto",
+      "SubType Economic": "Extraordinario",
+      "Tipo de transacción": "Gasto",
+      "Categoría de presupuesto": "Alimentación",
+      "budget_role": "no_presupuestable"
+    },
+    "DB COMPRA E-COMMERCE MCD CTE-PEDIDOSYA -5925-16079506": {
+      "Economic Type": "Gasto",
+      "SubType Economic": "Extraordinario",
+      "Tipo de transacción": "Gasto",
+      "Categoría de presupuesto": "Alimentación",
+      "budget_role": "no_presupuestable"
+    },
+    "DB COMPRA E-COMMERCE MCD CTE-PEDIDOSYA -5925-16079553": {
+      "Economic Type": "Gasto",
+      "SubType Economic": "Extraordinario",
+      "Tipo de transacción": "Gasto",
+      "Categoría de presupuesto": "Alimentación",
+      "budget_role": "no_presupuestable"
+    },
+    "DB COMPRA E-COMMERCE MCD CTE-PEDIDOSYA -5925-16082389": {
+      "Economic Type": "Gasto",
+      "SubType Economic": "Extraordinario",
+      "Tipo de transacción": "Gasto",
+      "Categoría de presupuesto": "Alimentación",
+      "budget_role": "no_presupuestable"
+    },
+    "DB COMPRA E-COMMERCE MCD CTE-PEDIDOSYA -5925-16165126": {
+      "Economic Type": "Gasto",
+      "SubType Economic": "Extraordinario",
+      "Tipo de transacción": "Gasto",
+      "Categoría de presupuesto": "Alimentación",
+      "budget_role": "no_presupuestable"
+    },
+    "DB COMPRA E-COMMERCE MCD CTE-PEDIDOSYA -5925-16263730": {
+      "Economic Type": "Gasto",
+      "SubType Economic": "Extraordinario",
+      "Tipo de transacción": "Gasto",
+      "Categoría de presupuesto": "Alimentación",
+      "budget_role": "no_presupuestable"
+    },
+    "DB COMPRA E-COMMERCE MCD CTE-PEDIDOSYA -5925-16401155": {
+      "Economic Type": "Gasto",
+      "SubType Economic": "Extraordinario",
+      "Tipo de transacción": "Gasto",
+      "Categoría de presupuesto": "Alimentación",
+      "budget_role": "no_presupuestable"
+    },
+    "DB COMPRA E-COMMERCE MCD CTE-PEDIDOSYA -5925-16548815": {
+      "Economic Type": "Gasto",
+      "SubType Economic": "Extraordinario",
+      "Tipo de transacción": "Gasto",
+      "Categoría de presupuesto": "Alimentación",
+      "budget_role": "no_presupuestable"
+    },
+    "DB COMPRA E-COMMERCE MCD CTE-PEDIDOSYA -5925-16706565": {
+      "Economic Type": "Gasto",
+      "SubType Economic": "Extraordinario",
+      "Tipo de transacción": "Gasto",
+      "Categoría de presupuesto": "Alimentación",
+      "budget_role": "no_presupuestable"
+    },
+    "DB COMPRA E-COMMERCE MCD CTE-PEDIDOSYA -5925-18371627": {
+      "Economic Type": "Gasto",
+      "SubType Economic": "Extraordinario",
+      "Tipo de transacción": "Gasto",
+      "Categoría de presupuesto": "Alimentación",
+      "budget_role": "no_presupuestable"
+    },
+    "DB COMPRA E-COMMERCE MCD CTE-PEDIDOSYA -5925-18741367": {
+      "Economic Type": "Gasto",
+      "SubType Economic": "Extraordinario",
+      "Tipo de transacción": "Gasto",
+      "Categoría de presupuesto": "Alimentación",
+      "budget_role": "no_presupuestable"
+    },
+    "DB ITBMS CTE-COL-0000000000-5925-14409716": {
+      "Economic Type": "impuesto",
+      "SubType Economic": "Extraordinario",
+      "Tipo de transacción": "Interes",
+      "Categoría de presupuesto": "Otros",
+      "budget_role": "no_presupuestable"
+    },
+    "DB POS COMPRA INTL MCD CTE-USA-GOOGLE  CR-5925-15330212": {
+      "Economic Type": "Gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "Gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA INTL MCD CTE-USA-GOOGLE  GO-5925-14951322": {
+      "Economic Type": "Gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "Gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA INTL MCD CTE-USA-GOOGLE  HE-5925-15209091": {
+      "Economic Type": "Gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "Gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "DB POS COMPRA LOCAL MCD CTE-PEDIDOSYA -5925-13063860": {
+      "Economic Type": "Gasto",
+      "SubType Economic": "Extraordinario",
+      "Tipo de transacción": "Gasto",
+      "Categoría de presupuesto": "Alimentación",
+      "budget_role": "no_presupuestable"
+    },
+    "DB POS COMPRA LOCAL MCD CTE-PEDIDOSYA -5925-15890003": {
+      "Economic Type": "Gasto",
+      "SubType Economic": "Extraordinario",
+      "Tipo de transacción": "Gasto",
+      "Categoría de presupuesto": "Alimentación",
+      "budget_role": "no_presupuestable"
+    },
+    "DB POS COMPRA LOCAL MCD CTE-PEDIDOSYA -5925-15965343": {
+      "Economic Type": "Gasto",
+      "SubType Economic": "Extraordinario",
+      "Tipo de transacción": "Gasto",
+      "Categoría de presupuesto": "Alimentación",
+      "budget_role": "no_presupuestable"
+    },
+    "DB POS COMPRA LOCAL MCD CTE-PEDIDOSYA -5925-16364328": {
+      "Economic Type": "Gasto",
+      "SubType Economic": "Extraordinario",
+      "Tipo de transacción": "Gasto",
+      "Categoría de presupuesto": "Alimentación",
+      "budget_role": "no_presupuestable"
+    },
+    "DB POS COMPRA LOCAL MCD CTE-PEDIDOSYA -5925-16417595": {
+      "Economic Type": "Gasto",
+      "SubType Economic": "Extraordinario",
+      "Tipo de transacción": "Gasto",
+      "Categoría de presupuesto": "Alimentación",
+      "budget_role": "no_presupuestable"
+    },
+    "DB POS COMPRA LOCAL MCD CTE-PEDIDOSYA -5925-16627619": {
+      "Economic Type": "Gasto",
+      "SubType Economic": "Extraordinario",
+      "Tipo de transacción": "Gasto",
+      "Categoría de presupuesto": "Alimentación",
+      "budget_role": "no_presupuestable"
+    },
+    "DB POS COMPRA LOCAL MCD CTE-PEDIDOSYA -5925-16982481": {
+      "Economic Type": "Gasto",
+      "SubType Economic": "Extraordinario",
+      "Tipo de transacción": "Gasto",
+      "Categoría de presupuesto": "Alimentación",
+      "budget_role": "no_presupuestable"
+    },
+    "DB POS COMPRA LOCAL MCD CTE-PEDIDOSYA -5925-17509274": {
+      "Economic Type": "Gasto",
+      "SubType Economic": "Extraordinario",
+      "Tipo de transacción": "Gasto",
+      "Categoría de presupuesto": "Alimentación",
+      "budget_role": "no_presupuestable"
+    },
+    "DB POS COMPRA LOCAL MCD CTE-PEDIDOSYA -5925-17580462": {
+      "Economic Type": "Gasto",
+      "SubType Economic": "Extraordinario",
+      "Tipo de transacción": "Gasto",
+      "Categoría de presupuesto": "Alimentación",
+      "budget_role": "no_presupuestable"
+    },
+    "DB POS COMPRA LOCAL MCD CTE-PEDIDOSYA -5925-18664595": {
+      "Economic Type": "Gasto",
+      "SubType Economic": "Extraordinario",
+      "Tipo de transacción": "Gasto",
+      "Categoría de presupuesto": "Alimentación",
+      "budget_role": "no_presupuestable"
+    },
+    "DB POS COMPRA LOCAL MCD CTE-PEDIDOSYA -5925-18781022": {
+      "Economic Type": "Gasto",
+      "SubType Economic": "Extraordinario",
+      "Tipo de transacción": "Gasto",
+      "Categoría de presupuesto": "Alimentación",
+      "budget_role": "no_presupuestable"
+    },
+    "DB POS COMPRA LOCAL MCD CTE-PEDIDOSYA -5925-19191367": {
+      "Economic Type": "Gasto",
+      "SubType Economic": "Extraordinario",
+      "Tipo de transacción": "Gasto",
+      "Categoría de presupuesto": "Alimentación",
+      "budget_role": "no_presupuestable"
+    },
+    "DB SEGURO CONTRA FRAUDE MC SEGURO FRAUDE SEC DIC 2025 TDD *5925": {
+      "Economic Type": "Comision",
+      "SubType Economic": "Recurrente",
+      "Tipo de transacción": "Impuesto",
+      "Categoría de presupuesto": "Otros",
+      "budget_role": "presupuestable"
+    },
+    "DB SEGURO CONTRA FRAUDE MC SEGURO FRAUDE SEC ENE 2026 TDD *5925": {
+      "Economic Type": "Comision",
+      "SubType Economic": "Recurrente",
+      "Tipo de transacción": "impuesto",
+      "Categoría de presupuesto": "Otros",
+      "budget_role": "presupuestable"
+    },
+    "DB SEGURO CONTRA FRAUDE MC SEGURO FRAUDE SEC FEB 2026 TDD *5925": {
+      "Economic Type": "Comision",
+      "SubType Economic": "Recurrente",
+      "Tipo de transacción": "impuesto",
+      "Categoría de presupuesto": "Otros",
+      "budget_role": "presupuestable"
+    },
+    "DB SEGURO CONTRA FRAUDE MC SEGURO FRAUDE SEC NOV 2025 TDD *5925": {
+      "Economic Type": "Comision",
+      "SubType Economic": "Recurrente",
+      "Tipo de transacción": "impuesto",
+      "Categoría de presupuesto": "Otros",
+      "budget_role": "presupuestable"
+    },
+    "DB SEGURO CONTRA FRAUDE MC SEGURO FRAUDE SEC OCT 2025 TDD *5925": {
+      "Economic Type": "Comision",
+      "SubType Economic": "Recurrente",
+      "Tipo de transacción": "impuesto",
+      "Categoría de presupuesto": "Otros",
+      "budget_role": "presupuestable"
+    },
+    "DB SEGURO CONTRA FRAUDE MC SEGURO FRAUDE SEC SEP 2025 TDD *5925": {
+      "Economic Type": "Comision",
+      "SubType Economic": "Recurrente",
+      "Tipo de transacción": "impuesto",
+      "Categoría de presupuesto": "Otros",
+      "budget_role": "presupuestable"
+    },
+    "ESTACION TEXACO BETA": {
+      "Economic Type": "Gasto",
+      "SubType Economic": "Recurrente",
+      "Tipo de transacción": "Gasto",
+      "Categoría de presupuesto": "Gasolina",
+      "budget_role": "presupuestable"
+    },
+    "PAGO YAPPY BG A PEDIDOS YA 199812": {
+      "Economic Type": "Gasto",
+      "SubType Economic": "Extraordinario",
+      "Tipo de transacción": "Gasto",
+      "Categoría de presupuesto": "Alimentación",
+      "budget_role": "no_presupuestable"
+    },
+    "PAGO YAPPY BG A PEDIDOS YA 247231": {
+      "Economic Type": "Gasto",
+      "SubType Economic": "Extraordinario",
+      "Tipo de transacción": "Gasto",
+      "Categoría de presupuesto": "Alimentación",
+      "budget_role": "no_presupuestable"
+    },
+    "PAGO YAPPY BG A PEDIDOS YA 255917": {
+      "Economic Type": "Gasto",
+      "SubType Economic": "Extraordinario",
+      "Tipo de transacción": "Gasto",
+      "Categoría de presupuesto": "Alimentación",
+      "budget_role": "no_presupuestable"
+    },
+    "PAGO YAPPY BG A PEDIDOS YA 491951": {
+      "Economic Type": "Gasto",
+      "SubType Economic": "Extraordinario",
+      "Tipo de transacción": "Gasto",
+      "Categoría de presupuesto": "Alimentación",
+      "budget_role": "no_presupuestable"
+    },
+    "PAGO YAPPY BG A PEDIDOS YA 519029": {
+      "Economic Type": "Gasto",
+      "SubType Economic": "Extraordinario",
+      "Tipo de transacción": "Gasto",
+      "Categoría de presupuesto": "Alimentación",
+      "budget_role": "no_presupuestable"
+    },
+    "PAGO YAPPY BG A PEDIDOS YA 727080": {
+      "Economic Type": "Gasto",
+      "SubType Economic": "Extraordinario",
+      "Tipo de transacción": "Gasto",
+      "Categoría de presupuesto": "Alimentación",
+      "budget_role": "no_presupuestable"
+    },
+    "CREDITO TRANSF. DE CC A CC SPOTIFY 0109311747": {
+      "Economic Type": "transferencia_tercero",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "ingreso",
+      "Categoría de presupuesto": "servicios",
+      "budget_role": "presupuestable"
+    },
+    "CREDITO TRANSF. DE CC A CC SPOTIFY HASTA JUNIO 0106610547": {
+      "Economic Type": "transferencia_tercero",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "ingreso",
+      "Categoría de presupuesto": "servicios",
+      "budget_role": "presupuestable"
+    },
+    "CR DEVOLUCION POS COMPRA LOCAL MCD AJUSTE CTE-DLC*UBER R-5925-16299151": {
+      "Economic Type": "reembolso",
+      "SubType Economic": "extraordinario",
+      "Tipo de transacción": "ingreso",
+      "Categoría de presupuesto": "ahorro",
+      "budget_role": "no_presupuestable"
+    },
+    "REV DB POS COMPRA LOCAL MCD CTE-DLC UBER R-5925-16078765": {
+      "Economic Type": "reembolso",
+      "SubType Economic": "extraordinario",
+      "Tipo de transacción": "ingreso",
+      "Categoría de presupuesto": "ahorro",
+      "budget_role": "no_presupuestable"
+    },
+    "REV DB POS COMPRA LOCAL MCD CTE-DLC UBER R-5925-15825051": {
+      "Economic Type": "reembolso",
+      "SubType Economic": "extraordinario",
+      "Tipo de transacción": "ingreso",
+      "Categoría de presupuesto": "ahorro",
+      "budget_role": "no_presupuestable"
+    },
+    "COMISION POR ACH XPRESS A ALEXIS PINEDA": {
+      "Economic Type": "Comision",
+      "SubType Economic": "Recurrente",
+      "Tipo de transacción": "impuesto",
+      "Categoría de presupuesto": "Otros",
+      "budget_role": "presupuestable"
+    },
+    "CR DEVOLUCION POS COMPRA LOCAL MCD AJUSTE CTE-DLC*UBER R-5925-13424700": {
+      "Economic Type": "reembolso",
+      "SubType Economic": "extraordinario",
+      "Tipo de transacción": "ingreso",
+      "Categoría de presupuesto": "ahorro",
+      "budget_role": "no_presupuestable"
+    },
+    "DB ACH XPRESS APP TIGO": {
+      "Economic Type": "transferencia_tercero",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "transferencia",
+      "Categoría de presupuesto": "servicios",
+      "budget_role": "presupuestable"
+    },
+    "CR PAGO DE PLANILLA BLE PLL PLANILLA ESPECIA RH SALARIOS_OTRAS R": {
+      "Economic Type": "Salario",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "ingreso",
+      "Categoría de presupuesto": "Salario",
+      "budget_role": "presupuestable"
+    },
+    "CR PAGO DE PLANILLA BLE PLL PRIMER PAGO DE P RH SALARIOS_OTRAS R": {
+      "Economic Type": "Salario",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "ingreso",
+      "Categoría de presupuesto": "Salario",
+      "budget_role": "presupuestable"
+    },
+    "CR PAGO DE PLANILLA BLE PLL SEGUNDO PAGO DE RH SALARIOS_OTRAS R": {
+      "Economic Type": "Salario",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "ingreso",
+      "Categoría de presupuesto": "Salario",
+      "budget_role": "presupuestable"
+    },
+    "SUPER XTRA TRANSISTMICA": {
+      "Economic Type": "gasto",
+      "SubType Economic": "operativo",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "vivienda",
+      "budget_role": "presupuestable"
+    },
+    "SUBWAY": {
+      "Economic Type": "gasto",
+      "SubType Economic": "extraordinario",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "alimentacion",
+      "budget_role": "no_presupuestable"
+    },
+    "AMAZON PRIME": {
+      "Economic Type": "gasto",
+      "SubType Economic": "recurrente",
+      "Tipo de transacción": "gasto",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    }
+  },
+  "patterns": {
+    "pago_deuda_RAENCO": {
+      "regex": "\\bRAENCO\\b",
+      "categories": {
+        "Economic Type": "pago_deuda",
+        "SubType Economic": "financiero",
+        "Tipo de transacción": "deuda",
+        "Categoría de presupuesto": "deuda",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    },
+    "gasto_RECARGA": {
+      "regex": "\\bRECARGA\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "SubType Economic": "operativo",
+        "Tipo de transacción": "gasto",
+        "Categoría de presupuesto": "transporte",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    },
+    "comision_COMISION": {
+      "regex": "\\bCOMISION\\b",
+      "categories": {
+        "Economic Type": "comision",
+        "SubType Economic": "financiero",
+        "Tipo de transacción": "impuesto",
+        "Categoría de presupuesto": "otros",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "gasto_UBER": {
+      "regex": "\\bUBER\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "SubType Economic": "variable",
+        "Tipo de transacción": "gasto",
+        "Categoría de presupuesto": "transporte",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    },
+    "gasto_TIGO": {
+      "regex": "\\bTIGO\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "SubType Economic": "operativo",
+        "Tipo de transacción": "gasto",
+        "Categoría de presupuesto": "vivienda",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    },
+    "gasto_GOOGLE": {
+      "regex": "\\bGOOGLE\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "SubType Economic": "recurrente",
+        "Tipo de transacción": "gasto",
+        "Categoría de presupuesto": "entretenimiento",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    },
+    "gasto_MICROSOFT": {
+      "regex": "\\bMICROSOFT\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "SubType Economic": "recurrente",
+        "Tipo de transacción": "gasto",
+        "Categoría de presupuesto": "entretenimiento",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    },
+    "gasto_NETFLIX": {
+      "regex": "\\bNETFLIX\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "SubType Economic": "recurrente",
+        "Tipo de transacción": "gasto",
+        "Categoría de presupuesto": "entretenimiento",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    },
+    "gasto_CINNABON": {
+      "regex": "\\bCINNABON\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "SubType Economic": "extraordinario",
+        "Tipo de transacción": "gasto",
+        "Categoría de presupuesto": "alimentacion",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    },
+    "gasto_CLINICA": {
+      "regex": "\\bCLINICA\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "SubType Economic": "extraordinario",
+        "Tipo de transacción": "gasto",
+        "Categoría de presupuesto": "salud",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    },
+    "gasto_DELTA": {
+      "regex": "\\bDELTA\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "SubType Economic": "operativo",
+        "Tipo de transacción": "gasto",
+        "Categoría de presupuesto": "transporte",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    },
+    "gasto_FARMACIA": {
+      "regex": "\\bFARMACIA\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "SubType Economic": "extraordinario",
+        "Tipo de transacción": "gasto",
+        "Categoría de presupuesto": "salud",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    },
+    "gasto_FITLAB": {
+      "regex": "\\bFITLAB\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "SubType Economic": "extraordinario",
+        "Tipo de transacción": "gasto",
+        "Categoría de presupuesto": "salud",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    },
+    "gasto_MCDONALDS": {
+      "regex": "\\bMCDONALDS\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "SubType Economic": "extraordinario",
+        "Tipo de transacción": "gasto",
+        "Categoría de presupuesto": "alimentacion",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    },
+    "gasto_METRO": {
+      "regex": "\\bMETRO\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "SubType Economic": "extraordinario",
+        "Tipo de transacción": "gasto",
+        "Categoría de presupuesto": "salud",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    },
+    "gasto_NOVEY": {
+      "regex": "\\bNOVEY\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "SubType Economic": "extraordinario",
+        "Tipo de transacción": "gasto",
+        "Categoría de presupuesto": "vivienda",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "gasto_SUPER": {
+      "regex": "\\bSUPER\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "SubType Economic": "extraordinario",
+        "Tipo de transacción": "gasto",
+        "Categoría de presupuesto": "alimentacion",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    },
+    "gasto_DOMINOS": {
+      "regex": "\\bDOMINOS\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "SubType Economic": "extraordinario",
+        "Tipo de transacción": "gasto",
+        "Categoría de presupuesto": "alimentacion",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    },
+    "gasto_STARBUCKS": {
+      "regex": "\\bSTARBUCKS\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "SubType Economic": "recurrente",
+        "Tipo de transacción": "gasto",
+        "Categoría de presupuesto": "alimentacion",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    },
+    "gasto_TEXACO": {
+      "regex": "\\bTEXACO\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "SubType Economic": "operativo",
+        "Tipo de transacción": "gasto",
+        "Categoría de presupuesto": "transporte",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    },
+    "gasto_XTRA": {
+      "regex": "\\bXTRA\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "SubType Economic": "operativo",
+        "Tipo de transacción": "gasto",
+        "Categoría de presupuesto": "vivienda",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    },
+    "gasto_ENSA": {
+      "regex": "\\bENSA\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "SubType Economic": "operativo",
+        "Tipo de transacción": "gasto",
+        "Categoría de presupuesto": "vivienda",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    },
+    "pago_deuda_PRESTAMO": {
+      "regex": "\\bPRESTAMO\\b",
+      "categories": {
+        "Economic Type": "pago_deuda",
+        "SubType Economic": "financiero",
+        "Tipo de transacción": "deuda",
+        "Categoría de presupuesto": "deuda",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    },
+    "gasto_ALBROOK": {
+      "regex": "\\bALBROOK\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "SubType Economic": "extraordinario",
+        "Tipo de transacción": "gasto",
+        "Categoría de presupuesto": "entretenimiento",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "pago_deuda_EPIKCREDITO": {
+      "regex": "\\bEPIKCREDITO\\b",
+      "categories": {
+        "Economic Type": "pago_deuda",
+        "SubType Economic": "financiero",
+        "Tipo de transacción": "deuda",
+        "Categoría de presupuesto": "deuda",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    },
+    "gasto_PANATICKETS": {
+      "regex": "\\bPANATICKETS\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "SubType Economic": "extraordinario",
+        "Tipo de transacción": "gasto",
+        "Categoría de presupuesto": "entretenimiento",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "pago_deuda_PREMIERGENERAL": {
+      "regex": "\\bPREMIERGENERAL\\b",
+      "categories": {
+        "Economic Type": "pago_deuda",
+        "SubType Economic": "financiero",
+        "Tipo de transacción": "deuda",
+        "Categoría de presupuesto": "deuda",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    },
+    "gasto_SMARTFIT": {
+      "regex": "\\bSMARTFIT\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "SubType Economic": "recurrente",
+        "Tipo de transacción": "gasto",
+        "Categoría de presupuesto": "salud",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    },
+    "Comision_COMPASS": {
+      "regex": "\\bCOMPASS\\b",
+      "categories": {
+        "Economic Type": "Comision",
+        "SubType Economic": "Recurrente",
+        "Tipo de transacción": "Impuesto",
+        "Categoría de presupuesto": "Otros",
+        "budget_role": "gasto_operativo"
+      },
+      "source": "learned"
+    },
+    "Comision_MULTIPLAZA": {
+      "regex": "\\bMULTIPLAZA\\b",
+      "categories": {
+        "Economic Type": "Comision",
+        "SubType Economic": "Recurrente",
+        "Tipo de transacción": "Impuesto",
+        "Categoría de presupuesto": "Otros",
+        "budget_role": "gasto_operativo"
+      },
+      "source": "learned"
+    },
+    "Comision_PACIFIC": {
+      "regex": "\\bPACIFIC\\b",
+      "categories": {
+        "Economic Type": "Comision",
+        "SubType Economic": "Recurrente",
+        "Tipo de transacción": "Impuesto",
+        "Categoría de presupuesto": "Otros",
+        "budget_role": "gasto_operativo"
+      },
+      "source": "learned"
+    },
+    "Comision_CENTER": {
+      "regex": "\\bCENTER\\b",
+      "categories": {
+        "Economic Type": "Comision",
+        "SubType Economic": "Recurrente",
+        "Tipo de transacción": "Impuesto",
+        "Categoría de presupuesto": "Otros",
+        "budget_role": "gasto_operativo"
+      },
+      "source": "learned"
+    },
+    "Comision_COMISION": {
+      "regex": "\\bCOMISION\\b",
+      "categories": {
+        "Economic Type": "Comision",
+        "SubType Economic": "Extraordinario",
+        "Tipo de transacción": "Comision",
+        "Categoría de presupuesto": "Otros",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "Gasto_PEDIDOSYA": {
+      "regex": "\\bPEDIDOSYA\\b",
+      "categories": {
+        "Economic Type": "Gasto",
+        "SubType Economic": "Extraordinario",
+        "Tipo de transacción": "Gasto",
+        "Categoría de presupuesto": "Alimentación",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    },
+    "impuesto_ITBMS": {
+      "regex": "\\bITBMS\\b",
+      "categories": {
+        "Economic Type": "impuesto",
+        "SubType Economic": "Extraordinario",
+        "Tipo de transacción": "Interes",
+        "Categoría de presupuesto": "Otros",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "Gasto_GOOGLE": {
+      "regex": "\\bGOOGLE\\b",
+      "categories": {
+        "Economic Type": "Gasto",
+        "SubType Economic": "recurrente",
+        "Tipo de transacción": "Gasto",
+        "Categoría de presupuesto": "entretenimiento",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    },
+    "Comision_SEGURO": {
+      "regex": "\\bSEGURO\\b",
+      "categories": {
+        "Economic Type": "Comision",
+        "SubType Economic": "Recurrente",
+        "Tipo de transacción": "Comision",
+        "Categoría de presupuesto": "Otros",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "Gasto_TEXACO": {
+      "regex": "\\bTEXACO\\b",
+      "categories": {
+        "Economic Type": "Gasto",
+        "SubType Economic": "operativo",
+        "Tipo de transacción": "Gasto",
+        "Categoría de presupuesto": "Gasolina",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    },
+    "Gasto_PEDIDOS": {
+      "regex": "\\bPEDIDOS\\b",
+      "categories": {
+        "Economic Type": "Gasto",
+        "SubType Economic": "Extraordinario",
+        "Tipo de transacción": "Gasto",
+        "Categoría de presupuesto": "Alimentación",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    },
+    "transferencia_tercero_PEDIDOS": {
+      "regex": "\\bPEDIDOS\\b",
+      "categories": {
+        "Economic Type": "transferencia_tercero",
+        "SubType Economic": "Extraordinario",
+        "Tipo de transacción": "Gasto",
+        "Categoría de presupuesto": "Alimentación",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    },
+    "reembolso_UBER": {
+      "regex": "\\bUBER\\b",
+      "categories": {
+        "Economic Type": "reembolso",
+        "SubType Economic": "extraordinario",
+        "Tipo de transacción": "ingreso",
+        "Categoría de presupuesto": "ahorro",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "transferencia_tercero_TIGO": {
+      "regex": "\\bTIGO\\b",
+      "categories": {
+        "Economic Type": "transferencia_tercero",
+        "SubType Economic": "recurrente",
+        "Tipo de transacción": "transferencia",
+        "Categoría de presupuesto": "servicios",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    },
+    "Salario_PLANILLA": {
+      "regex": "\\bPLANILLA\\b",
+      "categories": {
+        "Economic Type": "Salario",
+        "SubType Economic": "recurrente",
+        "Tipo de transacción": "ingreso",
+        "Categoría de presupuesto": "Salario",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    },
+    "gasto_SPOTIFY": {
+      "regex": "\\bSPOTIFY\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "SubType Economic": "recurrente",
+        "Tipo de transacción": "gasto",
+        "Categoría de presupuesto": "entretenimiento",
+        "budget_role": "presupuestable"
+      },
+      "source": "corrected_v5"
+    },
+    "global_gasto_SUPER": {
+      "regex": "\\bSUPER\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "SubType Economic": "operativo",
+        "Tipo de transacción": "gasto",
+        "Categoría de presupuesto": "vivienda",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_gasto_XTRA": {
+      "regex": "\\bXTRA\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "SubType Economic": "operativo",
+        "Tipo de transacción": "gasto",
+        "Categoría de presupuesto": "vivienda",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_gasto_SUBWAY": {
+      "regex": "\\bSUBWAY\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "SubType Economic": "extraordinario",
+        "Tipo de transacción": "gasto",
+        "Categoría de presupuesto": "alimentacion",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_gasto_AMAZON_PRIME": {
+      "regex": "\\bAMAZON\\s+PRIME\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "SubType Economic": "recurrente",
+        "Tipo de transacción": "gasto",
+        "Categoría de presupuesto": "entretenimiento",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    }
+  },
+  "word_weights": {
+    "RAENCO": {
+      "Economic Type=pago_deuda": 2.0,
+      "SubType Economic=financiero": 2.0,
+      "Tipo de transacción=deuda": 2.0,
+      "Categoría de presupuesto=deuda": 2.0,
+      "budget_role=presupuestable": 2.0
+    },
+    "RECARGA": {
+      "Economic Type=gasto": 4.0,
+      "SubType Economic=operativo": 4.0,
+      "Tipo de transacción=gasto": 4.0,
+      "Categoría de presupuesto=transporte": 4.0,
+      "budget_role=presupuestable": 4.0
+    },
+    "TRANSPORTE": {
+      "Economic Type=gasto": 4.0,
+      "SubType Economic=operativo": 4.0,
+      "Tipo de transacción=gasto": 4.0,
+      "Categoría de presupuesto=transporte": 4.0,
+      "budget_role=presupuestable": 4.0
+    },
+    "COMISION": {
+      "Economic Type=comision": 3.0,
+      "SubType Economic=financiero": 3.0,
+      "Tipo de transacción=impuesto": 27.0,
+      "Categoría de presupuesto=otros": 1.0,
+      "budget_role=no_presupuestable": 6.0,
+      "Economic Type=Comision": 27.0,
+      "SubType Economic=Extraordinario": 5.0,
+      "Tipo de transacción=Comision": 3.0,
+      "Categoría de presupuesto=Otros": 29.0,
+      "budget_role=presupuestable": 24.0,
+      "SubType Economic=Recurrente": 22.0
+    },
+    "UBER": {
+      "Economic Type=gasto": 12.0,
+      "SubType Economic=recurrente": 1.0,
+      "Tipo de transacción=gasto": 12.0,
+      "Categoría de presupuesto=entretenimiento": 1.0,
+      "budget_role=presupuestable": 12.0,
+      "SubType Economic=variable": 11.0,
+      "Categoría de presupuesto=transporte": 13.0,
+      "Economic Type=Gasto": 2.0,
+      "SubType Economic=Extraordinario": 2.0,
+      "Tipo de transacción=Gasto": 2.0,
+      "budget_role=no_presupuestable": 10.0,
+      "Economic Type=reembolso": 8.0,
+      "SubType Economic=extraordinario": 8.0,
+      "Tipo de transacción=ingreso": 8.0,
+      "Categoría de presupuesto=ahorro": 8.0
+    },
+    "SPOTIFY": {
+      "Economic Type=gasto": 6.0,
+      "SubType Economic=recurrente": 12.0,
+      "Tipo de transacción=gasto": 6.0,
+      "Categoría de presupuesto=entretenimiento": 6.0,
+      "budget_role=presupuestable": 12.0,
+      "Economic Type=transferencia_tercero": 6.0,
+      "Tipo de transacción=ingreso": 6.0,
+      "Categoría de presupuesto=servicios": 6.0
+    },
+    "APPLE": {
+      "Economic Type=gasto": 1.0,
+      "SubType Economic=recurrente": 1.0,
+      "Tipo de transacción=gasto": 1.0,
+      "Categoría de presupuesto=entretenimiento": 1.0,
+      "budget_role=presupuestable": 1.0
+    },
+    "DISNEY": {
+      "Economic Type=gasto": 2.0,
+      "SubType Economic=recurrente": 2.0,
+      "Tipo de transacción=gasto": 2.0,
+      "Categoría de presupuesto=entretenimiento": 2.0,
+      "budget_role=presupuestable": 2.0
+    },
+    "GOOGLE": {
+      "Economic Type=gasto": 24.0,
+      "SubType Economic=recurrente": 36.0,
+      "Tipo de transacción=gasto": 24.0,
+      "Categoría de presupuesto=entretenimiento": 39.0,
+      "budget_role=presupuestable": 39.0,
+      "Economic Type=Gasto": 15.0,
+      "Tipo de transacción=Gasto": 15.0,
+      "SubType Economic=Recurrente": 3.0
+    },
+    "MICROSOFT": {
+      "Economic Type=gasto": 6.0,
+      "SubType Economic=recurrente": 6.0,
+      "Tipo de transacción=gasto": 6.0,
+      "Categoría de presupuesto=entretenimiento": 6.0,
+      "budget_role=presupuestable": 6.0
+    },
+    "NETFLIX": {
+      "Economic Type=gasto": 6.0,
+      "SubType Economic=recurrente": 6.0,
+      "Tipo de transacción=gasto": 6.0,
+      "Categoría de presupuesto=entretenimiento": 6.0,
+      "budget_role=presupuestable": 6.0
+    },
+    "KFC": {
+      "Economic Type=gasto": 5.0,
+      "SubType Economic=extraordinario": 5.0,
+      "Tipo de transacción=gasto": 5.0,
+      "Categoría de presupuesto=alimentacion": 5.0,
+      "budget_role=presupuestable": 5.0
+    },
+    "TIGO": {
+      "Economic Type=gasto": 6.0,
+      "SubType Economic=operativo": 5.0,
+      "Tipo de transacción=gasto": 6.0,
+      "Categoría de presupuesto=vivienda": 5.0,
+      "budget_role=presupuestable": 7.0,
+      "SubType Economic=extraordinario": 1.0,
+      "Categoría de presupuesto=servicios": 3.0,
+      "budget_role=no_presupuestable": 1.0,
+      "Economic Type=transferencia_tercero": 2.0,
+      "SubType Economic=recurrente": 2.0,
+      "Tipo de transacción=transferencia": 2.0
+    },
+    "CINNABON": {
+      "Economic Type=gasto": 1.0,
+      "SubType Economic=extraordinario": 1.0,
+      "Tipo de transacción=gasto": 1.0,
+      "Categoría de presupuesto=alimentacion": 1.0,
+      "budget_role=presupuestable": 1.0
+    },
+    "CLINICA": {
+      "Economic Type=gasto": 1.0,
+      "SubType Economic=extraordinario": 1.0,
+      "Tipo de transacción=gasto": 1.0,
+      "Categoría de presupuesto=salud": 1.0,
+      "budget_role=presupuestable": 1.0
+    },
+    "DELTA": {
+      "Economic Type=gasto": 4.0,
+      "SubType Economic=operativo": 4.0,
+      "Tipo de transacción=gasto": 4.0,
+      "Categoría de presupuesto=transporte": 2.0,
+      "budget_role=presupuestable": 4.0,
+      "Categoría de presupuesto=Gasolina": 2.0
+    },
+    "FARMACIA": {
+      "Economic Type=gasto": 4.0,
+      "SubType Economic=extraordinario": 4.0,
+      "Tipo de transacción=gasto": 4.0,
+      "Categoría de presupuesto=salud": 4.0,
+      "budget_role=presupuestable": 4.0
+    },
+    "FITLAB": {
+      "Economic Type=gasto": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Tipo de transacción=gasto": 2.0,
+      "Categoría de presupuesto=salud": 2.0,
+      "budget_role=presupuestable": 2.0
+    },
+    "MCDONALDS": {
+      "Economic Type=gasto": 1.0,
+      "SubType Economic=extraordinario": 1.0,
+      "Tipo de transacción=gasto": 1.0,
+      "Categoría de presupuesto=alimentacion": 1.0,
+      "budget_role=presupuestable": 1.0
+    },
+    "METRO": {
+      "Economic Type=gasto": 1.0,
+      "SubType Economic=extraordinario": 1.0,
+      "Tipo de transacción=gasto": 1.0,
+      "Categoría de presupuesto=salud": 1.0,
+      "budget_role=presupuestable": 1.0
+    },
+    "NOVEY": {
+      "Economic Type=gasto": 3.0,
+      "SubType Economic=extraordinario": 3.0,
+      "Tipo de transacción=gasto": 3.0,
+      "Categoría de presupuesto=vivienda": 3.0,
+      "budget_role=no_presupuestable": 3.0
+    },
+    "SUPER": {
+      "Economic Type=gasto": 6.0,
+      "SubType Economic=extraordinario": 1.0,
+      "Tipo de transacción=gasto": 6.0,
+      "Categoría de presupuesto=alimentacion": 1.0,
+      "budget_role=presupuestable": 6.0,
+      "SubType Economic=operativo": 5.0,
+      "Categoría de presupuesto=vivienda": 5.0
+    },
+    "DOMINOS": {
+      "Economic Type=gasto": 1.0,
+      "SubType Economic=extraordinario": 1.0,
+      "Tipo de transacción=gasto": 1.0,
+      "Categoría de presupuesto=alimentacion": 1.0,
+      "budget_role=presupuestable": 1.0
+    },
+    "STARBUCKS": {
+      "Economic Type=gasto": 1.0,
+      "SubType Economic=recurrente": 1.0,
+      "Tipo de transacción=gasto": 1.0,
+      "Categoría de presupuesto=alimentacion": 1.0,
+      "budget_role=presupuestable": 1.0
+    },
+    "TEXACO": {
+      "Economic Type=gasto": 1.0,
+      "SubType Economic=operativo": 3.0,
+      "Tipo de transacción=gasto": 1.0,
+      "Categoría de presupuesto=transporte": 1.0,
+      "budget_role=presupuestable": 4.0,
+      "Economic Type=Gasto": 3.0,
+      "Tipo de transacción=Gasto": 3.0,
+      "Categoría de presupuesto=Gasolina": 3.0,
+      "SubType Economic=Recurrente": 1.0
+    },
+    "XTRA": {
+      "Economic Type=gasto": 5.0,
+      "SubType Economic=operativo": 5.0,
+      "Tipo de transacción=gasto": 5.0,
+      "Categoría de presupuesto=vivienda": 5.0,
+      "budget_role=presupuestable": 5.0
+    },
+    "ENSA": {
+      "Economic Type=gasto": 10.0,
+      "SubType Economic=operativo": 10.0,
+      "Tipo de transacción=gasto": 10.0,
+      "Categoría de presupuesto=vivienda": 10.0,
+      "budget_role=presupuestable": 10.0
+    },
+    "PRESTAMO": {
+      "Economic Type=pago_deuda": 3.0,
+      "SubType Economic=financiero": 3.0,
+      "Tipo de transacción=deuda": 3.0,
+      "Categoría de presupuesto=deuda": 3.0,
+      "budget_role=presupuestable": 3.0
+    },
+    "ALBROOK": {
+      "Economic Type=gasto": 1.0,
+      "SubType Economic=extraordinario": 1.0,
+      "Tipo de transacción=gasto": 1.0,
+      "Categoría de presupuesto=entretenimiento": 1.0,
+      "budget_role=no_presupuestable": 1.0
+    },
+    "EPIKCREDITO": {
+      "Economic Type=pago_deuda": 1.0,
+      "SubType Economic=financiero": 1.0,
+      "Tipo de transacción=deuda": 1.0,
+      "Categoría de presupuesto=deuda": 1.0,
+      "budget_role=presupuestable": 1.0
+    },
+    "PANATICKETS": {
+      "Economic Type=gasto": 1.0,
+      "SubType Economic=extraordinario": 1.0,
+      "Tipo de transacción=gasto": 1.0,
+      "Categoría de presupuesto=entretenimiento": 1.0,
+      "budget_role=no_presupuestable": 1.0
+    },
+    "PREMIERGENERAL": {
+      "Economic Type=pago_deuda": 6.0,
+      "SubType Economic=financiero": 6.0,
+      "Tipo de transacción=deuda": 4.0,
+      "Categoría de presupuesto=deuda": 4.0,
+      "budget_role=presupuestable": 6.0,
+      "Tipo de transacción=Deuda": 2.0,
+      "Categoría de presupuesto=Deuda": 2.0
+    },
+    "SMARTFIT": {
+      "Economic Type=gasto": 1.0,
+      "SubType Economic=recurrente": 1.0,
+      "Tipo de transacción=gasto": 1.0,
+      "Categoría de presupuesto=salud": 1.0,
+      "budget_role=presupuestable": 1.0
+    },
+    "COMPASS": {
+      "Economic Type=Comision": 40.0,
+      "SubType Economic=Recurrente": 40.0,
+      "Tipo de transacción=Impuesto": 34.0,
+      "Categoría de presupuesto=Otros": 40.0,
+      "budget_role=gasto_operativo": 24.0,
+      "Tipo de transacción=impuesto": 6.0,
+      "budget_role=presupuestable": 16.0
+    },
+    "MULTIPLAZA": {
+      "Economic Type=Comision": 10.0,
+      "SubType Economic=Recurrente": 10.0,
+      "Tipo de transacción=Impuesto": 10.0,
+      "Categoría de presupuesto=Otros": 10.0,
+      "budget_role=gasto_operativo": 6.0,
+      "budget_role=presupuestable": 4.0
+    },
+    "PACIFIC": {
+      "Economic Type=Comision": 5.0,
+      "SubType Economic=Recurrente": 5.0,
+      "Tipo de transacción=Impuesto": 5.0,
+      "Categoría de presupuesto=Otros": 5.0,
+      "budget_role=gasto_operativo": 3.0,
+      "budget_role=presupuestable": 2.0
+    },
+    "CENTER": {
+      "Economic Type=Comision": 5.0,
+      "SubType Economic=Recurrente": 5.0,
+      "Tipo de transacción=Impuesto": 5.0,
+      "Categoría de presupuesto=Otros": 5.0,
+      "budget_role=gasto_operativo": 3.0,
+      "budget_role=presupuestable": 2.0
+    },
+    "PEDIDOSYA": {
+      "Economic Type=Gasto": 150.0,
+      "SubType Economic=Extraordinario": 150.0,
+      "Tipo de transacción=Gasto": 150.0,
+      "Categoría de presupuesto=Alimentación": 150.0,
+      "budget_role=presupuestable": 90.0,
+      "budget_role=no_presupuestable": 60.0
+    },
+    "ITBMS": {
+      "Economic Type=impuesto": 3.0,
+      "SubType Economic=Extraordinario": 3.0,
+      "Tipo de transacción=Interes": 3.0,
+      "Categoría de presupuesto=Otros": 3.0,
+      "budget_role=no_presupuestable": 3.0
+    },
+    "SEGURO": {
+      "Economic Type=Comision": 60.0,
+      "SubType Economic=Recurrente": 60.0,
+      "Tipo de transacción=Comision": 36.0,
+      "Categoría de presupuesto=Otros": 60.0,
+      "budget_role=no_presupuestable": 36.0,
+      "Tipo de transacción=Impuesto": 4.0,
+      "budget_role=presupuestable": 24.0,
+      "Tipo de transacción=impuesto": 20.0
+    },
+    "PEDIDOS": {
+      "Economic Type=Gasto": 24.0,
+      "SubType Economic=Extraordinario": 30.0,
+      "Tipo de transacción=Gasto": 30.0,
+      "Categoría de presupuesto=Alimentación": 30.0,
+      "budget_role=presupuestable": 18.0,
+      "Economic Type=transferencia_tercero": 6.0,
+      "budget_role=no_presupuestable": 12.0
+    },
+    "PLANILLA": {
+      "Economic Type=Salario": 28.0,
+      "SubType Economic=recurrente": 28.0,
+      "Tipo de transacción=ingreso": 28.0,
+      "Categoría de presupuesto=Salario": 28.0,
+      "budget_role=presupuestable": 28.0
+    },
+    "TRANSISTMICA": {
+      "Economic Type=gasto": 4.0,
+      "SubType Economic=operativo": 4.0,
+      "Tipo de transacción=gasto": 4.0,
+      "Categoría de presupuesto=vivienda": 4.0,
+      "budget_role=presupuestable": 4.0
+    },
+    "SUBWAY": {
+      "Economic Type=gasto": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Tipo de transacción=gasto": 2.0,
+      "Categoría de presupuesto=alimentacion": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "VILLA": {
+      "Economic Type=gasto": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Tipo de transacción=gasto": 2.0,
+      "Categoría de presupuesto=alimentacion": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "LUCRE": {
+      "Economic Type=gasto": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Tipo de transacción=gasto": 2.0,
+      "Categoría de presupuesto=alimentacion": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "XXXX": {
+      "Economic Type=gasto": 4.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Tipo de transacción=gasto": 4.0,
+      "Categoría de presupuesto=alimentacion": 2.0,
+      "budget_role=no_presupuestable": 2.0,
+      "SubType Economic=recurrente": 2.0,
+      "Categoría de presupuesto=entretenimiento": 2.0,
+      "budget_role=presupuestable": 2.0
+    },
+    "AMAZON": {
+      "Economic Type=gasto": 2.0,
+      "SubType Economic=recurrente": 2.0,
+      "Tipo de transacción=gasto": 2.0,
+      "Categoría de presupuesto=entretenimiento": 2.0,
+      "budget_role=presupuestable": 2.0
+    },
+    "PRIME": {
+      "Economic Type=gasto": 2.0,
+      "SubType Economic=recurrente": 2.0,
+      "Tipo de transacción=gasto": 2.0,
+      "Categoría de presupuesto=entretenimiento": 2.0,
+      "budget_role=presupuestable": 2.0
+    }
+  },
+  "corrections_count": 169
+}

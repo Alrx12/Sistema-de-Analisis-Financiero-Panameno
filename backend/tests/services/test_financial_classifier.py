@@ -62,8 +62,8 @@ def test_predict_returns_fallback_credito_when_nothing_matches(kb_dir: Path) -> 
     )
 
     assert categories is not None
-    assert categories["Economic Type"] == "otros_ingresos"
-    assert categories["Tipo de transacción"] == "ingreso"
+    assert categories["Economic Type"] == "ingreso"
+    assert categories["Economic Type Detail"] == "otros_ingresos"
     assert categories["Categoría de presupuesto"] == "otros"
     assert categories["budget_role"] == "revisar"
     assert confidence == 0.3
@@ -109,8 +109,8 @@ def test_learn_force_personal_stores_canonical_detail_in_personal_kb(kb_dir: Pat
 
     categories = {
         "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_recurrente",
         "SubType Economic": "recurrente",
-        "Tipo de transacción": "gasto",
         "Categoría de presupuesto": "entretenimiento",
         "budget_role": "presupuestable",
     }
@@ -133,8 +133,8 @@ def test_predict_hits_personal_canonical_exact_match_after_learning(kb_dir: Path
 
     learned_categories = {
         "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_recurrente",
         "SubType Economic": "recurrente",
-        "Tipo de transacción": "gasto",
         "Categoría de presupuesto": "entretenimiento",
         "budget_role": "presupuestable",
     }
@@ -154,13 +154,13 @@ def test_predict_hits_personal_canonical_exact_match_after_learning(kb_dir: Path
     assert method == "exact:personal:canonical"
 
 
-def test_learn_without_force_personal_goes_to_global_when_global_keyword_present(kb_dir: Path) -> None:
+def test_learn_without_force_personal_goes_to_global_by_default(kb_dir: Path) -> None:
     clf = FinancialClassifier(user_id="user-1", user_name="Alexis Pineda")
 
     categories = {
         "Economic Type": "gasto",
-        "SubType Economic": "operativo",
-        "Tipo de transacción": "gasto",
+        "Economic Type Detail": "gasto_variable",
+        "SubType Economic": "variable",
         "Categoría de presupuesto": "vivienda",
         "budget_role": "presupuestable",
     }
@@ -185,8 +185,8 @@ def test_predict_hits_global_canonical_exact_match_after_learning(kb_dir: Path) 
 
     learned_categories = {
         "Economic Type": "gasto",
-        "SubType Economic": "operativo",
-        "Tipo de transacción": "gasto",
+        "Economic Type Detail": "gasto_variable",
+        "SubType Economic": "variable",
         "Categoría de presupuesto": "vivienda",
         "budget_role": "presupuestable",
     }
@@ -211,16 +211,16 @@ def test_learn_preserves_google_gri_as_distinct_from_grindr(kb_dir: Path) -> Non
 
     google_gri_categories = {
         "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_recurrente",
         "SubType Economic": "recurrente",
-        "Tipo de transacción": "gasto",
         "Categoría de presupuesto": "entretenimiento",
         "budget_role": "presupuestable",
     }
 
     grindr_categories = {
         "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_recurrente",
         "SubType Economic": "recurrente",
-        "Tipo de transacción": "gasto",
         "Categoría de presupuesto": "otros",
         "budget_role": "presupuestable",
     }
@@ -256,8 +256,8 @@ def test_predict_builtin_salary_pattern(kb_dir: Path) -> None:
     )
 
     assert categories is not None
-    assert categories["Economic Type"] == "salario"
-    assert categories["Tipo de transacción"] == "ingreso"
+    assert categories["Economic Type"] == "ingreso"
+    assert categories["Economic Type Detail"] == "salario"
     assert confidence == 0.95
     assert method == "builtin:salario"
 
@@ -270,7 +270,8 @@ def test_predict_builtin_itbms_pattern(kb_dir: Path) -> None:
     )
 
     assert categories is not None
-    assert categories["Economic Type"] == "impuesto"
+    assert categories["Economic Type"] == "cargo_financiero"
+    assert categories["Economic Type Detail"] == "impuesto"
     assert categories["budget_role"] == "gasto_financiero"
     assert confidence == 0.95
     assert method == "builtin:itbms"
@@ -281,8 +282,8 @@ def test_ambiguous_canonical_key_does_not_generate_pattern(kb_dir: Path) -> None
 
     categories = {
         "Economic Type": "gasto",
-        "SubType Economic": "operativo",
-        "Tipo de transacción": "gasto",
+        "Economic Type Detail": "gasto_variable",
+        "SubType Economic": "variable",
         "Categoría de presupuesto": "otros",
         "budget_role": "presupuestable",
     }
@@ -301,8 +302,8 @@ def test_pattern_is_created_for_non_ambiguous_canonical_key(kb_dir: Path) -> Non
 
     categories = {
         "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_recurrente",
         "SubType Economic": "recurrente",
-        "Tipo de transacción": "gasto",
         "Categoría de presupuesto": "entretenimiento",
         "budget_role": "presupuestable",
     }
@@ -321,8 +322,8 @@ def test_pattern_is_created_for_non_ambiguous_canonical_key(kb_dir: Path) -> Non
 def test_reload_classifier_keeps_learned_information(kb_dir: Path) -> None:
     categories = {
         "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_recurrente",
         "SubType Economic": "recurrente",
-        "Tipo de transacción": "gasto",
         "Categoría de presupuesto": "entretenimiento",
         "budget_role": "presupuestable",
     }

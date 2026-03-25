@@ -9,9 +9,10 @@ Cubre:
   - Paso 4: patrón regex global
   - Paso 5: patrones builtin (ENTRE CUENTAS, PLANILLA, YAPPY, ITBMS, etc.)
   - Paso 6: fallback débito / crédito
-  - learn(): escribe en KB personal por defecto
-  - learn(): escribe en KB global cuando el detalle tiene keywords globales
-  - learn(): force_personal ignora keywords globales
+  - learn(): escribe en KB global por defecto (cualquier comercio)
+  - learn(): budget_role=solo_balance → KB personal (transferencia propia)
+  - learn(): Economic Type=transferencia_tercero → KB personal (pago a persona)
+  - learn(): force_personal=True → KB personal (excepción explícita del usuario)
   - learn(): crea exact_match Y patrón en el KB destino
   - Carga de KB desde disco (persistencia round-trip)
 """
@@ -117,8 +118,8 @@ class TestThirdPartyTransfer:
 class TestExactMatchPersonal:
     def test_exact_match_returns_personal_categories(self, clf: FinancialClassifier) -> None:
         cats = {
-            "Economic Type": "gasto", "SubType Economic": "variable",
-            "Tipo de transacción": "gasto", "Categoría de presupuesto": "alimentacion",
+            "Economic Type": "gasto", "Economic Type Detail": "gasto_variable",
+            "SubType Economic": "variable", "Categoría de presupuesto": "alimentacion",
             "budget_role": "presupuestable",
         }
         clf.learn("SUPER REY TRANSISTMICA", cats, weight=1.0, force_personal=True)
@@ -132,8 +133,8 @@ class TestExactMatchPersonal:
 
     def test_exact_match_is_case_normalized(self, clf: FinancialClassifier) -> None:
         """learn() normaliza a uppercase; predict() también normaliza el detalle."""
-        cats = {"Economic Type": "gasto", "SubType Economic": "variable",
-                "Tipo de transacción": "gasto", "Categoría de presupuesto": "farmacia",
+        cats = {"Economic Type": "gasto", "Economic Type Detail": "gasto_variable",
+                "SubType Economic": "variable", "Categoría de presupuesto": "farmacia",
                 "budget_role": "presupuestable"}
         clf.learn("farmacia arrocha", cats, force_personal=True)
 
@@ -153,8 +154,8 @@ class TestPatternPersonal:
         Ejemplo: aprender "DOMINOS TRANSISTMICA OCTUBRE" guarda la clave canónica "DOMINOS".
         Al predecir "DOMINOS BELLA VISTA", el canonical también es "DOMINOS" → exact match.
         """
-        cats = {"Economic Type": "gasto", "SubType Economic": "variable",
-                "Tipo de transacción": "gasto", "Categoría de presupuesto": "alimentacion",
+        cats = {"Economic Type": "gasto", "Economic Type Detail": "gasto_variable",
+                "SubType Economic": "variable", "Categoría de presupuesto": "alimentacion",
                 "budget_role": "presupuestable"}
         clf.learn("DOMINOS TRANSISTMICA OCTUBRE", cats, force_personal=True)
 
@@ -171,8 +172,8 @@ class TestPatternPersonal:
 class TestExactMatchGlobal:
     def test_global_keyword_goes_to_global_kb(self, clf: FinancialClassifier) -> None:
         """Detalles con keywords globales (NETFLIX, UBER, etc.) → KB global."""
-        cats = {"Economic Type": "gasto", "SubType Economic": "recurrente",
-                "Tipo de transacción": "gasto", "Categoría de presupuesto": "entretenimiento",
+        cats = {"Economic Type": "gasto", "Economic Type Detail": "gasto_recurrente",
+                "SubType Economic": "recurrente", "Categoría de presupuesto": "entretenimiento",
                 "budget_role": "presupuestable"}
         clf.learn("NETFLIX MONTHLY SUBSCRIPTION", cats)  # NETFLIX es global keyword
 
@@ -190,11 +191,11 @@ class TestExactMatchGlobal:
         si el usuario entrenó un patrón que coincide, ese resultado se usa aunque
         exista un exact match en el KB global.
         """
-        personal_cats = {"Economic Type": "otro", "SubType Economic": "otro",
-                         "Tipo de transacción": "otro", "Categoría de presupuesto": "otro",
+        personal_cats = {"Economic Type": "gasto", "Economic Type Detail": "gasto_variable",
+                         "SubType Economic": "variable", "Categoría de presupuesto": "otro",
                          "budget_role": "revisar"}
-        global_cats = {"Economic Type": "gasto", "SubType Economic": "recurrente",
-                       "Tipo de transacción": "gasto", "Categoría de presupuesto": "streaming",
+        global_cats = {"Economic Type": "gasto", "Economic Type Detail": "gasto_recurrente",
+                       "SubType Economic": "recurrente", "Categoría de presupuesto": "streaming",
                        "budget_role": "presupuestable"}
 
         # Patrón personal con keyword "UBER"
@@ -209,7 +210,7 @@ class TestExactMatchGlobal:
         # Personal pattern (step 2) runs before global exact match (step 3)
         assert method == "pattern:personal:personal_uber"
         assert conf == 0.92
-        assert result_cats["Categoría de presupuesto"] == "otro"
+        assert result_cats["Categoría de presupuesto"] == "otro"  # personal beats global
 
 
 # ── Paso 5: patrones builtin ──────────────────────────────────────────────────
@@ -289,8 +290,9 @@ class TestFallback:
 class TestLearn:
     def _cats(self, category: str = "alimentacion", role: str = "presupuestable") -> dict:
         return {
-            "Economic Type": "gasto", "SubType Economic": "variable",
-            "Tipo de transacción": "gasto",
+            "Economic Type": "gasto",
+            "Economic Type Detail": "gasto_variable",
+            "SubType Economic": "variable",
             "Categoría de presupuesto": category,
             "budget_role": role,
         }
@@ -300,15 +302,67 @@ class TestLearn:
         assert "MERCADO 99 COSTA DEL ESTE" in clf.personal_rules["exact_matches"]
         assert "MERCADO 99 COSTA DEL ESTE" not in clf.global_rules["exact_matches"]
 
-    def test_learn_global_keyword_goes_to_global(self, clf: FinancialClassifier) -> None:
-        clf.learn("UBER EATS PAGO", self._cats())  # UBER es global keyword
-        # learn() almacena por clave canónica; canonical("UBER EATS PAGO") = "UBER"
+    def test_learn_comercio_sin_keywords_va_a_global_por_defecto(self, clf: FinancialClassifier) -> None:
+        """Cualquier comercio va a global por defecto, incluso si no tiene keywords conocidos.
+
+        Esto cubre el caso de comercios locales (TRESCUATES, NATUVIVA, ROCKEFELLER, etc.)
+        que antes iban a personal por no estar en GLOBAL_KEYWORDS.
+        """
+        clf.learn("TRESCUATES", self._cats(category="restaurantes", role="no_presupuestable"))
+        # learn() almacena por clave canónica; "TRESCUATES" es un comercio → global
+        assert "TRESCUATES" in clf.global_rules["exact_matches"]
+        assert "TRESCUATES" not in clf.personal_rules["exact_matches"]
+
+    def test_learn_global_keyword_still_goes_to_global(self, clf: FinancialClassifier) -> None:
+        """Marcas conocidas (UBER, NETFLIX) siguen yendo a global — no cambia nada para ellas."""
+        clf.learn("UBER EATS PAGO", self._cats())
+        # canonical("UBER EATS PAGO") = "UBER"
         assert "UBER" in clf.global_rules["exact_matches"]
         assert "UBER" not in clf.personal_rules["exact_matches"]
 
-    def test_learn_force_personal_overrides_global_keyword(self, clf: FinancialClassifier) -> None:
+    def test_learn_solo_balance_va_a_personal(self, clf: FinancialClassifier) -> None:
+        """Transferencias propias (solo_balance) van siempre a KB personal, nunca a global.
+
+        No tiene sentido compartir entre cuentas propias en el KB global porque son
+        específicas del usuario (ENTRE CUENTAS, BANCA MOVIL TRANSFERENCIA).
+        """
+        cats = {
+            "Economic Type": "transferencia_propia",
+            "Economic Type Detail": "transferencia_propia",
+            "SubType Economic": "interno",
+            "Categoría de presupuesto": "otros",
+            "budget_role": "solo_balance",
+        }
+        clf.learn("ENTRE CUENTAS AHORRO", cats)  # sin force_personal, debe ir a personal por solo_balance
+        # canonical puede ser "ENTRE CUENTAS AHORRO" o similar
+        key = list(clf.personal_rules["exact_matches"].keys())
+        assert len(key) == 1
+        assert key[0] not in clf.global_rules["exact_matches"]
+
+    def test_learn_transferencia_tercero_va_a_personal(self, clf: FinancialClassifier) -> None:
+        """Pagos a personas específicas (YAPPY A CARLOS, ACH XPRESS A MARIA) van a personal.
+
+        El Economic Type "transferencia_tercero" es la señal de que el descriptor
+        contiene el nombre de una persona, no un comercio. No debe compartirse en global.
+        """
+        cats = {
+            "Economic Type": "transferencia_tercero",
+            "Economic Type Detail": "transferencia_tercero",
+            "SubType Economic": "variable",
+            "Categoría de presupuesto": "otros",
+            "budget_role": "no_presupuestable",
+        }
+        clf.learn("YAPPY BG A CARLOS RODRIGUEZ", cats)  # sin force_personal → personal por tipo
+        # canonical("YAPPY BG A CARLOS RODRIGUEZ") → algo como "CARLOS RODRIGUEZ"
+        assert len(clf.personal_rules["exact_matches"]) == 1
+        assert len(clf.global_rules["exact_matches"]) == 0
+
+    def test_learn_force_personal_overrides_default_global(self, clf: FinancialClassifier) -> None:
+        """force_personal=True fuerza a personal aunque sea un comercio (útil para
+        categorización diferente a la del KB global).
+        """
         clf.learn("NETFLIX FAMILIAR", self._cats(), force_personal=True)
-        # learn() almacena por clave canónica; canonical("NETFLIX FAMILIAR") = "NETFLIX"
+        # canonical("NETFLIX FAMILIAR") = "NETFLIX"
         assert "NETFLIX" in clf.personal_rules["exact_matches"]
         assert "NETFLIX" not in clf.global_rules["exact_matches"]
 
@@ -339,8 +393,8 @@ class TestLearn:
 
     def test_learn_round_trip(self, tmp_kb_dir: Path) -> None:
         """Un clasificador nuevo cargando el KB persistido debe predecir correctamente."""
-        cats = {"Economic Type": "gasto", "SubType Economic": "recurrente",
-                "Tipo de transacción": "gasto", "Categoría de presupuesto": "gimnasio",
+        cats = {"Economic Type": "gasto", "Economic Type Detail": "gasto_recurrente",
+                "SubType Economic": "recurrente", "Categoría de presupuesto": "gimnasio",
                 "budget_role": "presupuestable"}
 
         with patch("app.services.financial_classifier.settings") as mock_settings:
@@ -360,8 +414,8 @@ class TestLearn:
 
     def test_learn_user_name_tokens_excluded_from_patterns(self, clf: FinancialClassifier) -> None:
         """Los tokens del nombre del usuario no deben usarse como palabras clave de patrones."""
-        cats = {"Economic Type": "gasto", "SubType Economic": "variable",
-                "Tipo de transacción": "gasto", "Categoría de presupuesto": "otros",
+        cats = {"Economic Type": "gasto", "Economic Type Detail": "gasto_variable",
+                "SubType Economic": "variable", "Categoría de presupuesto": "otros",
                 "budget_role": "presupuestable"}
         clf.learn("BANCA MOVIL TRANSFERENCIA DE ALEXIS PINEDA ENTRE CUENTAS", cats, force_personal=True)
 
