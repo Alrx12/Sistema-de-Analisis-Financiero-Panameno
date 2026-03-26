@@ -26,7 +26,7 @@ services:
     environment:
       POSTGRES_DB: safpro
       POSTGRES_USER: apineda
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Variable POSTGRES_PASSWORD requerida}
+      POSTGRES_PASSWORD: InsightLex
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -61,7 +61,7 @@ services:
     env_file: ./backend/.env
     environment:
       # Sobreescribe las variables de .env que necesitan apuntar a los servicios Docker
-      DATABASE_URL: postgresql+psycopg://apineda:${POSTGRES_PASSWORD}@postgres:5432/safpro
+      DATABASE_URL: postgresql+psycopg://apineda:InsightLex@postgres:5432/safpro
       REDIS_URL: redis://redis:6379/0
       # Activa el paso de migraciones en el entrypoint
       RUN_MIGRATIONS: "true"
@@ -88,24 +88,21 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     restart: unless-stopped
-    # Sobreescribe el CMD del Dockerfile: worker en lugar de uvicorn
     command: celery -A app.workers.celery_app worker --loglevel=info --concurrency=2
     env_file: ./backend/.env
     environment:
-      DATABASE_URL: postgresql+psycopg://apineda:${POSTGRES_PASSWORD}@postgres:5432/safpro
+      DATABASE_URL: postgresql+psycopg://apineda:InsightLex@postgres:5432/safpro
       REDIS_URL: redis://redis:6379/0
-      # El worker NO corre migraciones
       RUN_MIGRATIONS: "false"
     volumes:
-      # Mismo volumen que el api — ambos necesitan leer/escribir storage/knowledge_bases
       - storage_data:/app/storage
     depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      api:
-        condition: service_healthy
+        postgres:
+          condition: service_healthy
+        redis:
+          condition: service_healthy
+        api:
+          condition: service_healthy
 
   # ── Frontend (nginx + React build) ─────────────────────────────────────────
   frontend:

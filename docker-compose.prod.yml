@@ -18,77 +18,41 @@ services:
     networks:
       - app_net
 
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: saff_frontend
-    restart: unless-stopped
-    depends_on:
-      api:
-        condition: service_started
-    networks:
-      - app_net
-    healthcheck:
-      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost/"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 20s
-
-  api:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: saff_api
-    restart: unless-stopped
-    env_file:
-      - ./backend/.env
-    depends_on:
-      postgres:
-        condition: service_healthy
-    volumes:
-      - app_storage:/app/storage
-    networks:
-      - app_net
-    healthcheck:
-      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:8001/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 40s
-
   worker:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: saff_worker
     restart: unless-stopped
-    env_file:
-      - ./backend/.env
-    depends_on:
-      postgres:
-        condition: service_healthy
+    command: celery -A app.workers.celery_app worker --loglevel=info --concurrency=2
+    env_file: ./backend/.env
+    environment:
+      DATABASE_URL: postgresql+psycopg://apineda:InsightLex@postgres:5432/safpro
+      REDIS_URL: redis://redis:6379/0
+      RUN_MIGRATIONS: "false"
     volumes:
-      - app_storage:/app/storage
-    command: ["/app/docker-entrypoint.sh", "worker"]
-    networks:
-      - app_net
+      - storage_data:/app/storage
+    depends_on:
+        postgres:
+          condition: service_healthy
+        redis:
+          condition: service_healthy
+        api:
+          condition: service_healthy
 
   postgres:
     image: postgres:16
     container_name: saff_postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-saff}
-      POSTGRES_USER: ${POSTGRES_USER:-saff}
+      POSTGRES_DB: ${POSTGRES_DB:-safpro}
+      POSTGRES_USER: ${POSTGRES_USER:-apineda}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - app_net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-saff} -d ${POSTGRES_DB:-saff}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-apineda} -d ${POSTGRES_DB:-safpro}"]
       interval: 10s
       timeout: 5s
       retries: 10
