@@ -1,4 +1,4 @@
-# CLAUDE.md — Guía Completa de SAFPRO
+# Guía Completa de SAFPRO
 
 **Última actualización:** 2026-03-26 (sesión 18)
 **Estado general:** Pipeline E2E validado. Backend completo para MVP. **Frontend completo para MVP (sesión 18):** Auth, Dashboard (con donut por rol de presupuesto), Upload con trigger de onboarding, Análisis (lista/detalle), Transacciones con reclasificación inline + select de categoría + filtros crédito/débito/tipo económico, Knowledge Base (personal + global), Presupuesto 50/30/20 con gastos adicionales manuales, Onboarding post-primer-análisis, **Entrenamiento masivo** (`/retrain`). Tests backend 183 passed, 3 warnings. TypeScript limpio.
