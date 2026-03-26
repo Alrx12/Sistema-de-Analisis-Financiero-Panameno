@@ -25,12 +25,12 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_DB: safpro
-      POSTGRES_USER: safpro
+      POSTGRES_USER: apineda
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Variable POSTGRES_PASSWORD requerida}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U safpro -d safpro"]
+      test: ["CMD-SHELL", "pg_isready -U apineda -d safpro"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -61,7 +61,7 @@ services:
     env_file: ./backend/.env
     environment:
       # Sobreescribe las variables de .env que necesitan apuntar a los servicios Docker
-      DATABASE_URL: postgresql+psycopg://safpro:${POSTGRES_PASSWORD}@postgres:5432/safpro
+      DATABASE_URL: postgresql+psycopg://apineda:${POSTGRES_PASSWORD}@postgres:5432/safpro
       REDIS_URL: redis://redis:6379/0
       # Activa el paso de migraciones en el entrypoint
       RUN_MIGRATIONS: "true"
@@ -92,7 +92,7 @@ services:
     command: celery -A app.workers.celery_app worker --loglevel=info --concurrency=2
     env_file: ./backend/.env
     environment:
-      DATABASE_URL: postgresql+psycopg://safpro:${POSTGRES_PASSWORD}@postgres:5432/safpro
+      DATABASE_URL: postgresql+psycopg://apineda:${POSTGRES_PASSWORD}@postgres:5432/safpro
       REDIS_URL: redis://redis:6379/0
       # El worker NO corre migraciones
       RUN_MIGRATIONS: "false"

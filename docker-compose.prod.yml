@@ -71,7 +71,7 @@ services:
         condition: service_healthy
     volumes:
       - app_storage:/app/storage
-    command: ["./docker-entrypoint.sh", "worker"]
+    command: ["/app/docker-entrypoint.sh", "worker"]
     networks:
       - app_net
 

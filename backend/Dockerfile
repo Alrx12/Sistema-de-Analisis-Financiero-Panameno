@@ -33,7 +33,9 @@ RUN cp storage/knowledge_bases/knowledge_base_global.json /app/seeds/ 2>/dev/nul
 
 # Entrypoint: maneja seeds de storage y migraciones opcionales
 COPY docker-entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+COPY docker-entrypoint.sh /app/docker-entrypoint.sh
+RUN chmod +x /entrypoint.sh /app/docker-entrypoint.sh
+
 
 EXPOSE 8001
 
