@@ -1,5 +1,5 @@
 import apiClient from "./client"
-import type { AnalysisSnapshot, Transaction, ConfidenceStats, ReclassifyRequest } from "@/types"
+import type { AnalysisSnapshot, Transaction, ConfidenceStats, ReclassifyRequest, AggregatedSummary } from "@/types"
 
 export async function listAnalysis(): Promise<AnalysisSnapshot[]> {
   const res = await apiClient.get<AnalysisSnapshot[]>("/analysis/")
@@ -23,6 +23,15 @@ export async function getTransactions(
 
 export async function getConfidenceStats(snapshotId: string): Promise<ConfidenceStats> {
   const res = await apiClient.get<ConfidenceStats>(`/analysis/${snapshotId}/confidence-stats`)
+  return res.data
+}
+
+export async function getAggregatedSummary(params: {
+  year?: number
+  month?: number
+  bank_account_id?: string
+}): Promise<AggregatedSummary> {
+  const res = await apiClient.get<AggregatedSummary>("/analysis/aggregated", { params })
   return res.data
 }
 

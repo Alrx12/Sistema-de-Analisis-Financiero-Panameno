@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from app.api.deps import get_current_user
 from app.models.user import User
-from app.schemas.kb import KBDeleteResponse, KBEntry, KBListResponse, KBPreviewResponse
+from app.schemas.kb import KBDeleteResponse, KBEntry, KBGlobalListResponse, KBListResponse, KBPreviewResponse
 from app.services.detail_normalizer import canonicalize_detail, is_ambiguous_key
 from app.services.financial_classifier import FinancialClassifier
 
@@ -63,6 +63,38 @@ def list_kb(
         corrections_count=personal["corrections_count"],
         global_exact_matches_count=global_summary["exact_matches_count"],
         global_patterns_count=global_summary["patterns_count"],
+    )
+
+
+@router.get(
+    "/global",
+    response_model=KBGlobalListResponse,
+    summary="Listar entradas del KB global",
+    description="Retorna todas las entradas exact_match del KB global compartido (read-only).",
+)
+def list_global_kb(
+    current_user: User = Depends(get_current_user),
+) -> KBGlobalListResponse:
+    clf = _build_classifier(current_user)
+    global_data = clf.list_global_kb()
+
+    entries = [
+        KBEntry(
+            key=key,
+            economic_type=cats.get("Economic Type"),
+            economic_type_detail=cats.get("Economic Type Detail"),
+            subtype_economic=cats.get("SubType Economic"),
+            budget_category=cats.get("Categoría de presupuesto"),
+            budget_role=cats.get("budget_role"),
+        )
+        for key, cats in global_data["exact_matches"].items()
+    ]
+    entries.sort(key=lambda e: e.key)
+
+    return KBGlobalListResponse(
+        entries=entries,
+        patterns_count=len(global_data["patterns"]),
+        corrections_count=global_data["corrections_count"],
     )
 
 

@@ -30,6 +30,14 @@ class KBDeleteResponse(BaseModel):
     patterns_removed: int = Field(description="Número de patrones regex asociados también eliminados")
 
 
+class KBGlobalListResponse(BaseModel):
+    """Contenido completo del KB global (read-only)."""
+
+    entries: list[KBEntry] = Field(description="Todas las entradas exact_match del KB global")
+    patterns_count: int = Field(description="Número de patrones regex en el KB global")
+    corrections_count: int = Field(description="Total de correcciones en el KB global")
+
+
 class KBPreviewResponse(BaseModel):
     """Resultado de previsualizar la clave canónica que produciría un descriptor raw."""
 

@@ -46,7 +46,7 @@ export default function TransactionsPage() {
   const filtered = transactions.filter((t) =>
     search === "" ||
     t.detail.toLowerCase().includes(search.toLowerCase()) ||
-    t.budget_category.toLowerCase().includes(search.toLowerCase())
+    (t.budget_category ?? "").toLowerCase().includes(search.toLowerCase())
   )
 
   return (
@@ -93,12 +93,12 @@ export default function TransactionsPage() {
         <div className="space-y-2">
           {filtered.map((tx) => (
             <TransactionRow
-              key={tx.id}
+              key={tx.transaction_id}
               tx={tx}
-              isEditing={editing === tx.id}
-              onEdit={() => setEditing(editing === tx.id ? null : tx.id)}
-              onSave={(data) => reclassify.mutate({ txId: tx.id, data })}
-              isSaving={reclassify.isPending && editing === tx.id}
+              isEditing={editing === tx.transaction_id}
+              onEdit={() => setEditing(editing === tx.transaction_id ? null : tx.transaction_id)}
+              onSave={(data) => reclassify.mutate({ txId: tx.transaction_id, data })}
+              isSaving={reclassify.isPending && editing === tx.transaction_id}
             />
           ))}
         </div>
@@ -117,15 +117,15 @@ function TransactionRow({
   isSaving: boolean
 }) {
   const [form, setForm] = useState<ReclassifyRequest>({
-    economic_type: tx.economic_type,
-    economic_type_detail: tx.economic_type_detail,
-    subtype_economic: tx.subtype_economic,
-    budget_category: tx.budget_category,
-    budget_role: tx.budget_role,
+    economic_type: tx.economic_type ?? "gasto",
+    economic_type_detail: tx.economic_type_detail ?? "gasto_variable",
+    subtype_economic: tx.subtype_economic ?? "desconocido",
+    budget_category: tx.budget_category ?? "",
+    budget_role: tx.budget_role ?? "revisar",
     also_learn: true,
   })
 
-  const isIncome = tx.economic_type === "ingreso"
+  const isIncome = tx.economic_type === "ingreso" || tx.movement_type === "credito"
 
   return (
     <Card className={cn(tx.requires_review && "border-yellow-300")}>
@@ -134,8 +134,8 @@ function TransactionRow({
           {/* Info principal */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className={cn("text-xs font-semibold px-2 py-0.5 rounded-full", economicTypeBadgeClass(tx.economic_type))}>
-                {capitalize(tx.economic_type)}
+              <span className={cn("text-xs font-semibold px-2 py-0.5 rounded-full", economicTypeBadgeClass(tx.economic_type ?? ""))}>
+                {capitalize(tx.economic_type ?? tx.movement_type)}
               </span>
               <span className="text-xs text-muted-foreground">{formatDate(tx.date)}</span>
               {tx.requires_review && (
@@ -144,7 +144,7 @@ function TransactionRow({
             </div>
             <p className="mt-1 text-sm font-medium" title={tx.detail}>{truncate(tx.detail, 50)}</p>
             <div className="mt-1 flex items-center gap-2 flex-wrap">
-              <span className="text-xs text-muted-foreground">{capitalize(tx.budget_category)}</span>
+              <span className="text-xs text-muted-foreground">{capitalize(tx.budget_category ?? "sin categoría")}</span>
               <span className={cn("text-xs font-medium", confidenceColor(tx.confidence))}>
                 {(tx.confidence * 100).toFixed(0)}% conf.
               </span>

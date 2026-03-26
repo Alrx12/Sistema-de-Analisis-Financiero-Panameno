@@ -37,6 +37,38 @@ export interface UploadResponse {
 
 // ─── Analysis ────────────────────────────────────────────────────────────────
 
+export interface MerchantStat {
+  name: string
+  amount: number
+  count: number
+  category: string | null
+}
+
+export interface TypeStat {
+  type: string
+  amount: number
+  count: number
+}
+
+export interface MonthTrendStat {
+  month: string   // "2025-09"
+  label: string   // "Sep 25"
+  income: number
+  expenses: number
+  transactions: number
+}
+
+export interface AggregatedSummary {
+  total_income: number
+  total_expenses: number
+  balance: number
+  total_transactions: number
+  categories: Record<string, number>
+  top_merchants: MerchantStat[]
+  by_economic_type: TypeStat[]
+  monthly_trend: MonthTrendStat[]
+}
+
 export interface BankAccountSummary {
   account_id: string
   bank_name: string
@@ -68,19 +100,20 @@ export interface Recommendation {
 // ─── Transactions ─────────────────────────────────────────────────────────────
 
 export interface Transaction {
-  id: string
+  transaction_id: string
+  snapshot_id: string
   date: string
   detail: string
   amount: number
-  economic_type: string
-  economic_type_detail: string
-  subtype_economic: string
-  budget_category: string
-  budget_role: string
+  movement_type: string
+  economic_type: string | null
+  economic_type_detail: string | null
+  subtype_economic: string | null
+  budget_category: string | null
+  budget_role: string | null
   confidence: number
   method: string
   requires_review: boolean
-  snapshot_id: string
 }
 
 export interface ReclassifyRequest {
@@ -118,11 +151,36 @@ export interface ConfidenceStats {
 
 export interface KBEntry {
   key: string
-  category: string
-  economic_type: string
-  budget_role: string
-  weight: number
-  source: string
+  economic_type: string | null
+  economic_type_detail: string | null
+  subtype_economic: string | null
+  budget_category: string | null
+  budget_role: string | null
+}
+
+export interface KBListResponse {
+  entries: KBEntry[]
+  patterns_count: number
+  corrections_count: number
+  global_exact_matches_count: number
+  global_patterns_count: number
+}
+
+export interface KBGlobalListResponse {
+  entries: KBEntry[]
+  patterns_count: number
+  corrections_count: number
+}
+
+export interface KBDeleteResponse {
+  key: string
+  patterns_removed: number
+}
+
+export interface KBPreviewResponse {
+  original: string
+  canonical_key: string
+  is_ambiguous: boolean
 }
 
 // ─── Bank Accounts ────────────────────────────────────────────────────────────

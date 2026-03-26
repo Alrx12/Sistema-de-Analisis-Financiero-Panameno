@@ -3,6 +3,7 @@ import {
   LayoutDashboard,
   Upload,
   BarChart2,
+  Brain,
   LogOut,
   TrendingUp,
   Menu,
@@ -17,6 +18,7 @@ const navItems = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
   { to: "/upload", label: "Subir estado de cuenta", icon: Upload, end: false },
   { to: "/analysis", label: "Mis análisis", icon: BarChart2, end: false },
+  { to: "/kb", label: "Knowledge Base", icon: Brain, end: false },
 ]
 
 export default function AppShell() {

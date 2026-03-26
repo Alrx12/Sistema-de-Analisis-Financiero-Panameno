@@ -11,6 +11,7 @@ import UploadPage from "@/pages/UploadPage"
 import AnalysisListPage from "@/pages/AnalysisListPage"
 import AnalysisDetailPage from "@/pages/AnalysisDetailPage"
 import TransactionsPage from "@/pages/TransactionsPage"
+import KBPage from "@/pages/KBPage"
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
@@ -39,6 +40,7 @@ export default function App() {
           <Route path="analysis" element={<AnalysisListPage />} />
           <Route path="analysis/:id" element={<AnalysisDetailPage />} />
           <Route path="analysis/:id/transactions" element={<TransactionsPage />} />
+          <Route path="kb" element={<KBPage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

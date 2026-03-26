@@ -120,6 +120,43 @@ class ConfidenceStatsResponse(BaseModel):
     )
 
 
+class MerchantStat(BaseModel):
+    name: str
+    amount: float
+    count: int
+    category: str | None = None
+
+
+class TypeStat(BaseModel):
+    type: str
+    amount: float
+    count: int
+
+
+class MonthTrendStat(BaseModel):
+    month: str    # "2025-09" — para ordenar cronológicamente
+    label: str    # "Sep 25" — texto para el eje X del gráfico
+    income: float
+    expenses: float
+    transactions: int
+
+
+class AggregatedSummaryResponse(BaseModel):
+    """
+    KPIs calculados directamente desde analysis_transactions con filtros opcionales.
+    A diferencia de AnalysisSnapshotResponse, refleja el rango exacto de fechas pedido,
+    no el período completo del archivo subido.
+    """
+    total_income: float
+    total_expenses: float
+    balance: float
+    total_transactions: int
+    categories: dict[str, float]
+    top_merchants: list[MerchantStat] = []
+    by_economic_type: list[TypeStat] = []
+    monthly_trend: list[MonthTrendStat] = []
+
+
 class BulkReclassifyRequest(BaseModel):
     skip_user_reclassified: bool = Field(
         default=True,

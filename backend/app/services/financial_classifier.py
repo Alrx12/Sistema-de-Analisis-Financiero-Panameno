@@ -688,6 +688,14 @@ class FinancialClassifier:
             "corrections_count": self.global_rules["corrections_count"],
         }
 
+    def list_global_kb(self) -> dict[str, Any]:
+        """Retorna el contenido completo del KB global para inspección."""
+        return {
+            "exact_matches": dict(self.global_rules["exact_matches"]),
+            "patterns": dict(self.global_rules["patterns"]),
+            "corrections_count": self.global_rules["corrections_count"],
+        }
+
     def delete_personal_entry(self, key: str) -> int:
         """
         Elimina una entrada del KB personal por clave canónica.

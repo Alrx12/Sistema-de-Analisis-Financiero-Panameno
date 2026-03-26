@@ -6,6 +6,7 @@ from datetime import date, datetime
 from typing import Any
 from uuid import UUID
 
+from sqlalchemy import extract
 from sqlalchemy.orm import Session
 
 from app.models.analysis_snapshot import AnalysisSnapshot
@@ -177,6 +178,34 @@ class AnalysisService:
         current_user: User,
         bank_account_id: UUID | None = None,
     ) -> AnalysisSnapshot:
+        # --- UPSERT: si ya existe un snapshot para esta cuenta + mes, reemplazarlo ---
+        # Solo aplica cuando tenemos bank_account_id y period_start conocidos.
+        # Razón: el usuario puede corregir o re-exportar el mismo mes; el segundo upload
+        # debe ganarle al primero, no acumularse encima.
+        period_start_str = analysis.get("period_start")
+        period_start_date: date | None = (
+            date.fromisoformat(period_start_str) if period_start_str else None
+        )
+
+        if bank_account_id and period_start_date:
+            existing = (
+                self.db.query(AnalysisSnapshot)
+                .filter(
+                    AnalysisSnapshot.user_id == current_user.user_id,
+                    AnalysisSnapshot.bank_account_id == bank_account_id,
+                    extract("year", AnalysisSnapshot.period_start) == period_start_date.year,
+                    extract("month", AnalysisSnapshot.period_start) == period_start_date.month,
+                )
+                .first()
+            )
+            if existing:
+                # Borrar primero las transacciones (FK constraint)
+                self.db.query(AnalysisTransaction).filter(
+                    AnalysisTransaction.snapshot_id == existing.snapshot_id
+                ).delete(synchronize_session=False)
+                self.db.delete(existing)
+                self.db.flush()
+
         # Excluir "transactions" del summary JSON:
         # 1) Los datetime objects no son JSON-serializables → TypeError en PostgreSQL.
         # 2) Las transacciones se persisten por separado en analysis_transactions.

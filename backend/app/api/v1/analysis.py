@@ -1,14 +1,22 @@
 import logging
+import unicodedata
+from collections import defaultdict
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import extract
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
 from app.models.analysis_snapshot import AnalysisSnapshot
 from app.models.bank_account import BankAccount
 from app.models.user import User
+from app.services.detail_normalizer import canonicalize_detail
 from app.schemas.analysis import (
+    AggregatedSummaryResponse,
+    MerchantStat,
+    MonthTrendStat,
+    TypeStat,
     AnalysisSnapshotResponse,
     BulkReclassifyRequest,
     BulkReclassifyResponse,
@@ -53,6 +61,133 @@ def list_analysis(
         AnalysisSnapshotResponse.model_validate(s, bank_account=accounts.get(s.bank_account_id))
         for s in snapshots
     ]
+
+
+@router.get(
+    "/aggregated",
+    response_model=AggregatedSummaryResponse,
+    summary="KPIs agregados desde transacciones con filtros opcionales",
+    description=(
+        "Calcula ingresos, gastos, balance y categorías directamente desde "
+        "analysis_transactions. A diferencia de los snapshots, permite filtrar "
+        "por año, mes y banco con resultados exactos al rango pedido."
+    ),
+)
+def get_aggregated_summary(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    year: int | None = Query(default=None, description="Año de la transacción (EXTRACT year)"),
+    month: int | None = Query(default=None, description="Mes de la transacción 1–12"),
+    bank_account_id: UUID | None = Query(default=None, description="Filtrar por banco"),
+) -> AggregatedSummaryResponse:
+    _MONTH_ABBR = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"]
+
+    query = (
+        db.query(AnalysisTransaction)
+        .join(AnalysisSnapshot, AnalysisTransaction.snapshot_id == AnalysisSnapshot.snapshot_id)
+        .filter(AnalysisTransaction.user_id == current_user.user_id)
+    )
+    if year is not None:
+        query = query.filter(extract("year", AnalysisTransaction.date) == year)
+    if month is not None:
+        query = query.filter(extract("month", AnalysisTransaction.date) == month)
+    if bank_account_id is not None:
+        query = query.filter(AnalysisSnapshot.bank_account_id == bank_account_id)
+
+    transactions = query.all()
+
+    # ── Acumuladores ──────────────────────────────────────────────────────────
+    total_income = 0.0
+    total_expenses = 0.0
+    categories: dict[str, float] = defaultdict(float)
+
+    # merchant → (amount_total, count, last_category)
+    merchants: dict[str, list] = defaultdict(lambda: [0.0, 0, None])
+    # economic_type → (amount_total, count)
+    by_etype: dict[str, list] = defaultdict(lambda: [0.0, 0])
+    # "YYYY-MM" → {income, expenses, transactions}
+    monthly: dict[str, dict] = defaultdict(lambda: {"income": 0.0, "expenses": 0.0, "tx": 0})
+
+    for tx in transactions:
+        budget_role = (tx.budget_role or "revisar").lower().strip()
+        amount = float(tx.amount)
+        abs_amount = abs(amount)
+
+        # ── Tendencia mensual (todas las transacciones, incluye solo_balance para contar) ──
+        if tx.date:
+            mk = f"{tx.date.year}-{tx.date.month:02d}"
+            monthly[mk]["tx"] += 1
+            if budget_role != "solo_balance":
+                if amount >= 0:
+                    monthly[mk]["income"] += amount
+                else:
+                    monthly[mk]["expenses"] += abs_amount
+
+        if budget_role == "solo_balance":
+            continue
+
+        # ── KPIs ──
+        if amount >= 0:
+            total_income += amount
+        else:
+            total_expenses += abs_amount
+
+        # ── Categorías (solo gastos) ──
+        if amount < 0 and tx.budget_category:
+            raw_cat = tx.budget_category.lower().strip()
+            cat = unicodedata.normalize("NFD", raw_cat).encode("ascii", "ignore").decode("ascii")
+            categories[cat] += abs_amount
+
+        # ── Top merchants (solo gastos con detalle) ──
+        if amount < 0 and tx.detail:
+            try:
+                key = canonicalize_detail(tx.detail) or tx.detail[:30]
+            except Exception:
+                key = tx.detail[:30]
+            merchants[key][0] += abs_amount
+            merchants[key][1] += 1
+            if tx.budget_category:
+                merchants[key][2] = tx.budget_category
+
+        # ── Por tipo económico ──
+        etype = (tx.economic_type or "desconocido").lower()
+        by_etype[etype][0] += abs_amount
+        by_etype[etype][1] += 1
+
+    # ── Construir respuesta ────────────────────────────────────────────────────
+    top_merchants = sorted(
+        [MerchantStat(name=k, amount=round(v[0], 2), count=v[1], category=v[2])
+         for k, v in merchants.items()],
+        key=lambda x: -x.amount,
+    )[:15]
+
+    by_economic_type = sorted(
+        [TypeStat(type=k, amount=round(v[0], 2), count=v[1])
+         for k, v in by_etype.items()],
+        key=lambda x: -x.amount,
+    )
+
+    monthly_trend = [
+        MonthTrendStat(
+            month=mk,
+            label=f"{_MONTH_ABBR[int(mk[5:7]) - 1]} {mk[2:4]}",
+            income=round(v["income"], 2),
+            expenses=round(v["expenses"], 2),
+            transactions=v["tx"],
+        )
+        for mk, v in sorted(monthly.items())
+    ]
+
+    return AggregatedSummaryResponse(
+        total_income=round(total_income, 2),
+        total_expenses=round(total_expenses, 2),
+        balance=round(total_income - total_expenses, 2),
+        total_transactions=len(transactions),
+        categories={k: round(v, 2) for k, v in sorted(categories.items(), key=lambda x: -x[1])},
+        top_merchants=top_merchants,
+        by_economic_type=by_economic_type,
+        monthly_trend=monthly_trend,
+    )
 
 
 @router.get(
