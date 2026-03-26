@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { formatCurrency, formatDate, capitalize, confidenceColor, economicTypeBadgeClass, truncate } from "@/lib/utils"
 import { cn } from "@/lib/utils"
+import { BUDGET_CATEGORIES } from "@/lib/categories"
 
 export default function TransactionsPage() {
   const { id } = useParams<{ id: string }>()
@@ -19,13 +20,15 @@ export default function TransactionsPage() {
     searchParams.get("requires_review") === "true"
   )
   const [search, setSearch] = useState("")
+  const [filterMovement, setFilterMovement] = useState<"all" | "credit" | "debit">("all")
+  const [filterEtype, setFilterEtype] = useState<string>("all")
   const [editing, setEditing] = useState<string | null>(null)
 
   const queryClient = useQueryClient()
 
   const { data: transactions = [], isLoading } = useQuery({
-    queryKey: ["transactions", id, filterReview],
-    queryFn: () => getTransactions(id!, filterReview ? { requires_review: true } : undefined),
+    queryKey: ["transactions", id],
+    queryFn: () => getTransactions(id!),
     enabled: !!id,
   })
 
@@ -43,11 +46,20 @@ export default function TransactionsPage() {
     },
   })
 
-  const filtered = transactions.filter((t) =>
-    search === "" ||
-    t.detail.toLowerCase().includes(search.toLowerCase()) ||
-    (t.budget_category ?? "").toLowerCase().includes(search.toLowerCase())
-  )
+  const needsReview = (t: Transaction) =>
+    t.requires_review ||
+    t.budget_role === "revisar" ||
+    (t.budget_category ?? "").toLowerCase().includes("desconocido")
+
+  const filtered = transactions.filter((t) => {
+    if (filterReview && !needsReview(t)) return false
+    if (search !== "" &&
+        !t.detail.toLowerCase().includes(search.toLowerCase()) &&
+        !(t.budget_category ?? "").toLowerCase().includes(search.toLowerCase())) return false
+    if (filterMovement !== "all" && t.movement_type !== filterMovement) return false
+    if (filterEtype !== "all" && t.economic_type !== filterEtype) return false
+    return true
+  })
 
   return (
     <div className="space-y-6">
@@ -58,7 +70,11 @@ export default function TransactionsPage() {
         </Button>
         <div>
           <h1 className="text-2xl font-bold">Transacciones</h1>
-          <p className="text-sm text-muted-foreground">{transactions.length} en total</p>
+          <p className="text-sm text-muted-foreground">
+            {filtered.length !== transactions.length
+              ? `${filtered.length} de ${transactions.length}`
+              : `${transactions.length} en total`}
+          </p>
         </div>
       </div>
 
@@ -70,6 +86,28 @@ export default function TransactionsPage() {
           onChange={(e) => setSearch(e.target.value)}
           className="max-w-xs"
         />
+        <select
+          className="rounded-md border border-input bg-background px-3 py-1.5 text-sm shadow-sm"
+          value={filterMovement}
+          onChange={(e) => setFilterMovement(e.target.value as "all" | "credit" | "debit")}
+        >
+          <option value="all">Tipo de movimiento</option>
+          <option value="credit">Crédito</option>
+          <option value="debit">Débito</option>
+        </select>
+        <select
+          className="rounded-md border border-input bg-background px-3 py-1.5 text-sm shadow-sm"
+          value={filterEtype}
+          onChange={(e) => setFilterEtype(e.target.value)}
+        >
+          <option value="all">Tipo económico</option>
+          <option value="ingreso">Ingreso</option>
+          <option value="gasto">Gasto</option>
+          <option value="cargo_financiero">Cargo financiero</option>
+          <option value="transferencia_propia">Transferencia propia</option>
+          <option value="transferencia_tercero">Transferencia tercero</option>
+          <option value="reembolso">Reembolso</option>
+        </select>
         <Button
           variant={filterReview ? "default" : "outline"}
           size="sm"
@@ -78,6 +116,15 @@ export default function TransactionsPage() {
           <Filter className="h-3 w-3" />
           {filterReview ? "Mostrar todas" : "Solo requieren revisión"}
         </Button>
+        {(search || filterMovement !== "all" || filterEtype !== "all") && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => { setSearch(""); setFilterMovement("all"); setFilterEtype("all") }}
+          >
+            Limpiar filtros
+          </Button>
+        )}
       </div>
 
       {/* Lista */}
@@ -125,7 +172,7 @@ function TransactionRow({
     also_learn: true,
   })
 
-  const isIncome = tx.economic_type === "ingreso" || tx.movement_type === "credito"
+  const isIncome = tx.economic_type === "ingreso" || tx.movement_type === "credito" || tx.amount > 0
 
   return (
     <Card className={cn(tx.requires_review && "border-yellow-300")}>
@@ -181,12 +228,31 @@ function TransactionRow({
                 </select>
               </Field>
 
+              <Field label="Detalle económico">
+                <select
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={form.economic_type_detail}
+                  onChange={(e) => setForm({ ...form, economic_type_detail: e.target.value })}
+                >
+                  {["gasto_variable", "gasto_recurrente", "salario", "otros_ingresos", "comision", "impuesto", "cargo_bancario", "transferencia_propia", "transferencia_tercero", "reembolso"].map((v) => (
+                    <option key={v} value={v}>{capitalize(v)}</option>
+                  ))}
+                </select>
+              </Field>
+
               <Field label="Categoría de presupuesto">
-                <Input
+                <select
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                   value={form.budget_category}
                   onChange={(e) => setForm({ ...form, budget_category: e.target.value })}
-                  placeholder="ej: restaurantes, supermercado…"
-                />
+                >
+                  <option value="">— Seleccionar —</option>
+                  {BUDGET_CATEGORIES.map((c) => (
+                    <option key={c} value={c}>
+                      {capitalize(c.replace(/_/g, " "))}
+                    </option>
+                  ))}
+                </select>
               </Field>
 
               <Field label="Subtipo">

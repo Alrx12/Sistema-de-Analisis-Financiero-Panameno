@@ -66,6 +66,7 @@ export interface AggregatedSummary {
   categories: Record<string, number>
   top_merchants: MerchantStat[]
   by_economic_type: TypeStat[]
+  by_budget_role: TypeStat[]
   monthly_trend: MonthTrendStat[]
 }
 
@@ -195,6 +196,93 @@ export interface BankAccount {
   detection_source: string
   confidence_score: number
   created_at: string
+}
+
+// ─── User Profile ─────────────────────────────────────────────────────────────
+
+export type IndustryType =
+  | "tecnologia"
+  | "salud"
+  | "educacion"
+  | "finanzas"
+  | "comercio"
+  | "construccion"
+  | "gobierno"
+  | "transporte"
+  | "servicios"
+  | "otro"
+
+export type GoalType =
+  | "fondo_emergencia"
+  | "ahorro_general"
+  | "eliminar_deuda"
+  | "invertir"
+  | "meta_especifica"
+
+export type ExpenseFrequency = "weekly" | "monthly" | "annual"
+export type ExpenseOrigin = "efectivo" | "otro_banco" | "tarjeta_externa" | "prestamo" | "otro"
+
+export interface ManualExpense {
+  id: string
+  description: string
+  amount: number
+  frequency: ExpenseFrequency
+  monthly_amount: number        // normalizado a mensual
+  category: string
+  origins: ExpenseOrigin[]
+}
+
+export interface UserProfile {
+  profile_id: string
+  user_id: string
+  industry: IndustryType | null
+  expected_monthly_income: number | null
+  financial_goals: GoalType[]
+  onboarding_completed: boolean
+  manual_expenses: ManualExpense[] | null  // null = nunca configurado
+  created_at: string
+  updated_at: string
+}
+
+export interface UserProfileUpdate {
+  industry: IndustryType | null
+  expected_monthly_income: number | null
+  financial_goals: GoalType[]
+  onboarding_completed: boolean
+  manual_expenses?: ManualExpense[] | null
+}
+
+// ─── Review Groups ────────────────────────────────────────────────────────────
+
+export interface ReviewGroup {
+  canonical_key: string
+  sample_detail: string
+  count: number
+  total_amount: number
+  transaction_ids: string[]
+  current_category: string | null
+  current_budget_role: string | null
+}
+
+export interface ApplyGroupRequest {
+  canonical_key: string
+  transaction_ids: string[]
+  sample_detail: string
+  economic_type: string
+  economic_type_detail: string | null
+  subtype_economic: string | null
+  budget_category: string
+  budget_role: string
+  also_learn: boolean
+  force_personal: boolean
+  weight: number
+}
+
+export interface ApplyGroupResponse {
+  updated_count: number
+  canonical_key: string
+  detail_learned: string | null
+  kb_target: string | null
 }
 
 // ─── API Error ────────────────────────────────────────────────────────────────

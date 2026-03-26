@@ -13,6 +13,7 @@ from app.models.uploaded_file import UploadedFile
 from app.models.processing_job import ProcessingJob
 from app.models.analysis_snapshot import AnalysisSnapshot
 from app.models.analysis_transaction import AnalysisTransaction
+from app.models.user_profile import UserProfile  # noqa: F401
 
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.database_url)

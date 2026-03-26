@@ -12,6 +12,9 @@ import AnalysisListPage from "@/pages/AnalysisListPage"
 import AnalysisDetailPage from "@/pages/AnalysisDetailPage"
 import TransactionsPage from "@/pages/TransactionsPage"
 import KBPage from "@/pages/KBPage"
+import BudgetPage from "@/pages/BudgetPage"
+import OnboardingPage from "@/pages/OnboardingPage"
+import RetrainPage from "@/pages/RetrainPage"
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
@@ -33,6 +36,9 @@ export default function App() {
         <Route path="/forgot-password" element={<PublicRoute><ForgotPasswordPage /></PublicRoute>} />
         <Route path="/reset-password" element={<PublicRoute><ResetPasswordPage /></PublicRoute>} />
 
+        {/* Onboarding — protegida pero fuera del AppShell (pantalla completa) */}
+        <Route path="/onboarding" element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />
+
         {/* Rutas protegidas — dentro del AppShell con sidebar */}
         <Route path="/" element={<ProtectedRoute><AppShell /></ProtectedRoute>}>
           <Route index element={<DashboardPage />} />
@@ -41,6 +47,8 @@ export default function App() {
           <Route path="analysis/:id" element={<AnalysisDetailPage />} />
           <Route path="analysis/:id/transactions" element={<TransactionsPage />} />
           <Route path="kb" element={<KBPage />} />
+          <Route path="budget" element={<BudgetPage />} />
+          <Route path="retrain" element={<RetrainPage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

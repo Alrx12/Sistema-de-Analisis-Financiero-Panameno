@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-03-26T07:06:53.297422+00:00",
+  "last_updated": "2026-03-26T20:38:19.891620+00:00",
   "exact_matches": {
     "CREDITO TRANSF DE CC A": {
       "Economic Type": "transferencia_tercero",
@@ -63,6 +63,34 @@
       "SubType Economic": "recurrente",
       "Categoría de presupuesto": "vivienda",
       "budget_role": "presupuestable"
+    },
+    "PAGO YAPPY BG A PANATICKETS": {
+      "Economic Type": "transferencia_tercero",
+      "Economic Type Detail": "transferencia_tercero",
+      "SubType Economic": "extraordinario",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "no_presupuestable"
+    },
+    "PAGO YAPPY BG A SMARTFIT": {
+      "Economic Type": "transferencia_tercero",
+      "Economic Type Detail": "transferencia_tercero",
+      "SubType Economic": "variable",
+      "Categoría de presupuesto": "salud",
+      "budget_role": "presupuestable"
+    },
+    "PAGO YAPPY BG A FITLAB": {
+      "Economic Type": "transferencia_tercero",
+      "Economic Type Detail": "transferencia_tercero",
+      "SubType Economic": "variable",
+      "Categoría de presupuesto": "salud",
+      "budget_role": "presupuestable"
+    },
+    "DEBITO TRANSF DE CC A": {
+      "Economic Type": "transferencia_propia",
+      "Economic Type Detail": "gasto_recurrente",
+      "SubType Economic": "recurrente",
+      "Categoría de presupuesto": "deuda",
+      "budget_role": "solo_balance"
     }
   },
   "patterns": {
@@ -164,6 +192,50 @@
         "budget_role": "presupuestable"
       },
       "source": "learned"
+    },
+    "personal_transferencia_tercero_PANATICKETS": {
+      "regex": "\\bPANATICKETS\\b",
+      "categories": {
+        "Economic Type": "transferencia_tercero",
+        "Economic Type Detail": "transferencia_tercero",
+        "SubType Economic": "extraordinario",
+        "Categoría de presupuesto": "entretenimiento",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "personal_transferencia_tercero_SMARTFIT": {
+      "regex": "\\bSMARTFIT\\b",
+      "categories": {
+        "Economic Type": "transferencia_tercero",
+        "Economic Type Detail": "transferencia_tercero",
+        "SubType Economic": "variable",
+        "Categoría de presupuesto": "salud",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    },
+    "personal_transferencia_tercero_FITLAB": {
+      "regex": "\\bFITLAB\\b",
+      "categories": {
+        "Economic Type": "transferencia_tercero",
+        "Economic Type Detail": "transferencia_tercero",
+        "SubType Economic": "variable",
+        "Categoría de presupuesto": "salud",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    },
+    "personal_transferencia_propia_CC": {
+      "regex": "\\bCC\\b",
+      "categories": {
+        "Economic Type": "transferencia_propia",
+        "Economic Type Detail": "gasto_recurrente",
+        "SubType Economic": "recurrente",
+        "Categoría de presupuesto": "deuda",
+        "budget_role": "solo_balance"
+      },
+      "source": "learned"
     }
   },
   "word_weights": {
@@ -185,11 +257,14 @@
       "SubType Economic=extraordinario": 2.0,
       "Categoría de presupuesto=consumo_desconocido": 2.0,
       "budget_role=no_presupuestable": 2.0,
-      "Economic Type=transferencia_propia": 36.0,
+      "Economic Type=transferencia_propia": 38.0,
       "Economic Type Detail=transferencia_propia": 36.0,
       "SubType Economic=interno": 36.0,
       "Categoría de presupuesto=ahorro": 36.0,
-      "budget_role=solo_balance": 36.0
+      "budget_role=solo_balance": 38.0,
+      "Economic Type Detail=gasto_recurrente": 2.0,
+      "SubType Economic=recurrente": 2.0,
+      "Categoría de presupuesto=deuda": 2.0
     },
     "TRANSFERENCIA": {
       "Economic Type=transferencia_tercero": 4.0,
@@ -197,15 +272,16 @@
       "SubType Economic=extraordinario": 2.0,
       "Categoría de presupuesto=consumo_desconocido": 2.0,
       "budget_role=no_presupuestable": 2.0,
-      "Economic Type Detail=gasto_recurrente": 2.0,
-      "SubType Economic=recurrente": 2.0,
+      "Economic Type Detail=gasto_recurrente": 4.0,
+      "SubType Economic=recurrente": 4.0,
       "Categoría de presupuesto=vivienda": 2.0,
       "budget_role=presupuestable": 2.0,
-      "Economic Type=transferencia_propia": 36.0,
+      "Economic Type=transferencia_propia": 38.0,
       "Economic Type Detail=transferencia_propia": 36.0,
       "SubType Economic=interno": 36.0,
       "Categoría de presupuesto=ahorro": 36.0,
-      "budget_role=solo_balance": 36.0
+      "budget_role=solo_balance": 38.0,
+      "Categoría de presupuesto=deuda": 2.0
     },
     "CUENTAS": {
       "Economic Type=transferencia_tercero": 2.0,
@@ -213,11 +289,14 @@
       "SubType Economic=extraordinario": 2.0,
       "Categoría de presupuesto=consumo_desconocido": 2.0,
       "budget_role=no_presupuestable": 2.0,
-      "Economic Type=transferencia_propia": 36.0,
+      "Economic Type=transferencia_propia": 38.0,
       "Economic Type Detail=transferencia_propia": 36.0,
       "SubType Economic=interno": 36.0,
       "Categoría de presupuesto=ahorro": 36.0,
-      "budget_role=solo_balance": 36.0
+      "budget_role=solo_balance": 38.0,
+      "Economic Type Detail=gasto_recurrente": 2.0,
+      "SubType Economic=recurrente": 2.0,
+      "Categoría de presupuesto=deuda": 2.0
     },
     "TERCEROS": {
       "Economic Type=transferencia_tercero": 2.0,
@@ -321,15 +400,18 @@
       "budget_role=presupuestable": 2.0
     },
     "YAPPY": {
-      "Economic Type=transferencia_tercero": 8.0,
-      "Economic Type Detail=transferencia_tercero": 8.0,
-      "SubType Economic=extraordinario": 2.0,
+      "Economic Type=transferencia_tercero": 14.0,
+      "Economic Type Detail=transferencia_tercero": 14.0,
+      "SubType Economic=extraordinario": 4.0,
       "Categoría de presupuesto=consumo_desconocido": 2.0,
-      "budget_role=no_presupuestable": 2.0,
+      "budget_role=no_presupuestable": 4.0,
       "SubType Economic=recurrente": 6.0,
       "Categoría de presupuesto=alimentacion": 4.0,
-      "budget_role=presupuestable": 6.0,
-      "Categoría de presupuesto=vivienda": 2.0
+      "budget_role=presupuestable": 10.0,
+      "Categoría de presupuesto=vivienda": 2.0,
+      "Categoría de presupuesto=entretenimiento": 2.0,
+      "SubType Economic=variable": 4.0,
+      "Categoría de presupuesto=salud": 4.0
     },
     "ELENA": {
       "Economic Type=transferencia_tercero": 2.0,
@@ -360,18 +442,26 @@
       "budget_role=no_presupuestable": 2.0
     },
     "PROPIAS": {
-      "Economic Type=transferencia_propia": 36.0,
+      "Economic Type=transferencia_propia": 38.0,
       "Economic Type Detail=transferencia_propia": 36.0,
       "SubType Economic=interno": 36.0,
       "Categoría de presupuesto=ahorro": 36.0,
-      "budget_role=solo_balance": 36.0
+      "budget_role=solo_balance": 38.0,
+      "Economic Type Detail=gasto_recurrente": 2.0,
+      "SubType Economic=recurrente": 2.0,
+      "Categoría de presupuesto=deuda": 2.0
     },
     "PAGO": {
-      "Economic Type=transferencia_tercero": 4.0,
-      "Economic Type Detail=transferencia_tercero": 4.0,
+      "Economic Type=transferencia_tercero": 10.0,
+      "Economic Type Detail=transferencia_tercero": 10.0,
       "SubType Economic=recurrente": 4.0,
       "Categoría de presupuesto=alimentacion": 4.0,
-      "budget_role=presupuestable": 4.0
+      "budget_role=presupuestable": 8.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=entretenimiento": 2.0,
+      "budget_role=no_presupuestable": 2.0,
+      "SubType Economic=variable": 4.0,
+      "Categoría de presupuesto=salud": 4.0
     },
     "LOBBYMARKET": {
       "Economic Type=transferencia_tercero": 4.0,
@@ -428,7 +518,49 @@
       "SubType Economic=recurrente": 2.0,
       "Categoría de presupuesto=vivienda": 2.0,
       "budget_role=presupuestable": 2.0
+    },
+    "PANATICKETS": {
+      "Economic Type=transferencia_tercero": 2.0,
+      "Economic Type Detail=transferencia_tercero": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=entretenimiento": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "WEB": {
+      "Economic Type=transferencia_tercero": 2.0,
+      "Economic Type Detail=transferencia_tercero": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=entretenimiento": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "SMARTFIT": {
+      "Economic Type=transferencia_tercero": 2.0,
+      "Economic Type Detail=transferencia_tercero": 2.0,
+      "SubType Economic=variable": 2.0,
+      "Categoría de presupuesto=salud": 2.0,
+      "budget_role=presupuestable": 2.0
+    },
+    "LIBERTY": {
+      "Economic Type=transferencia_tercero": 4.0,
+      "Economic Type Detail=transferencia_tercero": 4.0,
+      "SubType Economic=variable": 4.0,
+      "Categoría de presupuesto=salud": 4.0,
+      "budget_role=presupuestable": 4.0
+    },
+    "FITLAB": {
+      "Economic Type=transferencia_tercero": 2.0,
+      "Economic Type Detail=transferencia_tercero": 2.0,
+      "SubType Economic=variable": 2.0,
+      "Categoría de presupuesto=salud": 2.0,
+      "budget_role=presupuestable": 2.0
+    },
+    "DEBITO": {
+      "Economic Type=transferencia_propia": 2.0,
+      "Economic Type Detail=gasto_recurrente": 2.0,
+      "SubType Economic=recurrente": 2.0,
+      "Categoría de presupuesto=deuda": 2.0,
+      "budget_role=solo_balance": 2.0
     }
   },
-  "corrections_count": 28
+  "corrections_count": 32
 }

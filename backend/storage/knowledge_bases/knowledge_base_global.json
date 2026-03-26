@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-03-26T07:06:53.292805+00:00",
+  "last_updated": "2026-03-26T20:38:19.871377+00:00",
   "exact_matches": {
     "DISNEY PLUS": {
       "Economic Type": "gasto",
@@ -79,10 +79,10 @@
       "budget_role": "presupuestable"
     },
     "SPOTIFY": {
-      "Economic Type": "gasto",
-      "Economic Type Detail": "gasto_recurrente",
-      "SubType Economic": "recurrente",
-      "Categoría de presupuesto": "entretenimiento",
+      "Economic Type": "ingreso",
+      "Economic Type Detail": "transferencia_tercero",
+      "SubType Economic": "variable",
+      "Categoría de presupuesto": "servicios",
       "budget_role": "presupuestable"
     },
     "ROCKEFELLE": {
@@ -271,8 +271,8 @@
       "Economic Type": "gasto",
       "Economic Type Detail": "gasto_variable",
       "SubType Economic": "extraordinario",
-      "Categoría de presupuesto": "consumo_desconocido",
-      "budget_role": "no_presupuestable"
+      "Categoría de presupuesto": "servicios",
+      "budget_role": "presupuestable"
     },
     "ESTACION T": {
       "Economic Type": "gasto",
@@ -313,7 +313,7 @@
       "Economic Type": "gasto",
       "Economic Type Detail": "gasto_variable",
       "SubType Economic": "extraordinario",
-      "Categoría de presupuesto": "alimentacion",
+      "Categoría de presupuesto": "restaurante",
       "budget_role": "no_presupuestable"
     },
     "LOBBY Y MA": {
@@ -329,6 +329,398 @@
       "SubType Economic": "recurrente",
       "Categoría de presupuesto": "salario",
       "budget_role": "presupuestable"
+    },
+    "PAGO TDC": {
+      "Economic Type": "cargo_financiero",
+      "Economic Type Detail": "cargo_bancario",
+      "SubType Economic": "financiero",
+      "Categoría de presupuesto": "deudas",
+      "budget_role": "gasto_financiero"
+    },
+    "PROTECCION ROBO": {
+      "Economic Type": "cargo_financiero",
+      "Economic Type Detail": "cargo_bancario",
+      "SubType Economic": "financiero",
+      "Categoría de presupuesto": "impuestos y comisiones",
+      "budget_role": "gasto_financiero"
+    },
+    "COMPASS": {
+      "Economic Type": "cargo_financiero",
+      "Economic Type Detail": "comision",
+      "SubType Economic": "financiero",
+      "Categoría de presupuesto": "impuestos y comisiones",
+      "budget_role": "gasto_financiero"
+    },
+    "VALOR DE TARJETA TITULAR": {
+      "Economic Type": "cargo_financiero",
+      "Economic Type Detail": "cargo_bancario",
+      "SubType Economic": "financiero",
+      "Categoría de presupuesto": "impuestos y comisiones",
+      "budget_role": "gasto_financiero"
+    },
+    "IMPUESTO SEGURO FRAUDE": {
+      "Economic Type": "cargo_financiero",
+      "Economic Type Detail": "cargo_bancario",
+      "SubType Economic": "financiero",
+      "Categoría de presupuesto": "impuestos y comisiones",
+      "budget_role": "gasto_financiero"
+    },
+    "SEGURO DE FRAUDE MENSU": {
+      "Economic Type": "cargo_financiero",
+      "Economic Type Detail": "cargo_bancario",
+      "SubType Economic": "financiero",
+      "Categoría de presupuesto": "impuestos y comisiones",
+      "budget_role": "gasto_financiero"
+    },
+    "MCDONALDS VILLA LUCRE": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "gasto_variable",
+      "SubType Economic": "extraordinario",
+      "Categoría de presupuesto": "alimentacion",
+      "budget_role": "no_presupuestable"
+    },
+    "IN OUT": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "gasto_variable",
+      "SubType Economic": "extraordinario",
+      "Categoría de presupuesto": "alimentacion",
+      "budget_role": "no_presupuestable"
+    },
+    "DEPOSITO CUENTA DE AHORROS SIN": {
+      "Economic Type": "ingreso",
+      "Economic Type Detail": "otros_ingresos",
+      "SubType Economic": "extraordinario",
+      "Categoría de presupuesto": "otros",
+      "budget_role": "no_presupuestable"
+    },
+    "NEW GENERATIONS UNLIMI": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "gasto_variable",
+      "SubType Economic": "extraordinario",
+      "Categoría de presupuesto": "alimentacion",
+      "budget_role": "no_presupuestable"
+    },
+    "MCDONALDS CINCUENTENAR": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "gasto_variable",
+      "SubType Economic": "extraordinario",
+      "Categoría de presupuesto": "restaurantes",
+      "budget_role": "no_presupuestable"
+    },
+    "MINI SUPER VILLA LUCRE": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "gasto_variable",
+      "SubType Economic": "extraordinario",
+      "Categoría de presupuesto": "alimentacion",
+      "budget_role": "no_presupuestable"
+    },
+    "PUMA VILLA LUCRE": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "gasto_variable",
+      "SubType Economic": "variable",
+      "Categoría de presupuesto": "transporte",
+      "budget_role": "presupuestable"
+    },
+    "ONZE 12 DE OCTUBRE": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "gasto_variable",
+      "SubType Economic": "extraordinario",
+      "Categoría de presupuesto": "restaurantes",
+      "budget_role": "no_presupuestable"
+    },
+    "SUPER 7 PUMA VILLA LUC": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "gasto_variable",
+      "SubType Economic": "extraordinario",
+      "Categoría de presupuesto": "alimentacion",
+      "budget_role": "no_presupuestable"
+    },
+    "ATM BANCO GENERAL BG SUCVILLALUCRE": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "gasto_variable",
+      "SubType Economic": "extraordinario",
+      "Categoría de presupuesto": "otros",
+      "budget_role": "no_presupuestable"
+    },
+    "BATTERY DEPOT SAN FR": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "gasto_variable",
+      "SubType Economic": "extraordinario",
+      "Categoría de presupuesto": "transporte",
+      "budget_role": "no_presupuestable"
+    },
+    "MINI SUPER VILLA FRESC": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "gasto_variable",
+      "SubType Economic": "extraordinario",
+      "Categoría de presupuesto": "alimentacion",
+      "budget_role": "no_presupuestable"
+    },
+    "PA VACILAR PANAMA": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "gasto_variable",
+      "SubType Economic": "extraordinario",
+      "Categoría de presupuesto": "restaurantes",
+      "budget_role": "no_presupuestable"
+    },
+    "AMAZON PRIME": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "gasto_recurrente",
+      "SubType Economic": "recurrente",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "presupuestable"
+    },
+    "BARRA LA ESTRELLA": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "gasto_variable",
+      "SubType Economic": "extraordinario",
+      "Categoría de presupuesto": "restaurantes",
+      "budget_role": "no_presupuestable"
+    },
+    "OSAKA Y TOSCANA": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "gasto_variable",
+      "SubType Economic": "extraordinario",
+      "Categoría de presupuesto": "restaurantes",
+      "budget_role": "no_presupuestable"
+    },
+    "TACOS DE LA NETA SEL": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "gasto_variable",
+      "SubType Economic": "extraordinario",
+      "Categoría de presupuesto": "restaurantes",
+      "budget_role": "no_presupuestable"
+    },
+    "ASADOS GABYDANA PAZUL": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "gasto_variable",
+      "SubType Economic": "extraordinario",
+      "Categoría de presupuesto": "restaurantes",
+      "budget_role": "no_presupuestable"
+    },
+    "REST FRUTOS DEL MAR 2": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "gasto_variable",
+      "SubType Economic": "extraordinario",
+      "Categoría de presupuesto": "restaurantes",
+      "budget_role": "no_presupuestable"
+    },
+    "TRESCUATES": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "gasto_variable",
+      "SubType Economic": "extraordinario",
+      "Categoría de presupuesto": "restaurantes",
+      "budget_role": "no_presupuestable"
+    },
+    "SUBWAY": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "gasto_variable",
+      "SubType Economic": "extraordinario",
+      "Categoría de presupuesto": "restaurantes",
+      "budget_role": "no_presupuestable"
+    },
+    "COMISION POR ACH XPRESS A": {
+      "Economic Type": "cargo_financiero",
+      "Economic Type Detail": "cargo_bancario",
+      "SubType Economic": "financiero",
+      "Categoría de presupuesto": "impuestos y comisiones",
+      "budget_role": "gasto_financiero"
+    },
+    "YAPPY BG A LUIS ALBERTO": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "transferencia_tercero",
+      "SubType Economic": "recurrente",
+      "Categoría de presupuesto": "servicios",
+      "budget_role": "presupuestable"
+    },
+    "PAGO YAPPY BG A PANATICKETS": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "transferencia_tercero",
+      "SubType Economic": "extraordinario",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "no_presupuestable"
+    },
+    "PAGO YAPPY BG A CARNESGRILLPTY": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "transferencia_tercero",
+      "SubType Economic": "extraordinario",
+      "Categoría de presupuesto": "alimentacion",
+      "budget_role": "no_presupuestable"
+    },
+    "ACH XPRESS PH ATHAS CUOTAS": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "transferencia_tercero",
+      "SubType Economic": "recurrente",
+      "Categoría de presupuesto": "vivienda",
+      "budget_role": "presupuestable"
+    },
+    "DELTA VILL": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "gasto_variable",
+      "SubType Economic": "variable",
+      "Categoría de presupuesto": "transporte",
+      "budget_role": "gasto_operativo"
+    },
+    "RESTAURANT": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "gasto_variable",
+      "SubType Economic": "extraordinario",
+      "Categoría de presupuesto": "restaurante",
+      "budget_role": "no_presupuestable"
+    },
+    "NOVEY OBAR": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "gasto_variable",
+      "SubType Economic": "extraordinario",
+      "Categoría de presupuesto": "vivienda",
+      "budget_role": "no_presupuestable"
+    },
+    "NACION SUS": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "gasto_variable",
+      "SubType Economic": "extraordinario",
+      "Categoría de presupuesto": "restaurante",
+      "budget_role": "no_presupuestable"
+    },
+    "DO IT CENT": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "gasto_variable",
+      "SubType Economic": "extraordinario",
+      "Categoría de presupuesto": "vivienda",
+      "budget_role": "no_presupuestable"
+    },
+    "CREDITO TRANSF DE CC A": {
+      "Economic Type": "ingreso",
+      "Economic Type Detail": "transferencia_tercero",
+      "SubType Economic": "extraordinario",
+      "Categoría de presupuesto": "alimentacion",
+      "budget_role": "no_presupuestable"
+    },
+    "BUENA VIST": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "gasto_variable",
+      "SubType Economic": "extraordinario",
+      "Categoría de presupuesto": "restaurantes",
+      "budget_role": "no_presupuestable"
+    },
+    "GELATIAMO": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "gasto_variable",
+      "SubType Economic": "extraordinario",
+      "Categoría de presupuesto": "restaurante",
+      "budget_role": "no_presupuestable"
+    },
+    "SUPERMERCADO REY": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "gasto_variable",
+      "SubType Economic": "variable",
+      "Categoría de presupuesto": "mercado",
+      "budget_role": "presupuestable"
+    },
+    "POWER LAB": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "gasto_variable",
+      "SubType Economic": "extraordinario",
+      "Categoría de presupuesto": "salud",
+      "budget_role": "no_presupuestable"
+    },
+    "PRODIM S": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "gasto_variable",
+      "SubType Economic": "extraordinario",
+      "Categoría de presupuesto": "alimentacion",
+      "budget_role": "no_presupuestable"
+    },
+    "YAPPY BG A MANUEL SALVADOR": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "gasto_variable",
+      "SubType Economic": "extraordinario",
+      "Categoría de presupuesto": "servicios",
+      "budget_role": "presupuestable"
+    },
+    "YAPPY BG A JOHAM ABDIEL": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "gasto_variable",
+      "SubType Economic": "extraordinario",
+      "Categoría de presupuesto": "alimentacion",
+      "budget_role": "no_presupuestable"
+    },
+    "YAPPY BG A CARLOS RAUL": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "gasto_recurrente",
+      "SubType Economic": "extraordinario",
+      "Categoría de presupuesto": "servicios",
+      "budget_role": "presupuestable"
+    },
+    "PAGO YAPPY BG A RAPIDITOS": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "gasto_variable",
+      "SubType Economic": "extraordinario",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "no_presupuestable"
+    },
+    "PAGO YAPPY BG A PREMIERGENERAL": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "cargo_bancario",
+      "SubType Economic": "extraordinario",
+      "Categoría de presupuesto": "deuda",
+      "budget_role": "gasto_financiero"
+    },
+    "YAPPY BG A WILMER ALEXANDER": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "gasto_variable",
+      "SubType Economic": "extraordinario",
+      "Categoría de presupuesto": "alimentacion",
+      "budget_role": "no_presupuestable"
+    },
+    "PAGO YAPPY BG A ANTICANGREJO": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "gasto_variable",
+      "SubType Economic": "extraordinario",
+      "Categoría de presupuesto": "alimentacion",
+      "budget_role": "no_presupuestable"
+    },
+    "KFC": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "gasto_variable",
+      "SubType Economic": "extraordinario",
+      "Categoría de presupuesto": "alimentacion",
+      "budget_role": "no_presupuestable"
+    },
+    "YAPPY BG A ESTANISLAO HERNANDEZ": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "gasto_variable",
+      "SubType Economic": "extraordinario",
+      "Categoría de presupuesto": "entretenimiento",
+      "budget_role": "no_presupuestable"
+    },
+    "PAGO YAPPY BG A EPIKCREDITO": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "cargo_bancario",
+      "SubType Economic": "financiero",
+      "Categoría de presupuesto": "deuda",
+      "budget_role": "gasto_financiero"
+    },
+    "PAGO YAPPY BG A SPORTLINKCENTER": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "gasto_variable",
+      "SubType Economic": "extraordinario",
+      "Categoría de presupuesto": "ocio",
+      "budget_role": "no_presupuestable"
+    },
+    "PAGO YAPPY BG A ZOOSHOPPTY": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "gasto_variable",
+      "SubType Economic": "variable",
+      "Categoría de presupuesto": "mascotas",
+      "budget_role": "no_presupuestable"
+    },
+    "AM PM RIO": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "gasto_variable",
+      "SubType Economic": "extraordinario",
+      "Categoría de presupuesto": "alimentacion",
+      "budget_role": "no_presupuestable"
     }
   },
   "patterns": {
@@ -382,7 +774,7 @@
         "Economic Type": "cargo_financiero",
         "Economic Type Detail": "comision",
         "SubType Economic": "financiero",
-        "Categoría de presupuesto": "otros",
+        "Categoría de presupuesto": "impuestos y comisiones",
         "budget_role": "gasto_financiero"
       },
       "source": "learned"
@@ -745,8 +1137,8 @@
         "Economic Type": "gasto",
         "Economic Type Detail": "gasto_variable",
         "SubType Economic": "extraordinario",
-        "Categoría de presupuesto": "consumo_desconocido",
-        "budget_role": "no_presupuestable"
+        "Categoría de presupuesto": "servicios",
+        "budget_role": "presupuestable"
       },
       "source": "learned"
     },
@@ -822,7 +1214,7 @@
         "Economic Type": "gasto",
         "Economic Type Detail": "gasto_variable",
         "SubType Economic": "extraordinario",
-        "Categoría de presupuesto": "alimentacion",
+        "Categoría de presupuesto": "restaurante",
         "budget_role": "no_presupuestable"
       },
       "source": "learned"
@@ -848,39 +1240,649 @@
         "budget_role": "presupuestable"
       },
       "source": "learned"
+    },
+    "global_cargo_financiero_TDC": {
+      "regex": "\\bTDC\\b",
+      "categories": {
+        "Economic Type": "cargo_financiero",
+        "Economic Type Detail": "cargo_bancario",
+        "SubType Economic": "financiero",
+        "Categoría de presupuesto": "deudas",
+        "budget_role": "gasto_financiero"
+      },
+      "source": "learned"
+    },
+    "global_cargo_financiero_PROTECCION_ROBO": {
+      "regex": "\\bPROTECCION\\s+ROBO\\b",
+      "categories": {
+        "Economic Type": "cargo_financiero",
+        "Economic Type Detail": "cargo_bancario",
+        "SubType Economic": "financiero",
+        "Categoría de presupuesto": "impuestos y comisiones",
+        "budget_role": "gasto_financiero"
+      },
+      "source": "learned"
+    },
+    "global_cargo_financiero_VALOR_TITULAR": {
+      "regex": "\\bVALOR\\s+TITULAR\\b",
+      "categories": {
+        "Economic Type": "cargo_financiero",
+        "Economic Type Detail": "cargo_bancario",
+        "SubType Economic": "financiero",
+        "Categoría de presupuesto": "impuestos y comisiones",
+        "budget_role": "gasto_financiero"
+      },
+      "source": "learned"
+    },
+    "global_cargo_financiero_IMPUESTO_SEGURO_FRAUDE": {
+      "regex": "\\bIMPUESTO\\s+SEGURO\\s+FRAUDE\\b",
+      "categories": {
+        "Economic Type": "cargo_financiero",
+        "Economic Type Detail": "cargo_bancario",
+        "SubType Economic": "financiero",
+        "Categoría de presupuesto": "impuestos y comisiones",
+        "budget_role": "gasto_financiero"
+      },
+      "source": "learned"
+    },
+    "global_cargo_financiero_SEGURO_FRAUDE_MENSU": {
+      "regex": "\\bSEGURO\\s+FRAUDE\\s+MENSU\\b",
+      "categories": {
+        "Economic Type": "cargo_financiero",
+        "Economic Type Detail": "cargo_bancario",
+        "SubType Economic": "financiero",
+        "Categoría de presupuesto": "impuestos y comisiones",
+        "budget_role": "gasto_financiero"
+      },
+      "source": "learned"
+    },
+    "global_gasto_MCDONALDS_VILLA_LUCRE": {
+      "regex": "\\bMCDONALDS\\s+VILLA\\s+LUCRE\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_variable",
+        "SubType Economic": "extraordinario",
+        "Categoría de presupuesto": "alimentacion",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_gasto_IN_OUT": {
+      "regex": "\\bIN\\s+OUT\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_variable",
+        "SubType Economic": "extraordinario",
+        "Categoría de presupuesto": "alimentacion",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_ingreso_DEPOSITO_CUENTA_AHORROS_SIN": {
+      "regex": "\\bDEPOSITO\\s+CUENTA\\s+AHORROS\\s+SIN\\b",
+      "categories": {
+        "Economic Type": "ingreso",
+        "Economic Type Detail": "otros_ingresos",
+        "SubType Economic": "extraordinario",
+        "Categoría de presupuesto": "otros",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_gasto_NEW_GENERATIONS_UNLIMI": {
+      "regex": "\\bNEW\\s+GENERATIONS\\s+UNLIMI\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_variable",
+        "SubType Economic": "extraordinario",
+        "Categoría de presupuesto": "alimentacion",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_gasto_MCDONALDS_CINCUENTENAR": {
+      "regex": "\\bMCDONALDS\\s+CINCUENTENAR\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_variable",
+        "SubType Economic": "extraordinario",
+        "Categoría de presupuesto": "restaurantes",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_gasto_MINI_SUPER_VILLA_LUCRE": {
+      "regex": "\\bMINI\\s+SUPER\\s+VILLA\\s+LUCRE\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_variable",
+        "SubType Economic": "extraordinario",
+        "Categoría de presupuesto": "alimentacion",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_gasto_PUMA_VILLA_LUCRE": {
+      "regex": "\\bPUMA\\s+VILLA\\s+LUCRE\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_variable",
+        "SubType Economic": "variable",
+        "Categoría de presupuesto": "transporte",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_gasto_ONZE_12": {
+      "regex": "\\bONZE\\s+12\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_variable",
+        "SubType Economic": "extraordinario",
+        "Categoría de presupuesto": "restaurantes",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_gasto_SUPER_7_PUMA_VILLA_LUC": {
+      "regex": "\\bSUPER\\s+7\\s+PUMA\\s+VILLA\\s+LUC\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_variable",
+        "SubType Economic": "extraordinario",
+        "Categoría de presupuesto": "alimentacion",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_gasto_ATM_SUCVILLALUCRE": {
+      "regex": "\\bATM\\s+SUCVILLALUCRE\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_variable",
+        "SubType Economic": "extraordinario",
+        "Categoría de presupuesto": "otros",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_gasto_BATTERY_DEPOT_SAN_FR": {
+      "regex": "\\bBATTERY\\s+DEPOT\\s+SAN\\s+FR\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_variable",
+        "SubType Economic": "extraordinario",
+        "Categoría de presupuesto": "transporte",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_gasto_MINI_SUPER_VILLA_FRESC": {
+      "regex": "\\bMINI\\s+SUPER\\s+VILLA\\s+FRESC\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_variable",
+        "SubType Economic": "extraordinario",
+        "Categoría de presupuesto": "alimentacion",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_gasto_PA_VACILAR_PANAMA": {
+      "regex": "\\bPA\\s+VACILAR\\s+PANAMA\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_variable",
+        "SubType Economic": "extraordinario",
+        "Categoría de presupuesto": "restaurantes",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_gasto_AMAZON_PRIME": {
+      "regex": "\\bAMAZON\\s+PRIME\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_recurrente",
+        "SubType Economic": "recurrente",
+        "Categoría de presupuesto": "entretenimiento",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_gasto_BARRA_ESTRELLA": {
+      "regex": "\\bBARRA\\s+ESTRELLA\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_variable",
+        "SubType Economic": "extraordinario",
+        "Categoría de presupuesto": "restaurantes",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_gasto_OSAKA_Y_TOSCANA": {
+      "regex": "\\bOSAKA\\s+Y\\s+TOSCANA\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_variable",
+        "SubType Economic": "extraordinario",
+        "Categoría de presupuesto": "restaurantes",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_gasto_TACOS_NETA_SEL": {
+      "regex": "\\bTACOS\\s+NETA\\s+SEL\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_variable",
+        "SubType Economic": "extraordinario",
+        "Categoría de presupuesto": "restaurantes",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_gasto_ASADOS_GABYDANA_PAZUL": {
+      "regex": "\\bASADOS\\s+GABYDANA\\s+PAZUL\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_variable",
+        "SubType Economic": "extraordinario",
+        "Categoría de presupuesto": "restaurantes",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_gasto_REST_FRUTOS_DEL_MAR_2": {
+      "regex": "\\bREST\\s+FRUTOS\\s+DEL\\s+MAR\\s+2\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_variable",
+        "SubType Economic": "extraordinario",
+        "Categoría de presupuesto": "restaurantes",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_gasto_TRESCUATES": {
+      "regex": "\\bTRESCUATES\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_variable",
+        "SubType Economic": "extraordinario",
+        "Categoría de presupuesto": "restaurantes",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_gasto_SUBWAY": {
+      "regex": "\\bSUBWAY\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_variable",
+        "SubType Economic": "extraordinario",
+        "Categoría de presupuesto": "restaurantes",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_cargo_financiero_COMISION_ACH": {
+      "regex": "\\bCOMISION\\s+ACH\\b",
+      "categories": {
+        "Economic Type": "cargo_financiero",
+        "Economic Type Detail": "cargo_bancario",
+        "SubType Economic": "financiero",
+        "Categoría de presupuesto": "impuestos y comisiones",
+        "budget_role": "gasto_financiero"
+      },
+      "source": "learned"
+    },
+    "global_gasto_LUIS_ALBERTO": {
+      "regex": "\\bLUIS\\s+ALBERTO\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "transferencia_tercero",
+        "SubType Economic": "recurrente",
+        "Categoría de presupuesto": "servicios",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_gasto_PANATICKETS": {
+      "regex": "\\bPANATICKETS\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "transferencia_tercero",
+        "SubType Economic": "extraordinario",
+        "Categoría de presupuesto": "entretenimiento",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_gasto_CARNESGRILLPTY": {
+      "regex": "\\bCARNESGRILLPTY\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "transferencia_tercero",
+        "SubType Economic": "extraordinario",
+        "Categoría de presupuesto": "alimentacion",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_gasto_ACH_PH_ATHAS_CUOTAS": {
+      "regex": "\\bACH\\s+PH\\s+ATHAS\\s+CUOTAS\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "transferencia_tercero",
+        "SubType Economic": "recurrente",
+        "Categoría de presupuesto": "vivienda",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_ingreso_SPOTIFY": {
+      "regex": "\\bSPOTIFY\\b",
+      "categories": {
+        "Economic Type": "ingreso",
+        "Economic Type Detail": "transferencia_tercero",
+        "SubType Economic": "variable",
+        "Categoría de presupuesto": "servicios",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_gasto_DELTA_VILL": {
+      "regex": "\\bDELTA\\s+VILL\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_variable",
+        "SubType Economic": "variable",
+        "Categoría de presupuesto": "transporte",
+        "budget_role": "gasto_operativo"
+      },
+      "source": "learned"
+    },
+    "global_gasto_RESTAURANT": {
+      "regex": "\\bRESTAURANT\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_variable",
+        "SubType Economic": "extraordinario",
+        "Categoría de presupuesto": "restaurante",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_gasto_NOVEY_OBAR": {
+      "regex": "\\bNOVEY\\s+OBAR\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_variable",
+        "SubType Economic": "extraordinario",
+        "Categoría de presupuesto": "vivienda",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_gasto_NACION_SUS": {
+      "regex": "\\bNACION\\s+SUS\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_variable",
+        "SubType Economic": "extraordinario",
+        "Categoría de presupuesto": "restaurante",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_gasto_DO_IT_CENT": {
+      "regex": "\\bDO\\s+IT\\s+CENT\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_variable",
+        "SubType Economic": "extraordinario",
+        "Categoría de presupuesto": "vivienda",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_ingreso_CC": {
+      "regex": "\\bCC\\b",
+      "categories": {
+        "Economic Type": "ingreso",
+        "Economic Type Detail": "transferencia_tercero",
+        "SubType Economic": "extraordinario",
+        "Categoría de presupuesto": "alimentacion",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_gasto_BUENA_VIST": {
+      "regex": "\\bBUENA\\s+VIST\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_variable",
+        "SubType Economic": "extraordinario",
+        "Categoría de presupuesto": "restaurantes",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_gasto_GELATIAMO": {
+      "regex": "\\bGELATIAMO\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_variable",
+        "SubType Economic": "extraordinario",
+        "Categoría de presupuesto": "restaurante",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_gasto_SUPERMERCADO_REY": {
+      "regex": "\\bSUPERMERCADO\\s+REY\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_variable",
+        "SubType Economic": "variable",
+        "Categoría de presupuesto": "mercado",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_gasto_POWER_LAB": {
+      "regex": "\\bPOWER\\s+LAB\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_variable",
+        "SubType Economic": "extraordinario",
+        "Categoría de presupuesto": "salud",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_gasto_PRODIM_S": {
+      "regex": "\\bPRODIM\\s+S\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_variable",
+        "SubType Economic": "extraordinario",
+        "Categoría de presupuesto": "alimentacion",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_gasto_MANUEL_SALVADOR": {
+      "regex": "\\bMANUEL\\s+SALVADOR\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_variable",
+        "SubType Economic": "extraordinario",
+        "Categoría de presupuesto": "servicios",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_gasto_JOHAM_ABDIEL": {
+      "regex": "\\bJOHAM\\s+ABDIEL\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_variable",
+        "SubType Economic": "extraordinario",
+        "Categoría de presupuesto": "alimentacion",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_gasto_CARLOS_RAUL": {
+      "regex": "\\bCARLOS\\s+RAUL\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_recurrente",
+        "SubType Economic": "extraordinario",
+        "Categoría de presupuesto": "servicios",
+        "budget_role": "presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_gasto_RAPIDITOS": {
+      "regex": "\\bRAPIDITOS\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_variable",
+        "SubType Economic": "extraordinario",
+        "Categoría de presupuesto": "entretenimiento",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_gasto_PREMIERGENERAL": {
+      "regex": "\\bPREMIERGENERAL\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "cargo_bancario",
+        "SubType Economic": "extraordinario",
+        "Categoría de presupuesto": "deuda",
+        "budget_role": "gasto_financiero"
+      },
+      "source": "learned"
+    },
+    "global_gasto_WILMER_ALEXANDER": {
+      "regex": "\\bWILMER\\s+ALEXANDER\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_variable",
+        "SubType Economic": "extraordinario",
+        "Categoría de presupuesto": "alimentacion",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_gasto_ANTICANGREJO": {
+      "regex": "\\bANTICANGREJO\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_variable",
+        "SubType Economic": "extraordinario",
+        "Categoría de presupuesto": "alimentacion",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_gasto_ESTANISLAO_HERNANDEZ": {
+      "regex": "\\bESTANISLAO\\s+HERNANDEZ\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_variable",
+        "SubType Economic": "extraordinario",
+        "Categoría de presupuesto": "entretenimiento",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_gasto_EPIKCREDITO": {
+      "regex": "\\bEPIKCREDITO\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "cargo_bancario",
+        "SubType Economic": "financiero",
+        "Categoría de presupuesto": "deuda",
+        "budget_role": "gasto_financiero"
+      },
+      "source": "learned"
+    },
+    "global_gasto_SPORTLINKCENTER": {
+      "regex": "\\bSPORTLINKCENTER\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_variable",
+        "SubType Economic": "extraordinario",
+        "Categoría de presupuesto": "ocio",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_gasto_ZOOSHOPPTY": {
+      "regex": "\\bZOOSHOPPTY\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_variable",
+        "SubType Economic": "variable",
+        "Categoría de presupuesto": "mascotas",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
+    },
+    "global_gasto_AM_PM_RIO": {
+      "regex": "\\bAM\\s+PM\\s+RIO\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_variable",
+        "SubType Economic": "extraordinario",
+        "Categoría de presupuesto": "alimentacion",
+        "budget_role": "no_presupuestable"
+      },
+      "source": "learned"
     }
   },
   "word_weights": {
     "COMPRA": {
-      "Economic Type=gasto": 70.0,
+      "Economic Type=gasto": 102.0,
       "Economic Type Detail=gasto_recurrente": 36.0,
       "SubType Economic=recurrente": 36.0,
       "Categoría de presupuesto=entretenimiento": 36.0,
-      "budget_role=presupuestable": 40.0,
-      "Economic Type Detail=gasto_variable": 34.0,
-      "SubType Economic=extraordinario": 30.0,
-      "Categoría de presupuesto=restaurantes": 4.0,
-      "budget_role=no_presupuestable": 32.0,
-      "Categoría de presupuesto=alimentacion": 18.0,
-      "Categoría de presupuesto=transporte": 8.0,
+      "budget_role=presupuestable": 46.0,
+      "Economic Type Detail=gasto_variable": 66.0,
+      "SubType Economic=extraordinario": 56.0,
+      "Categoría de presupuesto=restaurantes": 6.0,
+      "budget_role=no_presupuestable": 56.0,
+      "Categoría de presupuesto=alimentacion": 24.0,
+      "Categoría de presupuesto=transporte": 10.0,
       "Categoría de presupuesto=consumo_desconocido": 4.0,
-      "Categoría de presupuesto=servicios": 2.0,
+      "Categoría de presupuesto=servicios": 4.0,
       "SubType Economic=fijo": 4.0,
       "Economic Type=ingreso": 2.0,
       "Economic Type Detail=otros_ingresos": 2.0,
-      "SubType Economic=variable": 2.0
+      "SubType Economic=variable": 8.0,
+      "Categoría de presupuesto=restaurante": 8.0,
+      "budget_role=gasto_operativo": 2.0,
+      "Categoría de presupuesto=vivienda": 6.0,
+      "Categoría de presupuesto=mercado": 4.0,
+      "Categoría de presupuesto=salud": 2.0
     },
     "COMMERCE": {
-      "Economic Type=gasto": 28.0,
+      "Economic Type=gasto": 30.0,
       "Economic Type Detail=gasto_recurrente": 22.0,
       "SubType Economic=recurrente": 22.0,
       "Categoría de presupuesto=entretenimiento": 22.0,
-      "budget_role=presupuestable": 22.0,
-      "Economic Type Detail=gasto_variable": 6.0,
-      "SubType Economic=extraordinario": 6.0,
+      "budget_role=presupuestable": 24.0,
+      "Economic Type Detail=gasto_variable": 8.0,
+      "SubType Economic=extraordinario": 8.0,
       "Categoría de presupuesto=transporte": 2.0,
       "budget_role=no_presupuestable": 6.0,
-      "Categoría de presupuesto=servicios": 2.0,
+      "Categoría de presupuesto=servicios": 4.0,
       "Categoría de presupuesto=consumo_desconocido": 2.0
     },
     "INTL": {
@@ -896,42 +1898,52 @@
       "Categoría de presupuesto=servicios": 2.0
     },
     "MCD": {
-      "Economic Type=gasto": 70.0,
+      "Economic Type=gasto": 102.0,
       "Economic Type Detail=gasto_recurrente": 36.0,
       "SubType Economic=recurrente": 36.0,
       "Categoría de presupuesto=entretenimiento": 36.0,
-      "budget_role=presupuestable": 40.0,
-      "Economic Type Detail=gasto_variable": 34.0,
-      "SubType Economic=extraordinario": 30.0,
-      "Categoría de presupuesto=restaurantes": 4.0,
-      "budget_role=no_presupuestable": 32.0,
-      "Categoría de presupuesto=alimentacion": 18.0,
-      "Categoría de presupuesto=transporte": 8.0,
+      "budget_role=presupuestable": 46.0,
+      "Economic Type Detail=gasto_variable": 66.0,
+      "SubType Economic=extraordinario": 56.0,
+      "Categoría de presupuesto=restaurantes": 6.0,
+      "budget_role=no_presupuestable": 56.0,
+      "Categoría de presupuesto=alimentacion": 24.0,
+      "Categoría de presupuesto=transporte": 10.0,
       "Categoría de presupuesto=consumo_desconocido": 4.0,
-      "Categoría de presupuesto=servicios": 2.0,
+      "Categoría de presupuesto=servicios": 4.0,
       "SubType Economic=fijo": 4.0,
       "Economic Type=ingreso": 2.0,
       "Economic Type Detail=otros_ingresos": 2.0,
-      "SubType Economic=variable": 2.0
+      "SubType Economic=variable": 8.0,
+      "Categoría de presupuesto=restaurante": 8.0,
+      "budget_role=gasto_operativo": 2.0,
+      "Categoría de presupuesto=vivienda": 6.0,
+      "Categoría de presupuesto=mercado": 4.0,
+      "Categoría de presupuesto=salud": 2.0
     },
     "CTE": {
-      "Economic Type=gasto": 70.0,
+      "Economic Type=gasto": 102.0,
       "Economic Type Detail=gasto_recurrente": 36.0,
       "SubType Economic=recurrente": 36.0,
       "Categoría de presupuesto=entretenimiento": 36.0,
-      "budget_role=presupuestable": 40.0,
-      "Economic Type Detail=gasto_variable": 34.0,
-      "SubType Economic=extraordinario": 30.0,
-      "Categoría de presupuesto=restaurantes": 4.0,
-      "budget_role=no_presupuestable": 32.0,
-      "Categoría de presupuesto=alimentacion": 18.0,
-      "Categoría de presupuesto=transporte": 8.0,
+      "budget_role=presupuestable": 46.0,
+      "Economic Type Detail=gasto_variable": 66.0,
+      "SubType Economic=extraordinario": 56.0,
+      "Categoría de presupuesto=restaurantes": 6.0,
+      "budget_role=no_presupuestable": 56.0,
+      "Categoría de presupuesto=alimentacion": 24.0,
+      "Categoría de presupuesto=transporte": 10.0,
       "Categoría de presupuesto=consumo_desconocido": 4.0,
-      "Categoría de presupuesto=servicios": 2.0,
+      "Categoría de presupuesto=servicios": 4.0,
       "SubType Economic=fijo": 4.0,
       "Economic Type=ingreso": 2.0,
       "Economic Type Detail=otros_ingresos": 2.0,
-      "SubType Economic=variable": 2.0
+      "SubType Economic=variable": 8.0,
+      "Categoría de presupuesto=restaurante": 8.0,
+      "budget_role=gasto_operativo": 2.0,
+      "Categoría de presupuesto=vivienda": 6.0,
+      "Categoría de presupuesto=mercado": 4.0,
+      "Categoría de presupuesto=salud": 2.0
     },
     "USA": {
       "Economic Type=gasto": 32.0,
@@ -969,35 +1981,46 @@
       "budget_role=presupuestable": 4.0
     },
     "POS": {
-      "Economic Type=gasto": 42.0,
-      "Economic Type Detail=gasto_variable": 28.0,
-      "SubType Economic=extraordinario": 24.0,
-      "Categoría de presupuesto=restaurantes": 4.0,
-      "budget_role=no_presupuestable": 26.0,
-      "Categoría de presupuesto=alimentacion": 18.0,
+      "Economic Type=gasto": 72.0,
+      "Economic Type Detail=gasto_variable": 58.0,
+      "SubType Economic=extraordinario": 48.0,
+      "Categoría de presupuesto=restaurantes": 6.0,
+      "budget_role=no_presupuestable": 50.0,
+      "Categoría de presupuesto=alimentacion": 24.0,
       "Economic Type Detail=gasto_recurrente": 14.0,
       "SubType Economic=recurrente": 14.0,
       "Categoría de presupuesto=entretenimiento": 14.0,
-      "budget_role=presupuestable": 18.0,
+      "budget_role=presupuestable": 22.0,
       "Categoría de presupuesto=consumo_desconocido": 2.0,
       "SubType Economic=fijo": 4.0,
-      "Categoría de presupuesto=transporte": 6.0,
+      "Categoría de presupuesto=transporte": 8.0,
       "Economic Type=ingreso": 2.0,
       "Economic Type Detail=otros_ingresos": 2.0,
-      "SubType Economic=variable": 2.0
+      "SubType Economic=variable": 8.0,
+      "Categoría de presupuesto=restaurante": 8.0,
+      "budget_role=gasto_operativo": 2.0,
+      "Categoría de presupuesto=vivienda": 6.0,
+      "Categoría de presupuesto=mercado": 4.0,
+      "Categoría de presupuesto=salud": 2.0
     },
     "LOCAL": {
-      "Economic Type=gasto": 14.0,
-      "Economic Type Detail=gasto_variable": 14.0,
-      "SubType Economic=extraordinario": 14.0,
-      "Categoría de presupuesto=restaurantes": 4.0,
-      "budget_role=no_presupuestable": 16.0,
-      "Categoría de presupuesto=alimentacion": 8.0,
+      "Economic Type=gasto": 44.0,
+      "Economic Type Detail=gasto_variable": 44.0,
+      "SubType Economic=extraordinario": 38.0,
+      "Categoría de presupuesto=restaurantes": 6.0,
+      "budget_role=no_presupuestable": 40.0,
+      "Categoría de presupuesto=alimentacion": 14.0,
       "Categoría de presupuesto=consumo_desconocido": 2.0,
       "Economic Type=ingreso": 2.0,
       "Economic Type Detail=otros_ingresos": 2.0,
-      "Categoría de presupuesto=transporte": 2.0,
-      "SubType Economic=variable": 2.0
+      "Categoría de presupuesto=transporte": 4.0,
+      "SubType Economic=variable": 8.0,
+      "Categoría de presupuesto=restaurante": 8.0,
+      "budget_role=gasto_operativo": 2.0,
+      "Categoría de presupuesto=vivienda": 6.0,
+      "Categoría de presupuesto=mercado": 4.0,
+      "budget_role=presupuestable": 4.0,
+      "Categoría de presupuesto=salud": 2.0
     },
     "PEDIDOSYA": {
       "Economic Type=gasto": 2.0,
@@ -1007,11 +2030,13 @@
       "budget_role=no_presupuestable": 2.0
     },
     "SEGURO": {
-      "Economic Type=cargo_financiero": 4.0,
+      "Economic Type=cargo_financiero": 8.0,
       "Economic Type Detail=comision": 4.0,
-      "SubType Economic=financiero": 4.0,
+      "SubType Economic=financiero": 8.0,
       "Categoría de presupuesto=otros": 4.0,
-      "budget_role=gasto_financiero": 4.0
+      "budget_role=gasto_financiero": 8.0,
+      "Economic Type Detail=cargo_bancario": 4.0,
+      "Categoría de presupuesto=impuestos y comisiones": 4.0
     },
     "CONTRA": {
       "Economic Type=cargo_financiero": 2.0,
@@ -1021,11 +2046,13 @@
       "budget_role=gasto_financiero": 2.0
     },
     "FRAUDE": {
-      "Economic Type=cargo_financiero": 4.0,
+      "Economic Type=cargo_financiero": 8.0,
       "Economic Type Detail=comision": 4.0,
-      "SubType Economic=financiero": 4.0,
+      "SubType Economic=financiero": 8.0,
       "Categoría de presupuesto=otros": 4.0,
-      "budget_role=gasto_financiero": 4.0
+      "budget_role=gasto_financiero": 8.0,
+      "Economic Type Detail=cargo_bancario": 4.0,
+      "Categoría de presupuesto=impuestos y comisiones": 4.0
     },
     "SEC": {
       "Economic Type=cargo_financiero": 2.0,
@@ -1049,33 +2076,45 @@
       "budget_role=gasto_financiero": 2.0
     },
     "COMPASS": {
-      "Economic Type=cargo_financiero": 2.0,
-      "Economic Type Detail=comision": 2.0,
-      "SubType Economic=financiero": 2.0,
+      "Economic Type=cargo_financiero": 18.0,
+      "Economic Type Detail=comision": 18.0,
+      "SubType Economic=financiero": 18.0,
       "Categoría de presupuesto=otros": 2.0,
-      "budget_role=gasto_financiero": 2.0
+      "budget_role=gasto_financiero": 18.0,
+      "Categoría de presupuesto=impuestos y comisiones": 16.0
     },
     "BAC": {
-      "Economic Type=cargo_financiero": 2.0,
-      "Economic Type Detail=comision": 2.0,
-      "SubType Economic=financiero": 2.0,
+      "Economic Type=cargo_financiero": 12.0,
+      "Economic Type Detail=comision": 12.0,
+      "SubType Economic=financiero": 12.0,
       "Categoría de presupuesto=otros": 2.0,
-      "budget_role=gasto_financiero": 2.0
+      "budget_role=gasto_financiero": 12.0,
+      "Categoría de presupuesto=impuestos y comisiones": 10.0
     },
     "PAGO": {
-      "Economic Type=cargo_financiero": 2.0,
-      "Economic Type Detail=cargo_bancario": 2.0,
-      "SubType Economic=financiero": 2.0,
-      "Categoría de presupuesto=alimentacion": 2.0,
-      "budget_role=gasto_financiero": 2.0,
-      "Economic Type=gasto": 2.0,
+      "Economic Type=cargo_financiero": 12.0,
+      "Economic Type Detail=cargo_bancario": 16.0,
+      "SubType Economic=financiero": 14.0,
+      "Categoría de presupuesto=alimentacion": 8.0,
+      "budget_role=gasto_financiero": 16.0,
+      "Economic Type=gasto": 20.0,
       "Economic Type Detail=gasto_recurrente": 2.0,
       "SubType Economic=recurrente": 6.0,
       "Categoría de presupuesto=vivienda": 2.0,
       "budget_role=presupuestable": 6.0,
       "Economic Type=ingreso": 4.0,
       "Economic Type Detail=salario": 4.0,
-      "Categoría de presupuesto=salario": 4.0
+      "Categoría de presupuesto=salario": 4.0,
+      "Categoría de presupuesto=deudas": 10.0,
+      "Economic Type Detail=transferencia_tercero": 4.0,
+      "SubType Economic=extraordinario": 14.0,
+      "Categoría de presupuesto=entretenimiento": 4.0,
+      "budget_role=no_presupuestable": 14.0,
+      "Economic Type Detail=gasto_variable": 10.0,
+      "Categoría de presupuesto=deuda": 4.0,
+      "Categoría de presupuesto=ocio": 2.0,
+      "SubType Economic=variable": 2.0,
+      "Categoría de presupuesto=mascotas": 2.0
     },
     "NATUVIVA": {
       "Economic Type=gasto": 4.0,
@@ -1154,11 +2193,12 @@
       "budget_role=presupuestable": 2.0
     },
     "APP": {
-      "Economic Type=gasto": 2.0,
+      "Economic Type=gasto": 4.0,
       "Economic Type Detail=gasto_recurrente": 2.0,
-      "SubType Economic=recurrente": 2.0,
-      "Categoría de presupuesto=vivienda": 2.0,
-      "budget_role=presupuestable": 2.0
+      "SubType Economic=recurrente": 4.0,
+      "Categoría de presupuesto=vivienda": 4.0,
+      "budget_role=presupuestable": 4.0,
+      "Economic Type Detail=transferencia_tercero": 2.0
     },
     "ENSA": {
       "Economic Type=gasto": 4.0,
@@ -1179,7 +2219,11 @@
       "Economic Type Detail=gasto_recurrente": 2.0,
       "SubType Economic=recurrente": 2.0,
       "Categoría de presupuesto=entretenimiento": 2.0,
-      "budget_role=presupuestable": 2.0
+      "budget_role=presupuestable": 10.0,
+      "Economic Type=ingreso": 8.0,
+      "Economic Type Detail=transferencia_tercero": 8.0,
+      "SubType Economic=variable": 8.0,
+      "Categoría de presupuesto=servicios": 8.0
     },
     "ROCKEFELLE": {
       "Economic Type=gasto": 2.0,
@@ -1312,11 +2356,11 @@
       "budget_role=no_presupuestable": 2.0
     },
     "PRODIM": {
-      "Economic Type=gasto": 2.0,
-      "Economic Type Detail=gasto_variable": 2.0,
-      "SubType Economic=extraordinario": 2.0,
-      "Categoría de presupuesto=alimentacion": 2.0,
-      "budget_role=no_presupuestable": 2.0
+      "Economic Type=gasto": 6.0,
+      "Economic Type Detail=gasto_variable": 6.0,
+      "SubType Economic=extraordinario": 6.0,
+      "Categoría de presupuesto=alimentacion": 6.0,
+      "budget_role=no_presupuestable": 6.0
     },
     "DURAN": {
       "Economic Type=gasto": 2.0,
@@ -1377,9 +2421,12 @@
     "TRANSFERENCIA": {
       "Economic Type=gasto": 2.0,
       "Economic Type Detail=gasto_variable": 2.0,
-      "SubType Economic=extraordinario": 2.0,
+      "SubType Economic=extraordinario": 6.0,
       "Categoría de presupuesto=servicios": 2.0,
-      "budget_role=no_presupuestable": 2.0
+      "budget_role=no_presupuestable": 6.0,
+      "Economic Type=ingreso": 4.0,
+      "Economic Type Detail=transferencia_tercero": 4.0,
+      "Categoría de presupuesto=consumo_desconocido": 4.0
     },
     "ENV": {
       "Economic Type=gasto": 2.0,
@@ -1396,18 +2443,22 @@
       "budget_role=no_presupuestable": 2.0
     },
     "TIPO": {
-      "Economic Type=gasto": 2.0,
-      "Economic Type Detail=gasto_variable": 2.0,
-      "SubType Economic=extraordinario": 2.0,
+      "Economic Type=gasto": 4.0,
+      "Economic Type Detail=gasto_variable": 4.0,
+      "SubType Economic=extraordinario": 4.0,
       "Categoría de presupuesto=consumo_desconocido": 2.0,
-      "budget_role=no_presupuestable": 2.0
+      "budget_role=no_presupuestable": 2.0,
+      "Categoría de presupuesto=servicios": 2.0,
+      "budget_role=presupuestable": 2.0
     },
     "FACTU": {
-      "Economic Type=gasto": 2.0,
-      "Economic Type Detail=gasto_variable": 2.0,
-      "SubType Economic=extraordinario": 2.0,
+      "Economic Type=gasto": 4.0,
+      "Economic Type Detail=gasto_variable": 4.0,
+      "SubType Economic=extraordinario": 4.0,
       "Categoría de presupuesto=consumo_desconocido": 2.0,
-      "budget_role=no_presupuestable": 2.0
+      "budget_role=no_presupuestable": 2.0,
+      "Categoría de presupuesto=servicios": 2.0,
+      "budget_role=presupuestable": 2.0
     },
     "TRANSACCION": {
       "Economic Type=cargo_financiero": 2.0,
@@ -1504,11 +2555,12 @@
       "budget_role=no_presupuestable": 2.0
     },
     "CAPITAL": {
-      "Economic Type=gasto": 2.0,
-      "Economic Type Detail=gasto_variable": 2.0,
-      "SubType Economic=extraordinario": 2.0,
+      "Economic Type=gasto": 4.0,
+      "Economic Type Detail=gasto_variable": 4.0,
+      "SubType Economic=extraordinario": 4.0,
       "Categoría de presupuesto=alimentacion": 2.0,
-      "budget_role=no_presupuestable": 2.0
+      "budget_role=no_presupuestable": 4.0,
+      "Categoría de presupuesto=restaurante": 2.0
     },
     "LOBBY": {
       "Economic Type=gasto": 2.0,
@@ -1544,7 +2596,974 @@
       "SubType Economic=recurrente": 2.0,
       "Categoría de presupuesto=salario": 2.0,
       "budget_role=presupuestable": 2.0
+    },
+    "PROTECCION": {
+      "Economic Type=cargo_financiero": 14.0,
+      "Economic Type Detail=cargo_bancario": 14.0,
+      "SubType Economic=financiero": 14.0,
+      "Categoría de presupuesto=impuestos y comisiones": 14.0,
+      "budget_role=gasto_financiero": 14.0
+    },
+    "ROBO": {
+      "Economic Type=cargo_financiero": 14.0,
+      "Economic Type Detail=cargo_bancario": 14.0,
+      "SubType Economic=financiero": 14.0,
+      "Categoría de presupuesto=impuestos y comisiones": 14.0,
+      "budget_role=gasto_financiero": 14.0
+    },
+    "FEBRERO": {
+      "Economic Type=cargo_financiero": 2.0,
+      "Economic Type Detail=comision": 2.0,
+      "SubType Economic=financiero": 2.0,
+      "Categoría de presupuesto=impuestos y comisiones": 2.0,
+      "budget_role=gasto_financiero": 2.0
+    },
+    "DICIEMBRE": {
+      "Economic Type=cargo_financiero": 2.0,
+      "Economic Type Detail=comision": 2.0,
+      "SubType Economic=financiero": 2.0,
+      "Categoría de presupuesto=impuestos y comisiones": 2.0,
+      "budget_role=gasto_financiero": 2.0
+    },
+    "NOVIEMBRE": {
+      "Economic Type=cargo_financiero": 2.0,
+      "Economic Type Detail=comision": 2.0,
+      "SubType Economic=financiero": 2.0,
+      "Categoría de presupuesto=impuestos y comisiones": 2.0,
+      "budget_role=gasto_financiero": 2.0
+    },
+    "VALOR": {
+      "Economic Type=cargo_financiero": 2.0,
+      "Economic Type Detail=cargo_bancario": 2.0,
+      "SubType Economic=financiero": 2.0,
+      "Categoría de presupuesto=impuestos y comisiones": 2.0,
+      "budget_role=gasto_financiero": 2.0
+    },
+    "TARJETA": {
+      "Economic Type=cargo_financiero": 2.0,
+      "Economic Type Detail=cargo_bancario": 2.0,
+      "SubType Economic=financiero": 2.0,
+      "Categoría de presupuesto=impuestos y comisiones": 2.0,
+      "budget_role=gasto_financiero": 2.0
+    },
+    "TITULAR": {
+      "Economic Type=cargo_financiero": 2.0,
+      "Economic Type Detail=cargo_bancario": 2.0,
+      "SubType Economic=financiero": 2.0,
+      "Categoría de presupuesto=impuestos y comisiones": 2.0,
+      "budget_role=gasto_financiero": 2.0
+    },
+    "MULTIPLAZA": {
+      "Economic Type=cargo_financiero": 4.0,
+      "Economic Type Detail=comision": 4.0,
+      "SubType Economic=financiero": 4.0,
+      "Categoría de presupuesto=impuestos y comisiones": 4.0,
+      "budget_role=gasto_financiero": 4.0
+    },
+    "OCTUBRE": {
+      "Economic Type=cargo_financiero": 2.0,
+      "Economic Type Detail=comision": 2.0,
+      "SubType Economic=financiero": 2.0,
+      "Categoría de presupuesto=impuestos y comisiones": 2.0,
+      "budget_role=gasto_financiero": 2.0,
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=restaurantes": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "PACIFIC": {
+      "Economic Type=cargo_financiero": 2.0,
+      "Economic Type Detail=comision": 2.0,
+      "SubType Economic=financiero": 2.0,
+      "Categoría de presupuesto=impuestos y comisiones": 2.0,
+      "budget_role=gasto_financiero": 2.0
+    },
+    "CENTER": {
+      "Economic Type=cargo_financiero": 2.0,
+      "Economic Type Detail=comision": 2.0,
+      "SubType Economic=financiero": 2.0,
+      "Categoría de presupuesto=impuestos y comisiones": 2.0,
+      "budget_role=gasto_financiero": 2.0
+    },
+    "IMPUESTO": {
+      "Economic Type=cargo_financiero": 2.0,
+      "Economic Type Detail=cargo_bancario": 2.0,
+      "SubType Economic=financiero": 2.0,
+      "Categoría de presupuesto=impuestos y comisiones": 2.0,
+      "budget_role=gasto_financiero": 2.0
+    },
+    "XXXX": {
+      "Economic Type=cargo_financiero": 4.0,
+      "Economic Type Detail=cargo_bancario": 4.0,
+      "SubType Economic=financiero": 4.0,
+      "Categoría de presupuesto=impuestos y comisiones": 4.0,
+      "budget_role=gasto_financiero": 4.0,
+      "Economic Type=gasto": 54.0,
+      "Economic Type Detail=gasto_variable": 52.0,
+      "SubType Economic=extraordinario": 48.0,
+      "Categoría de presupuesto=alimentacion": 24.0,
+      "budget_role=no_presupuestable": 46.0,
+      "Categoría de presupuesto=restaurantes": 22.0,
+      "budget_role=revisar": 2.0,
+      "SubType Economic=variable": 4.0,
+      "Categoría de presupuesto=transporte": 6.0,
+      "budget_role=presupuestable": 6.0,
+      "Economic Type Detail=gasto_recurrente": 2.0,
+      "SubType Economic=recurrente": 2.0,
+      "Categoría de presupuesto=entretenimiento": 2.0
+    },
+    "MENSU": {
+      "Economic Type=cargo_financiero": 2.0,
+      "Economic Type Detail=cargo_bancario": 2.0,
+      "SubType Economic=financiero": 2.0,
+      "Categoría de presupuesto=impuestos y comisiones": 2.0,
+      "budget_role=gasto_financiero": 2.0
+    },
+    "MCDONALDS": {
+      "Economic Type=gasto": 4.0,
+      "Economic Type Detail=gasto_variable": 4.0,
+      "SubType Economic=extraordinario": 4.0,
+      "Categoría de presupuesto=alimentacion": 2.0,
+      "budget_role=no_presupuestable": 4.0,
+      "Categoría de presupuesto=restaurantes": 2.0
+    },
+    "VILLA": {
+      "Economic Type=gasto": 18.0,
+      "Economic Type Detail=gasto_variable": 18.0,
+      "SubType Economic=extraordinario": 14.0,
+      "Categoría de presupuesto=alimentacion": 12.0,
+      "budget_role=no_presupuestable": 12.0,
+      "budget_role=revisar": 2.0,
+      "SubType Economic=variable": 4.0,
+      "Categoría de presupuesto=transporte": 4.0,
+      "budget_role=presupuestable": 4.0,
+      "Categoría de presupuesto=restaurantes": 2.0
+    },
+    "LUCRE": {
+      "Economic Type=gasto": 10.0,
+      "Economic Type Detail=gasto_variable": 10.0,
+      "SubType Economic=extraordinario": 6.0,
+      "Categoría de presupuesto=alimentacion": 4.0,
+      "budget_role=no_presupuestable": 4.0,
+      "budget_role=revisar": 2.0,
+      "SubType Economic=variable": 4.0,
+      "Categoría de presupuesto=transporte": 4.0,
+      "budget_role=presupuestable": 4.0,
+      "Categoría de presupuesto=restaurantes": 2.0
+    },
+    "OUT": {
+      "Economic Type=gasto": 8.0,
+      "Economic Type Detail=gasto_variable": 8.0,
+      "SubType Economic=extraordinario": 8.0,
+      "Categoría de presupuesto=alimentacion": 8.0,
+      "budget_role=no_presupuestable": 8.0
+    },
+    "DEPOSITO": {
+      "Economic Type=ingreso": 2.0,
+      "Economic Type Detail=otros_ingresos": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=otros": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "CUENTA": {
+      "Economic Type=ingreso": 2.0,
+      "Economic Type Detail=otros_ingresos": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=otros": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "AHORROS": {
+      "Economic Type=ingreso": 2.0,
+      "Economic Type Detail=otros_ingresos": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=otros": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "SIN": {
+      "Economic Type=ingreso": 2.0,
+      "Economic Type Detail=otros_ingresos": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=otros": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "LIBRETA": {
+      "Economic Type=ingreso": 2.0,
+      "Economic Type Detail=otros_ingresos": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=otros": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "NEW": {
+      "Economic Type=gasto": 4.0,
+      "Economic Type Detail=gasto_variable": 4.0,
+      "SubType Economic=extraordinario": 4.0,
+      "Categoría de presupuesto=alimentacion": 4.0,
+      "budget_role=no_presupuestable": 4.0
+    },
+    "GENERATIONS": {
+      "Economic Type=gasto": 4.0,
+      "Economic Type Detail=gasto_variable": 4.0,
+      "SubType Economic=extraordinario": 4.0,
+      "Categoría de presupuesto=alimentacion": 4.0,
+      "budget_role=no_presupuestable": 4.0
+    },
+    "UNLIMI": {
+      "Economic Type=gasto": 4.0,
+      "Economic Type Detail=gasto_variable": 4.0,
+      "SubType Economic=extraordinario": 4.0,
+      "Categoría de presupuesto=alimentacion": 4.0,
+      "budget_role=no_presupuestable": 4.0
+    },
+    "CINCUENTENAR": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=restaurantes": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "MINI": {
+      "Economic Type=gasto": 6.0,
+      "Economic Type Detail=gasto_variable": 6.0,
+      "SubType Economic=extraordinario": 6.0,
+      "Categoría de presupuesto=alimentacion": 6.0,
+      "budget_role=revisar": 2.0,
+      "budget_role=no_presupuestable": 4.0
+    },
+    "SUPER": {
+      "Economic Type=gasto": 10.0,
+      "Economic Type Detail=gasto_variable": 10.0,
+      "SubType Economic=extraordinario": 10.0,
+      "Categoría de presupuesto=alimentacion": 10.0,
+      "budget_role=revisar": 2.0,
+      "budget_role=no_presupuestable": 8.0
+    },
+    "PUMA": {
+      "Economic Type=gasto": 8.0,
+      "Economic Type Detail=gasto_variable": 8.0,
+      "SubType Economic=variable": 4.0,
+      "Categoría de presupuesto=transporte": 4.0,
+      "budget_role=presupuestable": 4.0,
+      "SubType Economic=extraordinario": 4.0,
+      "Categoría de presupuesto=alimentacion": 4.0,
+      "budget_role=no_presupuestable": 4.0
+    },
+    "ONZE": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=restaurantes": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "LUC": {
+      "Economic Type=gasto": 4.0,
+      "Economic Type Detail=gasto_variable": 4.0,
+      "SubType Economic=extraordinario": 4.0,
+      "Categoría de presupuesto=alimentacion": 4.0,
+      "budget_role=no_presupuestable": 4.0
+    },
+    "ATM": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=otros": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "BANCO": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=otros": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "GENERAL": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=otros": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "SUCVILLALUCRE": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=otros": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "BATTERY": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=transporte": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "DEPOT": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=transporte": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "SAN": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=transporte": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "FRESC": {
+      "Economic Type=gasto": 4.0,
+      "Economic Type Detail=gasto_variable": 4.0,
+      "SubType Economic=extraordinario": 4.0,
+      "Categoría de presupuesto=alimentacion": 4.0,
+      "budget_role=no_presupuestable": 4.0
+    },
+    "VACILAR": {
+      "Economic Type=gasto": 4.0,
+      "Economic Type Detail=gasto_variable": 4.0,
+      "SubType Economic=extraordinario": 4.0,
+      "Categoría de presupuesto=restaurantes": 4.0,
+      "budget_role=no_presupuestable": 4.0
+    },
+    "PANAMA": {
+      "Economic Type=gasto": 4.0,
+      "Economic Type Detail=gasto_variable": 4.0,
+      "SubType Economic=extraordinario": 4.0,
+      "Categoría de presupuesto=restaurantes": 4.0,
+      "budget_role=no_presupuestable": 4.0
+    },
+    "AMAZON": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_recurrente": 2.0,
+      "SubType Economic=recurrente": 2.0,
+      "Categoría de presupuesto=entretenimiento": 2.0,
+      "budget_role=presupuestable": 2.0
+    },
+    "PRIME": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_recurrente": 2.0,
+      "SubType Economic=recurrente": 2.0,
+      "Categoría de presupuesto=entretenimiento": 2.0,
+      "budget_role=presupuestable": 2.0
+    },
+    "BARRA": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=restaurantes": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "ESTRELLA": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=restaurantes": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "OSAKA": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=restaurantes": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "TOSCANA": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=restaurantes": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "TACOS": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=restaurantes": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "NETA": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=restaurantes": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "SEL": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=restaurantes": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "ASADOS": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=restaurantes": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "GABYDANA": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=restaurantes": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "PAZUL": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=restaurantes": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "REST": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=restaurantes": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "FRUTOS": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=restaurantes": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "DEL": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=restaurantes": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "MAR": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=restaurantes": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "TRESCUATES": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=restaurantes": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "SUBWAY": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=restaurantes": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "COMISION": {
+      "Economic Type=cargo_financiero": 8.0,
+      "Economic Type Detail=comision": 2.0,
+      "SubType Economic=financiero": 8.0,
+      "Categoría de presupuesto=impuestos y comisiones": 8.0,
+      "budget_role=gasto_financiero": 8.0,
+      "Economic Type Detail=cargo_bancario": 6.0
+    },
+    "POR": {
+      "Economic Type=cargo_financiero": 8.0,
+      "Economic Type Detail=comision": 2.0,
+      "SubType Economic=financiero": 8.0,
+      "Categoría de presupuesto=impuestos y comisiones": 8.0,
+      "budget_role=gasto_financiero": 8.0,
+      "Economic Type Detail=cargo_bancario": 6.0
+    },
+    "ACH": {
+      "Economic Type=cargo_financiero": 8.0,
+      "Economic Type Detail=comision": 2.0,
+      "SubType Economic=financiero": 8.0,
+      "Categoría de presupuesto=impuestos y comisiones": 8.0,
+      "budget_role=gasto_financiero": 8.0,
+      "Economic Type Detail=cargo_bancario": 6.0,
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=transferencia_tercero": 2.0,
+      "SubType Economic=recurrente": 2.0,
+      "Categoría de presupuesto=vivienda": 2.0,
+      "budget_role=presupuestable": 2.0
+    },
+    "XPRESS": {
+      "Economic Type=cargo_financiero": 8.0,
+      "Economic Type Detail=comision": 2.0,
+      "SubType Economic=financiero": 8.0,
+      "Categoría de presupuesto=impuestos y comisiones": 8.0,
+      "budget_role=gasto_financiero": 8.0,
+      "Economic Type Detail=cargo_bancario": 6.0,
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=transferencia_tercero": 2.0,
+      "SubType Economic=recurrente": 2.0,
+      "Categoría de presupuesto=vivienda": 2.0,
+      "budget_role=presupuestable": 2.0
+    },
+    "YAPPY": {
+      "Economic Type=gasto": 30.0,
+      "Economic Type Detail=transferencia_tercero": 6.0,
+      "SubType Economic=recurrente": 2.0,
+      "Categoría de presupuesto=servicios": 6.0,
+      "budget_role=presupuestable": 6.0,
+      "SubType Economic=extraordinario": 24.0,
+      "Categoría de presupuesto=entretenimiento": 6.0,
+      "budget_role=no_presupuestable": 20.0,
+      "Categoría de presupuesto=alimentacion": 10.0,
+      "Economic Type Detail=gasto_variable": 18.0,
+      "Economic Type Detail=gasto_recurrente": 2.0,
+      "Economic Type Detail=cargo_bancario": 4.0,
+      "Categoría de presupuesto=deuda": 4.0,
+      "budget_role=gasto_financiero": 4.0,
+      "SubType Economic=financiero": 2.0,
+      "Categoría de presupuesto=ocio": 2.0,
+      "SubType Economic=variable": 2.0,
+      "Categoría de presupuesto=mascotas": 2.0
+    },
+    "LUIS": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=transferencia_tercero": 2.0,
+      "SubType Economic=recurrente": 2.0,
+      "Categoría de presupuesto=servicios": 2.0,
+      "budget_role=presupuestable": 2.0
+    },
+    "ALBERTO": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=transferencia_tercero": 2.0,
+      "SubType Economic=recurrente": 2.0,
+      "Categoría de presupuesto=servicios": 2.0,
+      "budget_role=presupuestable": 2.0
+    },
+    "ORTEGA": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=transferencia_tercero": 2.0,
+      "SubType Economic=recurrente": 2.0,
+      "Categoría de presupuesto=servicios": 2.0,
+      "budget_role=presupuestable": 2.0
+    },
+    "MOJICA": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=transferencia_tercero": 2.0,
+      "SubType Economic=recurrente": 2.0,
+      "Categoría de presupuesto=servicios": 2.0,
+      "budget_role=presupuestable": 2.0
+    },
+    "DISNEYPLUSPANAMAX": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=transferencia_tercero": 2.0,
+      "SubType Economic=recurrente": 2.0,
+      "Categoría de presupuesto=servicios": 2.0,
+      "budget_role=presupuestable": 2.0
+    },
+    "PANATICKETS": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=transferencia_tercero": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=entretenimiento": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "WEB": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=transferencia_tercero": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=entretenimiento": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "CARNESGRILLPTY": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=transferencia_tercero": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=alimentacion": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "ATHAS": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=transferencia_tercero": 2.0,
+      "SubType Economic=recurrente": 2.0,
+      "Categoría de presupuesto=vivienda": 2.0,
+      "budget_role=presupuestable": 2.0
+    },
+    "CUOTAS": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=transferencia_tercero": 2.0,
+      "SubType Economic=recurrente": 2.0,
+      "Categoría de presupuesto=vivienda": 2.0,
+      "budget_role=presupuestable": 2.0
+    },
+    "MANT": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=transferencia_tercero": 2.0,
+      "SubType Economic=recurrente": 2.0,
+      "Categoría de presupuesto=vivienda": 2.0,
+      "budget_role=presupuestable": 2.0
+    },
+    "MARZ": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=transferencia_tercero": 2.0,
+      "SubType Economic=recurrente": 2.0,
+      "Categoría de presupuesto=vivienda": 2.0,
+      "budget_role=presupuestable": 2.0
+    },
+    "CREDITO": {
+      "Economic Type=ingreso": 24.0,
+      "Economic Type Detail=transferencia_tercero": 24.0,
+      "SubType Economic=variable": 8.0,
+      "Categoría de presupuesto=servicios": 8.0,
+      "budget_role=presupuestable": 8.0,
+      "SubType Economic=extraordinario": 16.0,
+      "Categoría de presupuesto=alimentacion": 6.0,
+      "budget_role=no_presupuestable": 16.0,
+      "Categoría de presupuesto=consumo_desconocido": 10.0
+    },
+    "TRANSF": {
+      "Economic Type=ingreso": 24.0,
+      "Economic Type Detail=transferencia_tercero": 24.0,
+      "SubType Economic=variable": 8.0,
+      "Categoría de presupuesto=servicios": 8.0,
+      "budget_role=presupuestable": 8.0,
+      "SubType Economic=extraordinario": 16.0,
+      "Categoría de presupuesto=alimentacion": 6.0,
+      "budget_role=no_presupuestable": 16.0,
+      "Categoría de presupuesto=consumo_desconocido": 10.0
+    },
+    "HASTA": {
+      "Economic Type=ingreso": 4.0,
+      "Economic Type Detail=transferencia_tercero": 4.0,
+      "SubType Economic=variable": 4.0,
+      "Categoría de presupuesto=servicios": 4.0,
+      "budget_role=presupuestable": 4.0
+    },
+    "JUNIO": {
+      "Economic Type=ingreso": 4.0,
+      "Economic Type Detail=transferencia_tercero": 4.0,
+      "SubType Economic=variable": 4.0,
+      "Categoría de presupuesto=servicios": 4.0,
+      "budget_role=presupuestable": 4.0
+    },
+    "DELTA": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=variable": 2.0,
+      "Categoría de presupuesto=transporte": 2.0,
+      "budget_role=gasto_operativo": 2.0
+    },
+    "VILL": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=variable": 2.0,
+      "Categoría de presupuesto=transporte": 2.0,
+      "budget_role=gasto_operativo": 2.0
+    },
+    "RESTAURANT": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=restaurante": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "NOVEY": {
+      "Economic Type=gasto": 4.0,
+      "Economic Type Detail=gasto_variable": 4.0,
+      "SubType Economic=extraordinario": 4.0,
+      "Categoría de presupuesto=vivienda": 4.0,
+      "budget_role=no_presupuestable": 4.0
+    },
+    "OBAR": {
+      "Economic Type=gasto": 4.0,
+      "Economic Type Detail=gasto_variable": 4.0,
+      "SubType Economic=extraordinario": 4.0,
+      "Categoría de presupuesto=vivienda": 4.0,
+      "budget_role=no_presupuestable": 4.0
+    },
+    "NACION": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=restaurante": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "SUS": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=restaurante": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "CENT": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=vivienda": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "CAFECITO": {
+      "Economic Type=ingreso": 4.0,
+      "Economic Type Detail=transferencia_tercero": 4.0,
+      "SubType Economic=extraordinario": 4.0,
+      "Categoría de presupuesto=alimentacion": 4.0,
+      "budget_role=no_presupuestable": 4.0
+    },
+    "BUENA": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=restaurantes": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "VIST": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=restaurantes": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "GELATIAMO": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=restaurante": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "REY": {
+      "Economic Type=gasto": 4.0,
+      "Economic Type Detail=gasto_variable": 4.0,
+      "SubType Economic=variable": 4.0,
+      "Categoría de presupuesto=mercado": 4.0,
+      "budget_role=presupuestable": 4.0
+    },
+    "POWER": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=salud": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "LAB": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=salud": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "ALMUERZO": {
+      "Economic Type=ingreso": 4.0,
+      "Economic Type Detail=transferencia_tercero": 4.0,
+      "SubType Economic=extraordinario": 4.0,
+      "Categoría de presupuesto=alimentacion": 2.0,
+      "budget_role=no_presupuestable": 4.0,
+      "Categoría de presupuesto=consumo_desconocido": 2.0
+    },
+    "CELI": {
+      "Economic Type=ingreso": 4.0,
+      "Economic Type Detail=transferencia_tercero": 4.0,
+      "SubType Economic=extraordinario": 4.0,
+      "Categoría de presupuesto=alimentacion": 2.0,
+      "budget_role=no_presupuestable": 4.0,
+      "Categoría de presupuesto=consumo_desconocido": 2.0
+    },
+    "CUENTAS": {
+      "Economic Type=ingreso": 4.0,
+      "Economic Type Detail=transferencia_tercero": 4.0,
+      "SubType Economic=extraordinario": 4.0,
+      "Categoría de presupuesto=consumo_desconocido": 4.0,
+      "budget_role=no_presupuestable": 4.0
+    },
+    "TERCEROS": {
+      "Economic Type=ingreso": 4.0,
+      "Economic Type Detail=transferencia_tercero": 4.0,
+      "SubType Economic=extraordinario": 4.0,
+      "Categoría de presupuesto=consumo_desconocido": 4.0,
+      "budget_role=no_presupuestable": 4.0
+    },
+    "MANUEL": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=servicios": 2.0,
+      "budget_role=presupuestable": 2.0
+    },
+    "SALVADOR": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=servicios": 2.0,
+      "budget_role=presupuestable": 2.0
+    },
+    "DYAMOND": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=servicios": 2.0,
+      "budget_role=presupuestable": 2.0
+    },
+    "SANCHEZ": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=servicios": 2.0,
+      "budget_role=presupuestable": 2.0
+    },
+    "JOHAM": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=alimentacion": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "ABDIEL": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=alimentacion": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "DOMINGUEZ": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=alimentacion": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "SALGADO": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=alimentacion": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "CARLOS": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_recurrente": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=servicios": 2.0,
+      "budget_role=presupuestable": 2.0
+    },
+    "RAUL": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_recurrente": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=servicios": 2.0,
+      "budget_role=presupuestable": 2.0
+    },
+    "VASQUEZ": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_recurrente": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=servicios": 2.0,
+      "budget_role=presupuestable": 2.0
+    },
+    "KANT": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_recurrente": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=servicios": 2.0,
+      "budget_role=presupuestable": 2.0
+    },
+    "RAPIDITOS": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=entretenimiento": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "PREMIERGENERAL": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=cargo_bancario": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=deuda": 2.0,
+      "budget_role=gasto_financiero": 2.0
+    },
+    "WILMER": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=alimentacion": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "ALEXANDER": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=alimentacion": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "BUENO": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=alimentacion": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "ANTICANGREJO": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=alimentacion": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "KFC": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=alimentacion": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "PTY": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=alimentacion": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "ESTANISLAO": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=entretenimiento": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "HERNANDEZ": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=entretenimiento": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "ALMANZA": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=entretenimiento": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "EPIKCREDITO": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=cargo_bancario": 2.0,
+      "SubType Economic=financiero": 2.0,
+      "Categoría de presupuesto=deuda": 2.0,
+      "budget_role=gasto_financiero": 2.0
+    },
+    "SPORTLINKCENTER": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=ocio": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "ZOOSHOPPTY": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=variable": 2.0,
+      "Categoría de presupuesto=mascotas": 2.0,
+      "budget_role=no_presupuestable": 2.0
+    },
+    "RIO": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=alimentacion": 2.0,
+      "budget_role=no_presupuestable": 2.0
     }
   },
-  "corrections_count": 49
+  "corrections_count": 149
 }

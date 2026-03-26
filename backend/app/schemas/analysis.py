@@ -154,6 +154,7 @@ class AggregatedSummaryResponse(BaseModel):
     categories: dict[str, float]
     top_merchants: list[MerchantStat] = []
     by_economic_type: list[TypeStat] = []
+    by_budget_role: list[TypeStat] = []
     monthly_trend: list[MonthTrendStat] = []
 
 

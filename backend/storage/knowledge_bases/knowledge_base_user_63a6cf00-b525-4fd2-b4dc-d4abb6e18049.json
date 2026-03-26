@@ -1,6 +1,56 @@
 {
-  "exact_matches": {},
-  "patterns": {},
-  "word_weights": {},
-  "corrections_count": 0
+  "last_updated": "2026-03-26T08:10:28.030007+00:00",
+  "exact_matches": {
+    "ATM BANCO GENERAL BG SUCVILLALUCRE": {
+      "Economic Type": "gasto",
+      "Economic Type Detail": "gasto_variable",
+      "SubType Economic": "extraordinario",
+      "Categoría de presupuesto": "otros",
+      "budget_role": "solo_balance"
+    }
+  },
+  "patterns": {
+    "personal_gasto_ATM_SUCVILLALUCRE": {
+      "regex": "\\bATM\\s+SUCVILLALUCRE\\b",
+      "categories": {
+        "Economic Type": "gasto",
+        "Economic Type Detail": "gasto_variable",
+        "SubType Economic": "extraordinario",
+        "Categoría de presupuesto": "otros",
+        "budget_role": "solo_balance"
+      },
+      "source": "learned"
+    }
+  },
+  "word_weights": {
+    "ATM": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=otros": 2.0,
+      "budget_role=solo_balance": 2.0
+    },
+    "BANCO": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=otros": 2.0,
+      "budget_role=solo_balance": 2.0
+    },
+    "GENERAL": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=otros": 2.0,
+      "budget_role=solo_balance": 2.0
+    },
+    "SUCVILLALUCRE": {
+      "Economic Type=gasto": 2.0,
+      "Economic Type Detail=gasto_variable": 2.0,
+      "SubType Economic=extraordinario": 2.0,
+      "Categoría de presupuesto=otros": 2.0,
+      "budget_role=solo_balance": 2.0
+    }
+  },
+  "corrections_count": 1
 }

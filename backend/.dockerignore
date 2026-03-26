@@ -1,0 +1,38 @@
+# Entorno virtual — se reinstala en la imagen
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Tests y cobertura — no van a producción
+tests/
+.pytest_cache/
+htmlcov/
+.coverage
+
+# Archivos de desarrollo
+.env
+.env.*
+!.env.example
+
+# Storage local — en producción vive en un volumen Docker
+storage/uploads/
+storage/processed/
+storage/temp/
+# El KB global sí se incluye (se usa como seed)
+# storage/knowledge_bases/ — NO ignorar
+
+# Datos de usuario en KB — no deben ir en la imagen
+storage/knowledge_bases/knowledge_base_user_*.json
+storage/knowledge_bases/*.backup*.json
+
+# IDEs y herramientas locales
+.vscode/
+.idea/
+*.sw?
+
+# Git
+.git/
+.gitignore

@@ -1,10 +1,15 @@
 import logging
+from collections import defaultdict
+from typing import Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel, Field
+from sqlalchemy import or_, update
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
+from app.models.analysis_transaction import AnalysisTransaction
 from app.models.user import User
 from app.schemas.analysis_transaction import AnalysisTransactionResponse
 from app.schemas.transaction import (
@@ -13,12 +18,195 @@ from app.schemas.transaction import (
     ReclassifyRequest,
     ReclassifyResponse,
 )
+from app.services.detail_normalizer import canonicalize_detail
 from app.services.financial_classifier import FinancialClassifier
 from app.services.transaction_service import reclassify_transaction
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+# ─── Schemas internos para review-groups ──────────────────────────────────────
+
+class ReviewGroup(BaseModel):
+    canonical_key: str
+    sample_detail: str
+    count: int
+    total_amount: float
+    transaction_ids: list[UUID]
+    current_category: str | None = None
+    current_budget_role: str | None = None
+
+
+_BUDGET_ROLE_LIT = Literal[
+    "presupuestable", "no_presupuestable", "gasto_operativo",
+    "gasto_financiero", "ahorro_inversion", "solo_balance", "revisar",
+]
+
+
+class ApplyGroupRequest(BaseModel):
+    canonical_key: str
+    transaction_ids: list[UUID]
+    sample_detail: str
+    economic_type: str = Field(default="gasto")
+    economic_type_detail: str | None = None
+    subtype_economic: str | None = None
+    budget_category: str
+    budget_role: _BUDGET_ROLE_LIT
+    also_learn: bool = True
+    force_personal: bool = False
+    weight: float = Field(default=2.0)
+
+
+class ApplyGroupResponse(BaseModel):
+    updated_count: int
+    canonical_key: str
+    detail_learned: str | None = None
+    kb_target: str | None = None
+
+
+# ─── GET /review-groups ───────────────────────────────────────────────────────
+
+@router.get(
+    "/review-groups",
+    response_model=list[ReviewGroup],
+    summary="Transacciones que requieren revisión, agrupadas por merchant canónico",
+)
+def get_review_groups(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> list[ReviewGroup]:
+    """
+    Devuelve todas las transacciones de gasto del usuario que requieren revisión,
+    agrupadas por su clave canónica. Solo débitos no reclasificados manualmente.
+    """
+    txs = (
+        db.query(AnalysisTransaction)
+        .filter(
+            AnalysisTransaction.user_id == current_user.user_id,
+            AnalysisTransaction.amount < 0,
+            AnalysisTransaction.method != "user_reclassified",
+            or_(
+                AnalysisTransaction.confidence < 0.8,
+                AnalysisTransaction.budget_role == "revisar",
+                AnalysisTransaction.budget_category.ilike("%desconocido%"),
+            ),
+        )
+        .all()
+    )
+
+    groups: dict[str, dict] = defaultdict(lambda: {
+        "sample_detail": "",
+        "count": 0,
+        "total_amount": 0.0,
+        "transaction_ids": [],
+        "current_category": None,
+        "current_budget_role": None,
+    })
+
+    for tx in txs:
+        try:
+            key = canonicalize_detail(tx.detail) or tx.detail[:40]
+        except Exception:
+            key = tx.detail[:40]
+
+        g = groups[key]
+        g["count"] += 1
+        g["total_amount"] += abs(float(tx.amount))
+        g["transaction_ids"].append(tx.transaction_id)
+        if not g["sample_detail"]:
+            g["sample_detail"] = tx.detail
+        if tx.budget_category:
+            g["current_category"] = tx.budget_category
+        if tx.budget_role:
+            g["current_budget_role"] = tx.budget_role
+
+    return sorted(
+        [
+            ReviewGroup(
+                canonical_key=key,
+                sample_detail=g["sample_detail"],
+                count=g["count"],
+                total_amount=round(g["total_amount"], 2),
+                transaction_ids=g["transaction_ids"],
+                current_category=g["current_category"],
+                current_budget_role=g["current_budget_role"],
+            )
+            for key, g in groups.items()
+        ],
+        key=lambda x: -x.count,
+    )
+
+
+# ─── POST /review-groups/apply ────────────────────────────────────────────────
+
+@router.post(
+    "/review-groups/apply",
+    response_model=ApplyGroupResponse,
+    summary="Aplicar clasificación a un grupo + entrenar KB",
+)
+def apply_review_group(
+    body: ApplyGroupRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> ApplyGroupResponse:
+    """
+    Bulk update de todas las transacciones del grupo y entrenamiento del KB.
+    """
+    result = db.execute(
+        update(AnalysisTransaction)
+        .where(
+            AnalysisTransaction.transaction_id.in_(body.transaction_ids),
+            AnalysisTransaction.user_id == current_user.user_id,
+        )
+        .values(
+            economic_type=body.economic_type,
+            economic_type_detail=body.economic_type_detail,
+            subtype_economic=body.subtype_economic,
+            budget_category=body.budget_category,
+            budget_role=body.budget_role,
+            confidence=1.0,
+            method="user_reclassified",
+        )
+    )
+    db.commit()
+    updated_count = result.rowcount
+
+    detail_learned = None
+    kb_target = None
+
+    if body.also_learn and updated_count > 0:
+        user_id = str(current_user.user_id)
+        user_name = current_user.full_name or current_user.username
+        classifier = FinancialClassifier(user_id=user_id, user_name=user_name)
+        categories = {
+            "Economic Type": body.economic_type,
+            "Economic Type Detail": body.economic_type_detail or "gasto_variable",
+            "SubType Economic": body.subtype_economic or "extraordinario",
+            "Categoría de presupuesto": body.budget_category,
+            "budget_role": body.budget_role,
+        }
+        prev_global = len(classifier.global_rules["exact_matches"])
+        detail_learned = classifier.learn(
+            detail=body.sample_detail,
+            categories=categories,
+            weight=body.weight,
+            force_personal=body.force_personal,
+        )
+        new_global = len(classifier.global_rules["exact_matches"])
+        kb_target = "global" if new_global > prev_global else "personal"
+        logger.info(
+            "Bulk review-group applied — user=%s, key=%r, updated=%d, kb=%s",
+            user_id, body.canonical_key, updated_count, kb_target,
+        )
+
+    return ApplyGroupResponse(
+        updated_count=updated_count,
+        canonical_key=body.canonical_key,
+        detail_learned=detail_learned,
+        kb_target=kb_target,
+    )
 
 
 @router.post(

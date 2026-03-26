@@ -1,7 +1,7 @@
-# Guía Completa de SAFPRO
+# CLAUDE.md — Guía Completa de SAFPRO
 
-**Última actualización:** 2026-03-25 (sesión 14)
-**Estado general:** Pipeline E2E validado. Backend completo para MVP. **Frontend en desarrollo activo (sesión 14):** React + Vite + TypeScript + shadcn/ui. Auth completo (login/register/forgot/reset), dashboard, upload + polling, lista/detalle de análisis, transacciones con reclasificación inline. Tests backend 183 passed, 3 warnings.
+**Última actualización:** 2026-03-26 (sesión 18)
+**Estado general:** Pipeline E2E validado. Backend completo para MVP. **Frontend completo para MVP (sesión 18):** Auth, Dashboard (con donut por rol de presupuesto), Upload con trigger de onboarding, Análisis (lista/detalle), Transacciones con reclasificación inline + select de categoría + filtros crédito/débito/tipo económico, Knowledge Base (personal + global), Presupuesto 50/30/20 con gastos adicionales manuales, Onboarding post-primer-análisis, **Entrenamiento masivo** (`/retrain`). Tests backend 183 passed, 3 warnings. TypeScript limpio.
 
 ---
 
@@ -146,8 +146,8 @@ Estos archivos definen los endpoints HTTP. Reciben requests, llaman servicios, d
 | `accounts.py` | GET/POST/PUT/DELETE /accounts | CRUD de cuentas bancarias del usuario |
 | `users.py` | GET /me | Datos del usuario actual |
 | `jobs.py` | GET /jobs/, GET /jobs/{id} | Ver el estado y historial de uploads procesados |
-| `analysis.py` | GET /analysis, GET /analysis/{id}, GET /analysis/{id}/transactions, GET /analysis/{id}/confidence-stats, GET /analysis/{id}/features, POST /analysis/{id}/reclassify-bulk | Ver análisis (incluye `bank_account` con nombre del banco + last4), transacciones, KPIs de confianza, features de ingeniería financiera, re-categorización bulk |
-| `kb.py` | GET /kb, DELETE /kb/{key}, GET /kb/preview | Ver KB personal, borrar una entrada incorrecta, previsualizar clave canónica de un descriptor |
+| `analysis.py` | GET /analysis, GET /analysis/{id}, GET /analysis/{id}/transactions, GET /analysis/{id}/confidence-stats, GET /analysis/{id}/features, POST /analysis/{id}/reclassify-bulk, GET /analysis/aggregated | Ver análisis (incluye `bank_account` con nombre del banco + last4), transacciones, KPIs de confianza, features de ingeniería financiera, re-categorización bulk. **`/aggregated`**: queries `analysis_transactions` directo con filtros `?year=&month=&bank_account_id=`; devuelve top_merchants (via `canonicalize_detail`), by_economic_type, monthly_trend + KPIs. La ruta `/aggregated` debe ir ANTES de `/{snapshot_id}` en el archivo para evitar captura de parámetro. |
+| `kb.py` | GET /kb, GET /kb/global, DELETE /kb/{key}, GET /kb/preview | Ver KB personal, ver KB global completo (read-only), borrar una entrada incorrecta, previsualizar clave canónica. Las rutas literales (`/global`, `/preview`) deben ir ANTES de `/{key}`. |
 | `transactions.py` | POST /transactions/learn | El usuario corrige una categorización y el sistema aprende |
 | `health.py` | GET /health | Ping de salud del servidor |
 | `deps.py` | — | Funciones de dependencia: verifica JWT, inyecta sesión de DB |
@@ -161,10 +161,10 @@ Aquí vive la lógica de negocio. Los endpoints los llaman.
 | `file_service.py` | Valida que el archivo sea un Excel válido y lo guarda en temp/ |
 | `account_detection_service.py` | Detecta o crea la cuenta bancaria usando un fingerprint (hash de banco + últimos 4 dígitos) |
 | `account_service.py` | CRUD de cuentas bancarias usando el repositorio |
-| `analysis_service.py` | Calcula KPIs, guarda snapshot y transacciones. Llama a `recommendation_engine` y a `_get_merchant_history` para detección cross-snapshot. |
+| `analysis_service.py` | Calcula KPIs, guarda snapshot y transacciones. Llama a `recommendation_engine` y a `_get_merchant_history` para detección cross-snapshot. **Upsert en `save_snapshot()`**: antes de insertar, busca snapshot existente con mismo `(user_id, bank_account_id, año, mes)` usando `extract()` de SQLAlchemy y lo elimina junto con sus transacciones (con `flush()`). Evita duplicados al re-subir el mismo período. |
 | `recommendation_engine.py` | **Motor de recomendaciones.** Módulo puro (sin DB). 10 reglas: no_income_detected, expenses_exceed_income, good_savings_rate, top_expense_category, category_concentration, high_bank_charges, high_unknown_spend, recurring_spend_summary, low_confidence_transactions, merchant_price_increase. |
 | `feature_engineering_service.py` | **Pipeline de features.** Módulo puro. Recibe transacciones persistidas, devuelve: by_week, by_day_of_week, spending_velocity (curva acumulada + proyección), category_ratios, merchant_concentration (top 10), recurrence_stats, income_stats. |
-| `financial_classifier.py` | **Motor de categorización.** Busca en KB personal → KB global → patrones builtin → fallback |
+| `financial_classifier.py` | **Motor de categorización.** Busca en KB personal → KB global → patrones builtin → fallback. Métodos: `list_personal_kb()`, `list_global_kb()` (devuelve entradas completas), `list_global_kb_summary()` (solo conteos), `delete_personal_entry()`. |
 | `detail_normalizer.py` | **Limpia descriptores bancarios.** Convierte raw → clave canónica. |
 | `categorization_service.py` | Puente entre el pipeline y el clasificador. |
 | `auth_service.py` | Registro de usuarios y verificación de contraseñas |
@@ -547,7 +547,7 @@ Cuando el usuario ve una transacción mal categorizada, la corrige con este endp
 ### 🔲 Pendiente / No implementado
 
 - **`app/workers/job_runner.py`**: archivo vacío (0 bytes). Pendiente de `git rm` desde Windows.
-- **Frontend**: en desarrollo activo (sesión 14) — ver sección Frontend más abajo.
+- **Frontend (MVP completo, sesión 17)**: Auth, Dashboard (filtros + 5 charts incluyendo donut por rol de presupuesto + recomendaciones), Upload, Análisis (lista/detalle), Transacciones (filtros crédito/débito + tipo económico + economic_type_detail en reclasificación), KBPage (personal + global con tabs), Presupuesto (50/30/20 + gastos adicionales + onboarding). Ver sección Frontend más abajo.
 - **`transaction_repository.py`**: stub vacío. Necesario si se quiere re-categorización masiva o queries filtradas avanzadas.
 
 ---
@@ -587,6 +587,8 @@ Cuando el usuario ve una transacción mal categorizada, la corrige con este endp
 | `c4f9e2a1d8ab` | analysis_transactions |
 | `d7e3f1a2b9c4` | Agrega `economic_type_detail`, elimina `transaction_category` de analysis_transactions |
 | `e5b3f8a2c1d9` | Agrega `bank_account_id` (FK nullable → bank_accounts, ON DELETE SET NULL) a analysis_snapshots |
+| `f6a1b2c3d4e5` | Tabla `user_profiles` con industry, expected_monthly_income, financial_goals, onboarding_completed |
+| `g7b4c9d2e1f6` | Agrega `manual_expenses` (JSON nullable) a user_profiles |
 
 ---
 
@@ -610,49 +612,81 @@ frontend/src/
 │   ├── auth.ts       ← login, register, forgot/reset password
 │   ├── files.ts      ← uploadFile (multipart)
 │   ├── jobs.ts       ← getJob, listJobs
-│   ├── analysis.ts   ← listAnalysis, getAnalysis, getTransactions, reclassify
+│   ├── analysis.ts   ← listAnalysis, getAnalysis, getTransactions, reclassify, getAggregatedSummary
+│   ├── kb.ts         ← listKB, listGlobalKB, deleteKBEntry, previewCanonical
 │   └── users.ts      ← getMe
 ├── stores/
 │   └── authStore.ts  ← Zustand + persist: token, user, isAuthenticated
-├── types/index.ts    ← interfaces TypeScript (User, ProcessingJob, AnalysisSnapshot, etc.)
+├── types/index.ts    ← interfaces TypeScript (User, ProcessingJob, AnalysisSnapshot, KBEntry, etc.)
 ├── components/
-│   ├── AppShell.tsx  ← sidebar + header móvil + Outlet
+│   ├── AppShell.tsx  ← sidebar + header móvil + Outlet (nav: /, /upload, /analysis, /kb)
 │   └── ui/           ← shadcn/ui: button, card, badge, input, label, toast
 ├── pages/
 │   ├── LoginPage.tsx
 │   ├── RegisterPage.tsx
 │   ├── ForgotPasswordPage.tsx   ← muestra debug token si DEBUG=true
 │   ├── ResetPasswordPage.tsx    ← lee ?token= de la URL
-│   ├── DashboardPage.tsx        ← KPIs del análisis más reciente + gráfica categorías
+│   ├── DashboardPage.tsx        ← ver notas abajo
 │   ├── UploadPage.tsx           ← drag&drop, polling de job, redirect a /analysis
 │   ├── AnalysisListPage.tsx     ← historial de snapshots con info del banco
 │   ├── AnalysisDetailPage.tsx   ← KPIs, pie chart, recomendaciones
-│   └── TransactionsPage.tsx     ← listado + filtro requires_review + reclasificación inline
-└── lib/utils.ts    ← cn, formatCurrency, formatDate, formatPeriod (null-safe), etc.
+│   ├── TransactionsPage.tsx     ← listado + filtro requires_review + reclasificación inline
+│   └── KBPage.tsx               ← tabs Personal/Global, preview canónico, eliminar entradas
+└── lib/utils.ts    ← cn, formatCurrency, formatDate, formatPeriod (null-safe), capitalize, etc.
 ```
 
-**Notas de diseño importantes:**
+**DashboardPage — arquitectura de datos:**
+- Siempre llama a `GET /analysis/aggregated` (con los filtros activos) cuando hay snapshots cargados. Sin filtros devuelve el consolidado completo.
+- Filtros: año (de period_start Y period_end), mes (cursor loop por todo el rango del snapshot), banco (pill).
+- `filtersActive = !!(selectedYear || selectedBankKey)` — solo se usa para el label "filtradas" en el KPI card.
+- `kpis`: usa `aggregated` del servidor cuando está disponible; fallback a `snapshotAggregate()` client-side mientras carga.
+- Charts: tendencia mensual (ComposedChart, solo si trendData.length > 1), top merchants (BarChart horizontal), tipo económico (PieChart), categorías (BarChart vertical).
+- Months filter: cursor loop de period_start a period_end para incluir todos los meses intermedios.
+- Snapshot filtering: overlap-based (snapshot.period_start ≤ fin_del_mes_seleccionado AND snapshot.period_end ≥ inicio_del_mes_seleccionado).
 
-- **`job.job_id`** (no `job.id`) — el backend usa `job_id` como primary key. El frontend `ProcessingJob.job_id` refleja esto.
-- **`ProcessingJob` no tiene `snapshot_id`** — el backend no vincula el job con el snapshot. Al completar el upload, el frontend redirige a `/analysis` (lista) en lugar de al snapshot específico.
+**KBPage — notas de diseño:**
+- Tab "Personal": editable (delete con confirmación en-línea). Carga al montar.
+- Tab "Global": read-only, carga lazy (solo al hacer clic). Banner informativo. Sin botones de eliminar.
+- `GET /kb/global` debe ir antes de `DELETE /kb/{key}` en el router para evitar captura de parámetro.
+
+**Notas de diseño importantes:**
+- **`job.job_id`** (no `job.id`) — el backend usa `job_id` como primary key.
+- **`ProcessingJob` no tiene `snapshot_id`** — redirige a `/analysis` (lista) al completar upload.
 - **`user.user_id`** (no `user.id`) — el backend usa `user_id` como UUID primario.
+- **`Transaction.transaction_id`** (no `transaction.id`) — crítico para reclasificación inline.
 - **`formatPeriod(start | null, end | null)`** — null-safe; retorna "Período sin fecha" si ambos son null.
 - **Toast global** — `src/components/ui/toast.tsx` implementa un store singleton sin proveedor. Usar `toast("mensaje", "success"|"error"|"info")` desde cualquier componente. `<Toaster />` montado en `main.tsx`.
-- **ForgotPassword DEBUG mode** — cuando `DEBUG=true` el backend retorna el token en el response. La página lo muestra con un link directo a `/reset-password?token=...` para facilitar el desarrollo.
+- **ForgotPassword DEBUG mode** — cuando `DEBUG=true` el backend retorna el token en el response.
 
-**Features completadas:**
-- Auth completo: login, register, forgot-password, reset-password
-- Dashboard: KPIs del análisis más reciente + gráfica de barras de categorías + recomendaciones
-- Upload: drag&drop, progreso por fases (en cola → procesando → completado), manejo de 409 duplicado
-- Lista de análisis: historial con banco y últimos 4 dígitos visibles
-- Detalle de análisis: KPIs, pie chart de categorías, recomendaciones con badges
-- Transacciones: filtro por requires_review, búsqueda local, reclasificación inline con también-aprender
+**Notas de TransactionsPage (sesión 17):**
+- `filterMovement: "all" | "credit" | "debit"` — valores en inglés (como los guarda la DB), labels en español "Crédito"/"Débito"
+- `filterEtype: string` — filtra por `economic_type`
+- `needsReview(t)` = `t.requires_review || t.budget_role === "revisar" || t.budget_category?.includes("desconocido")`
+- Formulario de reclasificación inline incluye `economic_type_detail` como select
+
+**Notas de BudgetPage (sesión 17):**
+- `manual_expenses === null` → primera visita → muestra modal automáticamente
+- `manual_expenses === []` → ya configurado sin gastos → no muestra modal
+- Modal editable vía botón "Gastos adicionales" en el header
+- `toMonthly(amount, freq)`: weekly×4.33, annual÷12, monthly sin cambio
+- `manualMonthly` = suma de `monthly_amount` de todos los gastos manuales
+- `buckets` merges `aggregated.categories` + gastos manuales por categoría antes de clasificar en 50/30/20
+- `totalExpenses = aggregated.total_expenses + manualMonthly`
+
+**Notas de RetrainPage (sesión 18):**
+- Ruta `/retrain` — nav item "Entrenamiento" con ícono `Sparkles`
+- Carga `GET /transactions/review-groups` (solo débitos, excluye `user_reclassified`, con confidence < 0.8 o budget_role="revisar" o category contiene "desconocido")
+- Cada fila: dropdown "Frecuencia" → `subtype_economic` (extraordinario/recurrente/variable/financiero). `inferEtypeDetail(cat, subtype)` calcula `economic_type_detail` automáticamente: cargo_financiero/deuda → "cargo_bancario", recurrente → "gasto_recurrente", resto → "gasto_variable"
+- Al aplicar: `POST /transactions/review-groups/apply` actualiza todas las txs del grupo + entrena KB
+- `defaultRole(cat)` auto-infiere `budget_role` al cambiar categoría
+
+**Notas de categorías compartidas (sesión 18):**
+- `src/lib/categories.ts` exporta `BUDGET_CATEGORIES` (array `as const`) — fuente única para TransactionsPage y RetrainPage
+- `budget_category` en TransactionsPage cambió de `Input` texto libre a `<select>` con `BUDGET_CATEGORIES`
 
 **Pendiente del frontend:**
-- Agregar campo `economic_type_detail` al formulario de reclasificación
-- Página de cuentas bancarias (CRUD de `/accounts`)
-- Página de KB (gestión del knowledge base)
-- Estadísticas de confianza visibles en detalle de análisis
+- Estadísticas de confianza visibles en AnalysisDetailPage
+- Página de cuentas bancarias → **DESCARTADA por ahora**: nicknames no se usan en UI, cuentas se crean automáticamente al subir, delete es destructivo (ON DELETE SET NULL rompe asociación de snapshots históricos)
 
 ---
 
@@ -660,12 +694,13 @@ frontend/src/
 
 ### Prioridad Alta
 
-- **Frontend (en curso)**: continuar completando las páginas faltantes (cuentas, KB).
 - **Seguir entrenando el KB**: subir archivos periódicamente, revisar con `?requires_review=true`, usar `/learn` y `/reclassify` para bajar la tasa de fallback.
 - **Medir tasa de confianza**: usar `/confidence-stats` antes y después de cada sesión de entrenamiento.
+- **~~Frontend — campo `economic_type_detail`~~**: ✅ Agregado al formulario de reclasificación inline en TransactionsPage (sesión 17).
 
 ### Prioridad Media
 
+- **Estadísticas de confianza en AnalysisDetailPage**: mostrar los datos de `/confidence-stats` de forma visual.
 - **Resend en producción**: configurar dominio verificado y RESEND_API_KEY real.
 - **`transaction_repository.py`**: implementar si se necesita re-categorización masiva o queries filtradas avanzadas.
 - **Eliminar `job_runner.py`**: confirmado vacío (0 bytes). Hacer `git rm backend/app/workers/job_runner.py` desde Windows.
@@ -679,3 +714,19 @@ frontend/src/
 - **~~Migrar `AnalysisTransactionResponse` a `ConfigDict`~~**: ✅ completado.
 - **~~Rate limiting~~**: ✅ implementado con `slowapi`. Activo automáticamente cuando `DEBUG=false`.
 - **~~Recomendaciones financieras~~**: ✅ 10 reglas en producción (cross-snapshot incluido).
+- **~~Dashboard visualizaciones~~**: ✅ Tendencia mensual, top merchants, tipo económico (sesión 15).
+- **~~KBPage~~**: ✅ Tabs Personal/Global, preview canónico, eliminar en-línea (sesión 15).
+- **~~`GET /analysis/aggregated`~~**: ✅ Endpoint con filtros year/month/bank_account_id (sesión 15).
+- **~~`GET /kb/global`~~**: ✅ Endpoint read-only con entradas completas (sesión 15).
+- **~~Upsert en re-upload~~**: ✅ `save_snapshot()` elimina snapshot previo del mismo período antes de insertar (sesión 15).
+- **~~Cuentas bancarias CRUD~~**: ❌ Descartado — nicknames sin uso en UI, cuentas auto-detectadas, delete destructivo.
+- **~~Onboarding post-primer-análisis~~**: ✅ Flujo de 3 pasos (industria, ingreso, metas) activado tras primer upload exitoso (sesión 16).
+- **~~Página de Presupuesto~~**: ✅ `/budget` con 50/30/20 real vs objetivo, PieChart, BarChart, acciones por meta, guía educativa (sesión 16).
+- **~~UserProfile model/API~~**: ✅ `GET/PUT /users/profile` · tabla `user_profiles` · migración `f6a1b2c3d4e5` (sesión 16).
+- **~~Recommendation engine: metas~~**: ✅ 4 reglas nuevas: `goal_emergency_fund`, `goal_debt_payment`, `goal_savings_gap`, `income_below_expected` (sesión 16).
+- **~~Gastos adicionales manuales~~**: ✅ `manual_expenses` en UserProfile (JSON, migración `g7b4c9d2e1f6`), modal de configuración en BudgetPage con descripción/monto/frecuencia/categoría/origen multi-select, integrado en cálculo 50/30/20 (sesión 17).
+- **~~Filtros TransactionsPage~~**: ✅ Filtro tipo de movimiento (crédito/débito) + tipo económico. `economic_type_detail` en formulario de reclasificación. Filtro "requiere revisión" ampliado a `budget_role==="revisar"` y `budget_category` contiene "desconocido" (sesión 17).
+- **~~Dashboard: donut por rol de presupuesto~~**: ✅ Gráfica "Rol en presupuesto" en Dashboard. `by_budget_role` acumulado en `/analysis/aggregated` backend (solo gastos, excluye `solo_balance`) (sesión 17).
+- **~~Fix YAPPY BG DE clasificación~~**: ✅ Patrón builtin corregido: `^YAPPY BG DE` → `ingreso/otros_ingresos` (antes era transferencia_tercero) (sesión 17).
+- **~~Entrenamiento masivo (`/retrain`)~~**: ✅ `RetrainPage` con tabla de grupos por merchant; `GET /transactions/review-groups` + `POST /transactions/review-groups/apply`; dropdown "Frecuencia" manda `subtype_economic`; `inferEtypeDetail()` calcula `economic_type_detail` automáticamente; `defaultRole()` auto-infiere budget_role (sesión 18).
+- **~~Categorías compartidas~~**: ✅ `src/lib/categories.ts` → `BUDGET_CATEGORIES`; `budget_category` en TransactionsPage cambió de input libre a select (sesión 18).

@@ -8,6 +8,8 @@ import {
   TrendingUp,
   Menu,
   X,
+  PiggyBank,
+  Sparkles,
 } from "lucide-react"
 import { useState } from "react"
 import { useAuthStore } from "@/stores/authStore"
@@ -18,7 +20,9 @@ const navItems = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
   { to: "/upload", label: "Subir estado de cuenta", icon: Upload, end: false },
   { to: "/analysis", label: "Mis análisis", icon: BarChart2, end: false },
+  { to: "/budget", label: "Mi Presupuesto", icon: PiggyBank, end: false },
   { to: "/kb", label: "Knowledge Base", icon: Brain, end: false },
+  { to: "/retrain", label: "Entrenamiento", icon: Sparkles, end: false },
 ]
 
 export default function AppShell() {

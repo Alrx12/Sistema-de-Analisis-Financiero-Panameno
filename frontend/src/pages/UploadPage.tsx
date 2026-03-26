@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { Upload, FileSpreadsheet, CheckCircle2, XCircle, Loader2 } from "lucide-react"
 import { uploadFile } from "@/api/files"
 import { getJob } from "@/api/jobs"
+import { getProfile } from "@/api/profile"
 import type { JobStatus } from "@/types"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -23,10 +24,22 @@ export default function UploadPage() {
   const inputRef = useRef<HTMLInputElement>(null)
   const navigate = useNavigate()
 
-  // Auto-navegar al listado de análisis 1.5s después de completar exitosamente
+  // Auto-navegar 1.5s después de completar exitosamente.
+  // Si es el primer análisis (onboarding_completed=false) → onboarding, si no → /analysis
   useEffect(() => {
     if (state.phase === "success") {
-      const timer = setTimeout(() => navigate("/analysis"), 1500)
+      const timer = setTimeout(async () => {
+        try {
+          const profile = await getProfile()
+          if (!profile.onboarding_completed) {
+            navigate("/onboarding")
+          } else {
+            navigate("/analysis")
+          }
+        } catch {
+          navigate("/analysis")
+        }
+      }, 1500)
       return () => clearTimeout(timer)
     }
   }, [state, navigate])

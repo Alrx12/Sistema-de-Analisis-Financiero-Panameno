@@ -105,6 +105,8 @@ def get_aggregated_summary(
     merchants: dict[str, list] = defaultdict(lambda: [0.0, 0, None])
     # economic_type → (amount_total, count)
     by_etype: dict[str, list] = defaultdict(lambda: [0.0, 0])
+    # budget_role → (amount_total, count) — solo gastos (amount < 0)
+    by_brole: dict[str, list] = defaultdict(lambda: [0.0, 0])
     # "YYYY-MM" → {income, expenses, transactions}
     monthly: dict[str, dict] = defaultdict(lambda: {"income": 0.0, "expenses": 0.0, "tx": 0})
 
@@ -154,6 +156,12 @@ def get_aggregated_summary(
         by_etype[etype][0] += abs_amount
         by_etype[etype][1] += 1
 
+        # ── Por budget_role (solo gastos) ──
+        if amount < 0:
+            brole = budget_role  # ya calculado arriba, sin "solo_balance" (fue filtrado)
+            by_brole[brole][0] += abs_amount
+            by_brole[brole][1] += 1
+
     # ── Construir respuesta ────────────────────────────────────────────────────
     top_merchants = sorted(
         [MerchantStat(name=k, amount=round(v[0], 2), count=v[1], category=v[2])
@@ -164,6 +172,12 @@ def get_aggregated_summary(
     by_economic_type = sorted(
         [TypeStat(type=k, amount=round(v[0], 2), count=v[1])
          for k, v in by_etype.items()],
+        key=lambda x: -x.amount,
+    )
+
+    by_budget_role = sorted(
+        [TypeStat(type=k, amount=round(v[0], 2), count=v[1])
+         for k, v in by_brole.items()],
         key=lambda x: -x.amount,
     )
 
@@ -186,6 +200,7 @@ def get_aggregated_summary(
         categories={k: round(v, 2) for k, v in sorted(categories.items(), key=lambda x: -x[1])},
         top_merchants=top_merchants,
         by_economic_type=by_economic_type,
+        by_budget_role=by_budget_role,
         monthly_trend=monthly_trend,
     )
 

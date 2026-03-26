@@ -7,6 +7,7 @@ from app.api.v1.files import router as files_router
 from app.api.v1.health import router as health_router
 from app.api.v1.jobs import router as jobs_router
 from app.api.v1.kb import router as kb_router
+from app.api.v1.profile import router as profile_router
 from app.api.v1.transactions import router as transactions_router
 from app.api.v1.users import router as users_router
 
@@ -21,3 +22,4 @@ api_router.include_router(jobs_router, prefix="/jobs", tags=["jobs"])
 api_router.include_router(kb_router, prefix="/kb", tags=["kb"])
 api_router.include_router(transactions_router, prefix="/transactions", tags=["transactions"])
 api_router.include_router(users_router, prefix="/users", tags=["users"])
+api_router.include_router(profile_router, prefix="/users", tags=["profile"])

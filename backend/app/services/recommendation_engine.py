@@ -50,6 +50,8 @@ def generate_recommendations(
     low_confidence_count: int,
     categorized_transactions: list[dict[str, Any]],
     merchant_history: dict[str, list[float]] | None = None,
+    user_goals: list[str] | None = None,
+    expected_monthly_income: float | None = None,
 ) -> list[dict[str, Any]]:
     """
     Genera recomendaciones financieras a partir de los KPIs de un análisis.
@@ -63,6 +65,11 @@ def generate_recommendations(
         categorized_transactions: Lista completa de transacciones categorizadas.
         merchant_history:         {merchant_key: [avg_snapshot_anterior, ...]}
                                   Si se pasa, habilita detección de aumento de precios.
+        user_goals:               Lista de metas del usuario desde su perfil.
+                                  Ej: ["fondo_emergencia", "eliminar_deuda"]
+                                  Si se pasa, habilita reglas de metas personalizadas.
+        expected_monthly_income:  Ingreso mensual esperado desde el perfil del usuario.
+                                  Si se pasa, compara contra el ingreso real detectado.
 
     Returns:
         Lista ordenada de recomendaciones, de mayor a menor severidad.
@@ -234,6 +241,96 @@ def generate_recommendations(
                     f"a ${increase['curr_avg']:,.2f} ({increase['pct_change']:+.1f}% vs período anterior)."
                 ),
                 "data": increase,
+            })
+
+    # ── 11–13. Reglas basadas en metas del perfil ─────────────────────────────
+    if user_goals:
+        goals_set = set(user_goals)
+        savings = total_income - total_expenses if total_income > 0 else 0.0
+        savings_rate = savings / total_income if total_income > 0 else 0.0
+
+        # 11. Meta: fondo de emergencia — si ahorra menos de 1 mes de gastos
+        if "fondo_emergencia" in goals_set and total_expenses > 0:
+            # Un fondo de emergencia = 3–6 meses de gastos. Aquí alertamos si el
+            # ahorro actual (este período) ni siquiera cubre 1 mes de gastos.
+            if savings < total_expenses:
+                target = round(total_expenses * 3, 2)
+                recs.append({
+                    "type": "warning",
+                    "code": "goal_emergency_fund",
+                    "message": (
+                        f"Tu meta es construir un fondo de emergencia. "
+                        f"Un fondo sólido cubre 3 meses de gastos (≈${target:,.2f}). "
+                        f"Este período ahorraste ${max(savings, 0):,.2f}. "
+                        "Considera automatizar un depósito fijo mensual a una cuenta separada."
+                    ),
+                    "data": {
+                        "savings": round(savings, 2),
+                        "target_3_months": target,
+                        "monthly_expenses": round(total_expenses, 2),
+                    },
+                })
+
+        # 12. Meta: eliminar deuda — si hay cargos financieros significativos
+        if "eliminar_deuda" in goals_set:
+            bank_charges = budget_roles.get("gasto_financiero", 0.0)
+            if bank_charges > 0:
+                recs.append({
+                    "type": "info",
+                    "code": "goal_debt_payment",
+                    "message": (
+                        f"Tu meta es eliminar deuda. Este período pagaste ${bank_charges:,.2f} "
+                        "en cargos financieros (intereses, comisiones). "
+                        "Prioriza pagar primero la deuda con la tasa más alta — "
+                        "cada dólar en intereses es dinero que no trabaja para ti."
+                    ),
+                    "data": {"bank_charges": round(bank_charges, 2)},
+                })
+
+        # 13. Meta: ahorro general — si la tasa de ahorro está por debajo del 20%
+        if "ahorro_general" in goals_set and total_income > 0:
+            if savings_rate < _SAVINGS_RATE_GOOD:
+                deficit_pct = round((_SAVINGS_RATE_GOOD - savings_rate) * 100, 1)
+                deficit_amt = round(_SAVINGS_RATE_GOOD * total_income - savings, 2)
+                recs.append({
+                    "type": "info",
+                    "code": "goal_savings_gap",
+                    "message": (
+                        f"Tu meta de ahorro es el 20% de tus ingresos. "
+                        f"Este período ahorraste el {savings_rate * 100:.1f}% "
+                        f"(te faltan {deficit_pct}pp = ${deficit_amt:,.2f} para alcanzar la meta). "
+                        "Revisa tus categorías de gasto para encontrar dónde recortar."
+                    ),
+                    "data": {
+                        "current_rate_pct": round(savings_rate * 100, 1),
+                        "target_rate_pct": 20.0,
+                        "gap_pct": deficit_pct,
+                        "gap_amount": deficit_amt,
+                    },
+                })
+
+    # ── 14. Ingreso real vs ingreso esperado del perfil ───────────────────────
+    if expected_monthly_income and expected_monthly_income > 0 and total_income > 0:
+        ratio = total_income / expected_monthly_income
+        # Solo alertar si el ingreso real es < 80% del esperado (diferencia material)
+        if ratio < 0.80:
+            gap = round(expected_monthly_income - total_income, 2)
+            recs.append({
+                "type": "warning",
+                "code": "income_below_expected",
+                "message": (
+                    f"Tu ingreso detectado (${total_income:,.2f}) es "
+                    f"{round((1 - ratio) * 100, 1)}% menor que tu ingreso esperado "
+                    f"(${expected_monthly_income:,.2f}). "
+                    "Verifica que el estado de cuenta incluya todos tus depósitos, "
+                    "o actualiza tu ingreso esperado en tu perfil."
+                ),
+                "data": {
+                    "actual_income": round(total_income, 2),
+                    "expected_income": round(expected_monthly_income, 2),
+                    "gap": gap,
+                    "ratio_pct": round(ratio * 100, 1),
+                },
             })
 
     # ── Fallback: sin alertas ─────────────────────────────────────────────────

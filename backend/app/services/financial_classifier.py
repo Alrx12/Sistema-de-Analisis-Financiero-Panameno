@@ -132,10 +132,10 @@ class FinancialClassifier:
         (
             r"^YAPPY BG DE ",
             {
-                "Economic Type": "transferencia_tercero",
-                "Economic Type Detail": "transferencia_tercero",
+                "Economic Type": "ingreso",
+                "Economic Type Detail": "otros_ingresos",
                 "SubType Economic": "variable",
-                "Categoría de presupuesto": "otros",
+                "Categoría de presupuesto": "transferencias",
                 "budget_role": "presupuestable",
             },
             0.90,

@@ -29,6 +29,16 @@ const ETYPE_COLORS: Record<string, string> = {
   desconocido:          "#d1d5db",
 }
 
+const BROLE_COLORS: Record<string, string> = {
+  presupuestable:      "#10b981",
+  no_presupuestable:   "#f97316",
+  gasto_operativo:     "#3b82f6",
+  gasto_financiero:    "#f59e0b",
+  ahorro_inversion:    "#8b5cf6",
+  revisar:             "#ef4444",
+  solo_balance:        "#d1d5db",
+}
+
 const MONTH_NAMES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"]
 
 // ─── Helpers de fecha ─────────────────────────────────────────────────────────
@@ -55,7 +65,7 @@ function snapshotAggregate(snapshots: AnalysisSnapshot[]): Omit<AggregatedSummar
   return {
     total_income, total_expenses, balance: total_income - total_expenses,
     total_transactions, categories,
-    top_merchants: [], by_economic_type: [], monthly_trend: [],
+    top_merchants: [], by_economic_type: [], monthly_trend: [], by_budget_role: [],
   }
 }
 
@@ -81,6 +91,7 @@ export default function DashboardPage() {
   const [selectedYear, setSelectedYear]       = useState<number | null>(null)
   const [selectedMonth, setSelectedMonth]     = useState<number | null>(null)
   const [selectedBankKey, setSelectedBankKey] = useState<string | null>(null)
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
 
   // ── Años disponibles ──────────────────────────────────────────────────────
   const availableYears = useMemo(() => {
@@ -193,16 +204,29 @@ export default function DashboardPage() {
   const savingsRate = kpis.total_income > 0
     ? ((kpis.balance / kpis.total_income) * 100).toFixed(1) : "0.0"
 
+  // normaliza una categoría para comparación: lowercase + underscores→spaces
+  const normCat = (s: string) => s.toLowerCase().replace(/_/g, " ").trim()
+
   const categoryData = Object.entries(kpis.categories)
     .sort(([, a], [, b]) => b - a).slice(0, 8)
-    .map(([name, value]) => ({ name: capitalize(name), value }))
+    .map(([rawKey, value]) => ({ name: capitalize(rawKey), rawKey, value }))
 
-  const merchantData = (kpis.top_merchants ?? []).slice(0, 10)
-    .map(m => ({ name: m.name.length > 20 ? m.name.slice(0, 18) + "…" : m.name, value: m.amount, count: m.count, category: m.category }))
+  const allMerchantData = (kpis.top_merchants ?? [])
+    .map(m => ({ name: m.name.length > 28 ? m.name.slice(0, 26) + "…" : m.name, value: m.amount, count: m.count, category: m.category }))
+
+  const merchantData = selectedCategory
+    ? allMerchantData
+        .filter(m => normCat(m.category ?? "") === normCat(selectedCategory))
+        .slice(0, 10)
+    : allMerchantData.slice(0, 10)
 
   const etypeData = (kpis.by_economic_type ?? [])
     .filter(e => e.type !== "desconocido" || e.amount > 0)
     .map(e => ({ name: capitalize(e.type.replace(/_/g, " ")), value: e.amount, count: e.count, fill: ETYPE_COLORS[e.type] ?? "#94a3b8" }))
+
+  const budgetRoleData = (kpis.by_budget_role ?? [])
+    .filter(e => e.amount > 0)
+    .map(e => ({ name: capitalize(e.type.replace(/_/g, " ")), value: e.amount, count: e.count, fill: BROLE_COLORS[e.type] ?? "#94a3b8" }))
 
   const trendData = (kpis.monthly_trend ?? [])
 
@@ -306,19 +330,45 @@ export default function DashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle>Gastos por categoría</CardTitle>
-            <CardDescription>Top 8{filtersActive ? ` · ${periodLabel}` : ""}</CardDescription>
+            <CardDescription>
+              Top 8{filtersActive ? ` · ${periodLabel}` : ""}
+              {selectedCategory && (
+                <button
+                  onClick={() => setSelectedCategory(null)}
+                  className="ml-2 inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary hover:bg-primary/20"
+                >
+                  {capitalize(selectedCategory)} ✕
+                </button>
+              )}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {categoryData.length === 0
               ? <p className="text-sm text-muted-foreground">Sin datos</p>
               : (
                 <ResponsiveContainer width="100%" height={240}>
-                  <BarChart data={categoryData} layout="vertical" margin={{ left: 8 }}>
+                  <BarChart
+                    data={categoryData}
+                    layout="vertical"
+                    margin={{ left: 8 }}
+                    onClick={(data) => {
+                      if (!data?.activePayload?.[0]) return
+                      const rawKey = data.activePayload[0].payload.rawKey
+                      setSelectedCategory(prev => prev === rawKey ? null : rawKey)
+                    }}
+                    style={{ cursor: "pointer" }}
+                  >
                     <XAxis type="number" tickFormatter={v => `$${v}`} tick={{ fontSize: 11 }} />
                     <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={105} />
                     <Tooltip formatter={(v: number) => formatCurrency(v)} />
                     <Bar dataKey="value" radius={[0,4,4,0]}>
-                      {categoryData.map((_, i) => <Cell key={i} fill={CAT_COLORS[i % CAT_COLORS.length]} />)}
+                      {categoryData.map((entry, i) => (
+                        <Cell
+                          key={i}
+                          fill={CAT_COLORS[i % CAT_COLORS.length]}
+                          opacity={!selectedCategory || selectedCategory === entry.rawKey ? 1 : 0.3}
+                        />
+                      ))}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
@@ -332,17 +382,26 @@ export default function DashboardPage() {
             <CardTitle className="flex items-center gap-2">
               <ShoppingBag className="h-4 w-4 text-muted-foreground" />
               Top comercios
+              {selectedCategory && (
+                <span className="ml-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                  {capitalize(selectedCategory)}
+                </span>
+              )}
             </CardTitle>
-            <CardDescription>Los 10 donde más gastaste</CardDescription>
+            <CardDescription>
+              {selectedCategory
+                ? `Top 10 en ${capitalize(selectedCategory)} · haz clic en la categoría para quitar el filtro`
+                : "Los 10 donde más gastaste · haz clic en una categoría para filtrar"}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {merchantData.length === 0
-              ? <p className="text-sm text-muted-foreground">{filtersActive ? "Sin datos para el filtro seleccionado" : "Activa un filtro para ver el desglose por comercio"}</p>
+              ? <p className="text-sm text-muted-foreground">{selectedCategory ? `Sin comercios categorizados como "${capitalize(selectedCategory)}"` : filtersActive ? "Sin datos para el filtro seleccionado" : "Activa un filtro para ver el desglose por comercio"}</p>
               : (
-                <ResponsiveContainer width="100%" height={240}>
-                  <BarChart data={merchantData} layout="vertical" margin={{ left: 8 }}>
+                <ResponsiveContainer width="100%" height={280}>
+                  <BarChart data={merchantData} layout="vertical" margin={{ left: 4, right: 8 }}>
                     <XAxis type="number" tickFormatter={v => `$${v}`} tick={{ fontSize: 11 }} />
-                    <YAxis type="category" dataKey="name" tick={{ fontSize: 10 }} width={110} />
+                    <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={160} />
                     <Tooltip
                       formatter={(v: number, _, props) => [
                         `${formatCurrency(v)} · ${props.payload.count} transacciones`,
@@ -357,8 +416,45 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* ── Fila: Por tipo económico + Recomendaciones ── */}
+      {/* ── Fila: Rol en presupuesto + Por tipo económico ── */}
       <div className="grid gap-6 lg:grid-cols-2">
+        {/* Rol en presupuesto — donut */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Rol en presupuesto</CardTitle>
+            <CardDescription>Distribución de gastos por tipo de gasto</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {budgetRoleData.length === 0
+              ? <p className="text-sm text-muted-foreground">Sin datos de gastos para el período</p>
+              : (
+                <ResponsiveContainer width="100%" height={260}>
+                  <PieChart>
+                    <Pie
+                      data={budgetRoleData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={55}
+                      outerRadius={90}
+                    >
+                      {budgetRoleData.map((e, i) => <Cell key={i} fill={e.fill} />)}
+                    </Pie>
+                    <Tooltip formatter={(v: number, _, props) => [
+                      `${formatCurrency(v)} · ${props.payload.count} transacciones`,
+                      props.payload.name
+                    ]} />
+                    <Legend
+                      formatter={(value) => <span className="text-xs">{value}</span>}
+                      wrapperStyle={{ fontSize: 11 }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
+          </CardContent>
+        </Card>
+
         {/* Por tipo económico — pie chart */}
         <Card>
           <CardHeader>
@@ -369,7 +465,7 @@ export default function DashboardPage() {
             {etypeData.length === 0
               ? <p className="text-sm text-muted-foreground">{filtersActive ? "Sin datos" : "Activa un filtro para ver el desglose"}</p>
               : (
-                <ResponsiveContainer width="100%" height={240}>
+                <ResponsiveContainer width="100%" height={260}>
                   <PieChart>
                     <Pie
                       data={etypeData}
@@ -377,40 +473,46 @@ export default function DashboardPage() {
                       nameKey="name"
                       cx="50%"
                       cy="50%"
-                      outerRadius={80}
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      labelLine={false}
+                      innerRadius={55}
+                      outerRadius={90}
                     >
                       {etypeData.map((e, i) => <Cell key={i} fill={e.fill} />)}
                     </Pie>
-                    <Tooltip formatter={(v: number) => formatCurrency(v)} />
+                    <Tooltip formatter={(v: number, _, props) => [
+                      `${formatCurrency(v)} · ${props.payload.count} transacciones`,
+                      props.payload.name
+                    ]} />
+                    <Legend
+                      formatter={(value) => <span className="text-xs">{value}</span>}
+                      wrapperStyle={{ fontSize: 11 }}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
               )}
           </CardContent>
         </Card>
-
-        {/* Recomendaciones */}
-        <Card>
-          <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle>Recomendaciones</CardTitle>
-            {highPriority.length > 0 && <Badge variant="destructive">{highPriority.length} urgentes</Badge>}
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {activeRecommendations.length === 0
-              ? <p className="text-sm text-muted-foreground">Todo en orden 🎉</p>
-              : activeRecommendations.slice(0, 5).map((rec, i) => (
-                <div key={i} className="flex items-start gap-2">
-                  <AlertTriangle className={`mt-0.5 h-4 w-4 shrink-0 ${
-                    rec.type === "critical" ? "text-red-500" :
-                    rec.type === "warning"  ? "text-yellow-500" : "text-blue-500"
-                  }`} />
-                  <p className="text-sm">{rec.message}</p>
-                </div>
-              ))}
-          </CardContent>
-        </Card>
       </div>
+
+      {/* ── Recomendaciones ── */}
+      <Card>
+        <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle>Recomendaciones</CardTitle>
+          {highPriority.length > 0 && <Badge variant="destructive">{highPriority.length} urgentes</Badge>}
+        </CardHeader>
+        <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {activeRecommendations.length === 0
+            ? <p className="text-sm text-muted-foreground">Todo en orden 🎉</p>
+            : activeRecommendations.slice(0, 6).map((rec, i) => (
+              <div key={i} className="flex items-start gap-2">
+                <AlertTriangle className={`mt-0.5 h-4 w-4 shrink-0 ${
+                  rec.type === "critical" ? "text-red-500" :
+                  rec.type === "warning"  ? "text-yellow-500" : "text-blue-500"
+                }`} />
+                <p className="text-sm">{rec.message}</p>
+              </div>
+            ))}
+        </CardContent>
+      </Card>
 
       {/* ── Enlace ── */}
       <div className="flex justify-end">
