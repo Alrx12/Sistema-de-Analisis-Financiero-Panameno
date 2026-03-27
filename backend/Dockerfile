@@ -35,13 +35,11 @@ RUN cp storage/knowledge_bases/knowledge_base_global.json /app/seeds/ 2>/dev/nul
 COPY . /app
 WORKDIR /app
 COPY docker-entrypoint.sh /app/docker-entrypoint.sh
-RUN chmod +x /app/docker-entrypoint.sh /entrypoint.sh
-
 RUN sed -i 's/\r$//' /app/docker-entrypoint.sh && chmod +x /app/docker-entrypoint.sh
 
 EXPOSE 8001
 
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
 
 # CMD default: API server. El worker sobreescribe esto en docker-compose.
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8001", "--workers", "2"]
