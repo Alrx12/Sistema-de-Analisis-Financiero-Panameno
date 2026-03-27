@@ -27,9 +27,9 @@ def upgrade() -> None:
     op.drop_index(op.f('idx_transactions_category'), table_name='transactions')
     op.drop_index(op.f('idx_transactions_user_date'), table_name='transactions')
     op.drop_index(op.f('uq_transactions_file_signature'), table_name='transactions', postgresql_where='(hash_signature IS NOT NULL)')
-    op.drop_table('transactions')
-    op.drop_table('category_overrides')
-    op.drop_table('account_detection_reviews')
+    op.execute("DROP TABLE IF EXISTS transactions")
+    op.execute("DROP TABLE IF EXISTS category_overrides")
+    op.execute("DROP TABLE IF EXISTS account_detection_reviews")
     op.alter_column('bank_accounts', 'bank_name',
                existing_type=sa.TEXT(),
                type_=sa.String(),
