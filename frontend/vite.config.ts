@@ -11,6 +11,7 @@ export default defineConfig({
   },
   server: {
     port: 3000,
+    allowedHosts: ["lex-luthor-corp.tailfef861.ts.net", ".loca.lt"],
     proxy: {
       "/api": {
         target: "http://localhost:8001",

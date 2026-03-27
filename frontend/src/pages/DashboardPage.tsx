@@ -3,7 +3,8 @@ import { useQuery } from "@tanstack/react-query"
 import { Link } from "react-router-dom"
 import {
   TrendingUp, TrendingDown, Wallet, AlertTriangle,
-  Upload, ArrowRight, BarChart2, Building2, Layers, ShoppingBag
+  Upload, ArrowRight, BarChart2, Building2, Layers, ShoppingBag,
+  TrendingUp as SavingsIcon, Activity,
 } from "lucide-react"
 import { listAnalysis, getAggregatedSummary } from "@/api/analysis"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -12,7 +13,8 @@ import { Badge } from "@/components/ui/badge"
 import { formatCurrency, capitalize } from "@/lib/utils"
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
-  PieChart, Pie, Legend, ComposedChart, CartesianGrid,
+  PieChart, Pie, Legend, ComposedChart, CartesianGrid, Line,
+  Area, AreaChart, ReferenceLine, LabelList,
 } from "recharts"
 import type { AnalysisSnapshot, AggregatedSummary } from "@/types"
 
@@ -53,7 +55,24 @@ function getMonth(s: AnalysisSnapshot, f: "period_start" | "period_end") {
   const d = parseDate(s[f]); return d ? d.getMonth() + 1 : null
 }
 
-// ─── Snapshot-level aggregate (cuando no hay filtros activos) ─────────────────
+/** Parsea etiqueta de tendencia tipo "Sep 25" → { month: 9, year: 2025 } */
+function parseTrendLabel(label: string): { month: number; year: number } | null {
+  const parts = label.trim().split(/\s+/)
+  if (parts.length !== 2) return null
+  const monthIdx = MONTH_NAMES.indexOf(parts[0])
+  if (monthIdx === -1) return null
+  const suffix = parseInt(parts[1])
+  if (isNaN(suffix)) return null
+  const year = suffix < 50 ? 2000 + suffix : 1900 + suffix
+  return { month: monthIdx + 1, year }
+}
+
+function fmtK(v: number): string {
+  if (Math.abs(v) >= 1000) return `$${(v / 1000).toFixed(1)}k`
+  return `$${v.toFixed(0)}`
+}
+
+// ─── Snapshot-level aggregate ─────────────────────────────────────────────────
 function snapshotAggregate(snapshots: AnalysisSnapshot[]): Omit<AggregatedSummary, "top_merchants"|"by_economic_type"|"monthly_trend"> & { top_merchants: []; by_economic_type: []; monthly_trend: [] } {
   const total_income    = snapshots.reduce((s, x) => s + x.total_income, 0)
   const total_expenses  = snapshots.reduce((s, x) => s + x.total_expenses, 0)
@@ -69,17 +88,71 @@ function snapshotAggregate(snapshots: AnalysisSnapshot[]): Omit<AggregatedSummar
   }
 }
 
-// ─── Componentes de tooltip custom ───────────────────────────────────────────
+// ─── Tooltips custom ─────────────────────────────────────────────────────────
 function CurrencyTooltip({ active, payload, label }: { active?: boolean; payload?: { name: string; value: number; color: string }[]; label?: string }) {
   if (!active || !payload?.length) return null
   return (
-    <div className="rounded-lg border bg-background p-3 shadow-md text-xs">
-      <p className="mb-1 font-semibold">{label}</p>
+    <div className="rounded-xl border border-border/60 bg-white/95 px-3.5 py-2.5 shadow-lg text-xs backdrop-blur-sm">
+      <p className="mb-2 font-semibold text-foreground/80 border-b border-border/40 pb-1.5">{label}</p>
       {payload.map((p, i) => (
-        <p key={i} style={{ color: p.color }}>{p.name}: {formatCurrency(p.value)}</p>
+        <p key={i} className="flex justify-between gap-5 mt-1" style={{ color: p.color }}>
+          <span className="font-medium">{p.name}</span>
+          <span className="font-bold">{formatCurrency(p.value)}</span>
+        </p>
       ))}
     </div>
   )
+}
+
+function BalanceTooltip({ active, payload, label }: { active?: boolean; payload?: { value: number }[]; label?: string }) {
+  if (!active || !payload?.length) return null
+  const val = payload[0].value
+  const isPos = val >= 0
+  return (
+    <div className="rounded-xl border border-border/60 bg-white/95 px-3.5 py-2.5 shadow-lg text-xs backdrop-blur-sm">
+      <p className="mb-2 font-semibold text-foreground/80 border-b border-border/40 pb-1.5">{label}</p>
+      <p className={`flex justify-between gap-5 mt-1 font-bold ${isPos ? "text-emerald-600" : "text-red-500"}`}>
+        <span>Balance neto</span>
+        <span>{formatCurrency(val)}</span>
+      </p>
+    </div>
+  )
+}
+
+function SavingsTooltip({ active, payload, label }: { active?: boolean; payload?: { value: number }[]; label?: string }) {
+  if (!active || !payload?.length) return null
+  const val = payload[0].value
+  return (
+    <div className="rounded-xl border border-border/60 bg-white/95 px-3.5 py-2.5 shadow-lg text-xs backdrop-blur-sm">
+      <p className="mb-2 font-semibold text-foreground/80 border-b border-border/40 pb-1.5">{label}</p>
+      <p className="flex justify-between gap-5 mt-1 font-bold text-violet-600">
+        <span>Tasa de ahorro</span>
+        <span>{val.toFixed(1)}%</span>
+      </p>
+    </div>
+  )
+}
+
+// ─── Dot personalizado para la línea de gastos ────────────────────────────────
+function ExpenseDot(props: { cx?: number; cy?: number; value?: number; showLabel?: boolean }) {
+  const { cx = 0, cy = 0, value = 0, showLabel = false } = props
+  return (
+    <g>
+      <circle cx={cx} cy={cy} r={5} fill="#ef4444" stroke="white" strokeWidth={2} />
+      {showLabel && value > 0 && (
+        <text x={cx} y={cy - 11} textAnchor="middle" fontSize={9} fill="#ef4444" fontWeight="600">
+          {fmtK(value)}
+        </text>
+      )}
+    </g>
+  )
+}
+
+// ─── Dot para la línea de savings ────────────────────────────────────────────
+function SavingsDot(props: { cx?: number; cy?: number; value?: number }) {
+  const { cx = 0, cy = 0, value = 0 } = props
+  const isGood = value >= 20
+  return <circle cx={cx} cy={cy} r={3.5} fill={isGood ? "#8b5cf6" : "#f59e0b"} stroke="white" strokeWidth={1.5} />
 }
 
 export default function DashboardPage() {
@@ -88,10 +161,12 @@ export default function DashboardPage() {
     queryFn: listAnalysis,
   })
 
-  const [selectedYear, setSelectedYear]       = useState<number | null>(null)
-  const [selectedMonth, setSelectedMonth]     = useState<number | null>(null)
-  const [selectedBankKey, setSelectedBankKey] = useState<string | null>(null)
+  const [selectedYear, setSelectedYear]         = useState<number | null>(null)
+  const [selectedMonth, setSelectedMonth]       = useState<number | null>(null)
+  const [selectedBankKey, setSelectedBankKey]   = useState<string | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  // "both" | "income" | "expenses"
+  const [selectedMetric, setSelectedMetric]     = useState<"both" | "income" | "expenses">("both")
 
   // ── Años disponibles ──────────────────────────────────────────────────────
   const availableYears = useMemo(() => {
@@ -122,7 +197,7 @@ export default function DashboardPage() {
     return Array.from(months).sort((a, b) => b - a)
   }, [snapshots, selectedYear])
 
-  // ── Snapshots del período (para pills y recomendaciones) ──────────────────
+  // ── Snapshots filtrados ───────────────────────────────────────────────────
   const filteredSnapshots = useMemo(() => {
     if (!snapshots?.length) return []
     if (!selectedYear) return snapshots
@@ -161,7 +236,6 @@ export default function DashboardPage() {
 
   const filtersActive = !!(selectedYear || selectedBankKey)
 
-  // Siempre llamamos al endpoint — sin filtros devuelve el consolidado completo
   const { data: aggregated, isLoading: aggLoading } = useQuery({
     queryKey: ["analysis-aggregated", selectedYear, selectedMonth, bankAccountIdForQuery],
     queryFn: () => getAggregatedSummary({
@@ -169,10 +243,9 @@ export default function DashboardPage() {
       month:           selectedMonth  ?? undefined,
       bank_account_id: bankAccountIdForQuery,
     }),
-    enabled: !!(snapshots?.length),  // esperar a que haya snapshots cargados
+    enabled: !!(snapshots?.length),
   })
 
-  // ── Recomendaciones desde snapshots ──────────────────────────────────────
   const activeRecommendations = useMemo(() => {
     const src = selectedBankKey
       ? (bankGroups.find(g => g.key === selectedBankKey)?.snapshots ?? filteredSnapshots)
@@ -183,11 +256,9 @@ export default function DashboardPage() {
     })
   }, [filteredSnapshots, selectedBankKey, bankGroups])
 
-  // ── KPIs: siempre del servidor cuando disponible, snapshot-level mientras carga ──
   const kpis = useMemo((): AggregatedSummary | null => {
     if (aggregated) return aggregated
     if (!filteredSnapshots.length) return null
-    // Fallback inmediato mientras carga el endpoint
     return snapshotAggregate(
       selectedBankKey
         ? (bankGroups.find(g => g.key === selectedBankKey)?.snapshots ?? filteredSnapshots)
@@ -204,7 +275,6 @@ export default function DashboardPage() {
   const savingsRate = kpis.total_income > 0
     ? ((kpis.balance / kpis.total_income) * 100).toFixed(1) : "0.0"
 
-  // normaliza una categoría para comparación: lowercase + underscores→spaces
   const normCat = (s: string) => s.toLowerCase().replace(/_/g, " ").trim()
 
   const categoryData = Object.entries(kpis.categories)
@@ -215,9 +285,7 @@ export default function DashboardPage() {
     .map(m => ({ name: m.name.length > 28 ? m.name.slice(0, 26) + "…" : m.name, value: m.amount, count: m.count, category: m.category }))
 
   const merchantData = selectedCategory
-    ? allMerchantData
-        .filter(m => normCat(m.category ?? "") === normCat(selectedCategory))
-        .slice(0, 10)
+    ? allMerchantData.filter(m => normCat(m.category ?? "") === normCat(selectedCategory)).slice(0, 10)
     : allMerchantData.slice(0, 10)
 
   const etypeData = (kpis.by_economic_type ?? [])
@@ -229,6 +297,23 @@ export default function DashboardPage() {
     .map(e => ({ name: capitalize(e.type.replace(/_/g, " ")), value: e.amount, count: e.count, fill: BROLE_COLORS[e.type] ?? "#94a3b8" }))
 
   const trendData = (kpis.monthly_trend ?? [])
+
+  // ── Datos derivados para gráficos adicionales ─────────────────────────────
+  const balanceTrendData = trendData.map(d => ({
+    label: d.label,
+    balance: d.income - d.expenses,
+  }))
+
+  const savingsTrendData = trendData.map(d => ({
+    label: d.label,
+    rate: d.income > 0 ? Math.max(0, ((d.income - d.expenses) / d.income) * 100) : 0,
+  }))
+
+  // Gradiente dinámico del balance (verde arriba del 0, rojo abajo)
+  const maxBal = Math.max(...balanceTrendData.map(d => d.balance), 0)
+  const minBal = Math.min(...balanceTrendData.map(d => d.balance), 0)
+  const totalRange = maxBal - minBal
+  const zeroOffset = totalRange > 0 ? `${((maxBal / totalRange) * 100).toFixed(1)}%` : "0%"
 
   const highPriority = activeRecommendations.filter(r => r.type === "critical")
 
@@ -247,6 +332,21 @@ export default function DashboardPage() {
 
   const handleYearChange  = (y: number | null) => { setSelectedYear(y); setSelectedMonth(null); setSelectedBankKey(null) }
   const handleMonthChange = (m: number | null) => { setSelectedMonth(m); setSelectedBankKey(null) }
+
+  /** Clic en un punto del gráfico de tendencia → activa filtro de mes */
+  const handleChartMonthClick = (activeLabel?: string) => {
+    if (!activeLabel) return
+    const parsed = parseTrendLabel(activeLabel)
+    if (!parsed) return
+    // Toggle: si ya está seleccionado ese mes, limpia el filtro
+    if (selectedYear === parsed.year && selectedMonth === parsed.month) {
+      setSelectedYear(null)
+      setSelectedMonth(null)
+    } else {
+      setSelectedYear(parsed.year)
+      setSelectedMonth(parsed.month)
+    }
+  }
 
   return (
     <div className="space-y-5 pb-8">
@@ -302,24 +402,321 @@ export default function DashboardPage() {
           sub={filtersActive ? `${periodLabel} · filtradas` : scopeLabel} />
       </div>
 
-      {/* ── Tendencia mensual (solo si hay >1 mes de datos) ── */}
+      {/* ══════════════════════════════════════════════════════════════════════
+          TENDENCIA MENSUAL — interactiva
+      ══════════════════════════════════════════════════════════════════════ */}
       {trendData.length > 1 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Tendencia mensual</CardTitle>
-            <CardDescription>Ingresos vs. gastos por mes</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={220}>
-              <ComposedChart data={trendData} margin={{ left: 8, right: 8 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="label" tick={{ fontSize: 11 }} />
-                <YAxis tickFormatter={v => `$${(v/1000).toFixed(0)}k`} tick={{ fontSize: 11 }} />
+        <Card className="zoho-card border-0 overflow-hidden">
+          {/* Header con leyenda interactiva */}
+          <div className="flex flex-wrap items-center justify-between gap-3 px-6 pt-5 pb-4 border-b border-border/40">
+            <div>
+              <h2 className="text-sm font-semibold text-foreground">Tendencia mensual</h2>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {selectedMonth
+                  ? <>Filtrando <span className="font-medium text-primary">{periodLabel}</span> · haz clic en otro mes o en el mismo para quitar el filtro</>
+                  : "Haz clic en un mes para filtrar toda la página"}
+              </p>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <MetricPill
+                active={selectedMetric === "both"}
+                onClick={() => setSelectedMetric("both")}
+                label="Ambos"
+                color="#6366f1"
+              />
+              <MetricPill
+                active={selectedMetric === "income"}
+                onClick={() => setSelectedMetric(prev => prev === "income" ? "both" : "income")}
+                label="Ingresos"
+                color="#10b981"
+                dot
+              />
+              <MetricPill
+                active={selectedMetric === "expenses"}
+                onClick={() => setSelectedMetric(prev => prev === "expenses" ? "both" : "expenses")}
+                label="Gastos"
+                color="#ef4444"
+                line
+              />
+            </div>
+          </div>
+
+          <CardContent className="pt-5 pb-4">
+            <ResponsiveContainer width="100%" height={240}>
+              <ComposedChart
+                data={trendData}
+                margin={{ left: 8, right: 16, top: 16, bottom: 4 }}
+                onClick={(data) => handleChartMonthClick(data?.activeLabel)}
+                style={{ cursor: "pointer" }}
+              >
+                <defs>
+                  <linearGradient id="incomeBarGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#10b981" stopOpacity={1}/>
+                    <stop offset="100%" stopColor="#059669" stopOpacity={0.8}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fontSize: 11, fill: "#64748b" }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  tickFormatter={v => fmtK(v)}
+                  tick={{ fontSize: 11, fill: "#64748b" }}
+                  axisLine={false}
+                  tickLine={false}
+                  width={52}
+                />
                 <Tooltip content={<CurrencyTooltip />} />
-                <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Bar dataKey="income"   name="Ingresos" fill="#10b981" radius={[3,3,0,0]} />
-                <Bar dataKey="expenses" name="Gastos"   fill="#ef4444" radius={[3,3,0,0]} />
+
+                {/* Barras de ingresos */}
+                {selectedMetric !== "expenses" && (
+                  <Bar
+                    dataKey="income"
+                    name="Ingresos"
+                    fill="url(#incomeBarGrad)"
+                    radius={[4, 4, 0, 0]}
+                    maxBarSize={42}
+                  >
+                    <LabelList
+                      dataKey="income"
+                      position="top"
+                      formatter={(v: number) => fmtK(v)}
+                      style={{ fontSize: 9, fill: "#059669", fontWeight: 600 }}
+                    />
+                    {trendData.map((entry, i) => {
+                      const parsed = parseTrendLabel(entry.label)
+                      const isSelected = !!(parsed && selectedYear === parsed.year && selectedMonth === parsed.month)
+                      return (
+                        <Cell
+                          key={i}
+                          fill={isSelected ? "#059669" : "url(#incomeBarGrad)"}
+                          opacity={selectedMonth && !isSelected ? 0.45 : 1}
+                          stroke={isSelected ? "#047857" : "none"}
+                          strokeWidth={isSelected ? 1.5 : 0}
+                        />
+                      )
+                    })}
+                  </Bar>
+                )}
+
+                {/* Línea de gastos */}
+                {selectedMetric !== "income" && (
+                  <Line
+                    dataKey="expenses"
+                    name="Gastos"
+                    stroke="#ef4444"
+                    strokeWidth={2.5}
+                    dot={(props: any) => (
+                      <ExpenseDot
+                        cx={props.cx}
+                        cy={props.cy}
+                        value={props.value}
+                        showLabel={selectedMetric === "expenses"}
+                      />
+                    )}
+                    activeDot={{ r: 7, fill: "#ef4444", stroke: "white", strokeWidth: 2 }}
+                    connectNulls
+                  />
+                )}
               </ComposedChart>
+            </ResponsiveContainer>
+
+            {/* Leyenda visual fija en el fondo */}
+            <div className="flex justify-center gap-6 mt-1">
+              <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <span className="inline-block w-3 h-3 rounded-sm bg-emerald-500 opacity-90" />
+                Ingresos (barras)
+              </span>
+              <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <span className="inline-block w-6 border-t-2 border-red-400" style={{ marginBottom: 1 }} />
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-red-400 -ml-1" />
+                Gastos (línea)
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          EVOLUCIÓN DEL BALANCE — estilo TradingView
+      ══════════════════════════════════════════════════════════════════════ */}
+      {balanceTrendData.length > 1 && (
+        <Card className="zoho-card border-0 overflow-hidden">
+          {/* Header oscuro estilo TradingView */}
+          <div
+            className="flex items-center justify-between px-6 py-3.5"
+            style={{ background: "linear-gradient(135deg, #1c2b4b 0%, #243356 100%)" }}
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="p-1.5 rounded-lg bg-white/10">
+                <Activity className="h-4 w-4 text-white" />
+              </div>
+              <div>
+                <h2 className="text-sm font-semibold text-white">Evolución del balance</h2>
+                <p className="text-xs text-white/50">Balance neto mensual (ingresos − gastos)</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 text-xs">
+              <span className="flex items-center gap-1.5 text-white/70">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />
+                Positivo
+              </span>
+              <span className="flex items-center gap-1.5 text-white/70">
+                <span className="w-2 h-2 rounded-full bg-red-400 inline-block" />
+                Negativo
+              </span>
+            </div>
+          </div>
+
+          <CardContent className="pt-4 pb-4 bg-[#fafbfc]">
+            <ResponsiveContainer width="100%" height={190}>
+              <AreaChart
+                data={balanceTrendData}
+                margin={{ left: 8, right: 16, top: 12, bottom: 4 }}
+                onClick={(data) => handleChartMonthClick(data?.activeLabel)}
+                style={{ cursor: "pointer" }}
+              >
+                <defs>
+                  <linearGradient id="balGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%"        stopColor="#10b981" stopOpacity={0.45}/>
+                    <stop offset={zeroOffset} stopColor="#10b981" stopOpacity={0.08}/>
+                    <stop offset={zeroOffset} stopColor="#ef4444" stopOpacity={0.08}/>
+                    <stop offset="100%"      stopColor="#ef4444" stopOpacity={0.30}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e8ecf0" vertical={false} />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fontSize: 11, fill: "#64748b" }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  tickFormatter={v => fmtK(v)}
+                  tick={{ fontSize: 11, fill: "#64748b" }}
+                  axisLine={false}
+                  tickLine={false}
+                  width={52}
+                />
+                <Tooltip content={<BalanceTooltip />} />
+                <ReferenceLine
+                  y={0}
+                  stroke="#94a3b8"
+                  strokeDasharray="4 3"
+                  strokeWidth={1.5}
+                  label={{ value: "$0", position: "insideLeft", fontSize: 9, fill: "#94a3b8", dy: -6 }}
+                />
+                <Area
+                  dataKey="balance"
+                  name="Balance"
+                  stroke="#10b981"
+                  strokeWidth={2.5}
+                  fill="url(#balGradient)"
+                  dot={(props: any) => {
+                    const isPos = props.value >= 0
+                    const parsed = parseTrendLabel(props.payload?.label ?? "")
+                    const isSel = !!(parsed && selectedYear === parsed.year && selectedMonth === parsed.month)
+                    return (
+                      <circle
+                        cx={props.cx}
+                        cy={props.cy}
+                        r={isSel ? 6 : 4}
+                        fill={isPos ? "#10b981" : "#ef4444"}
+                        stroke="white"
+                        strokeWidth={2}
+                      />
+                    )
+                  }}
+                  activeDot={{ r: 7, stroke: "white", strokeWidth: 2 }}
+                  connectNulls
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          TASA DE AHORRO — sparkline mensual
+      ══════════════════════════════════════════════════════════════════════ */}
+      {savingsTrendData.length > 1 && (
+        <Card className="zoho-card border-0 overflow-hidden">
+          <div
+            className="flex items-center justify-between px-6 py-3.5"
+            style={{ background: "linear-gradient(135deg, #4c1d95 0%, #5b21b6 100%)" }}
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="p-1.5 rounded-lg bg-white/10">
+                <SavingsIcon className="h-4 w-4 text-white" />
+              </div>
+              <div>
+                <h2 className="text-sm font-semibold text-white">Tasa de ahorro mensual</h2>
+                <p className="text-xs text-white/50">% de ingresos que quedaron como ahorro cada mes</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4 text-xs text-white/70">
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-violet-400 inline-block" />
+                ≥ 20% — meta ideal
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />
+                &lt; 20% — por mejorar
+              </span>
+            </div>
+          </div>
+
+          <CardContent className="pt-4 pb-4 bg-[#fafbfc]">
+            <ResponsiveContainer width="100%" height={160}>
+              <AreaChart
+                data={savingsTrendData}
+                margin={{ left: 8, right: 16, top: 12, bottom: 4 }}
+                onClick={(data) => handleChartMonthClick(data?.activeLabel)}
+                style={{ cursor: "pointer" }}
+              >
+                <defs>
+                  <linearGradient id="savingsGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%"  stopColor="#8b5cf6" stopOpacity={0.35}/>
+                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.03}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e8ecf0" vertical={false} />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fontSize: 11, fill: "#64748b" }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  tickFormatter={v => `${v.toFixed(0)}%`}
+                  tick={{ fontSize: 11, fill: "#64748b" }}
+                  axisLine={false}
+                  tickLine={false}
+                  width={40}
+                  domain={[0, "auto"]}
+                />
+                <Tooltip content={<SavingsTooltip />} />
+                <ReferenceLine
+                  y={20}
+                  stroke="#8b5cf6"
+                  strokeDasharray="5 3"
+                  strokeWidth={1.5}
+                  label={{ value: "20% meta", position: "insideTopRight", fontSize: 9, fill: "#8b5cf6", dy: -4 }}
+                />
+                <Area
+                  dataKey="rate"
+                  name="Tasa de ahorro"
+                  stroke="#8b5cf6"
+                  strokeWidth={2.5}
+                  fill="url(#savingsGradient)"
+                  dot={<SavingsDot />}
+                  activeDot={{ r: 7, fill: "#8b5cf6", stroke: "white", strokeWidth: 2 }}
+                  connectNulls
+                />
+              </AreaChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
@@ -327,17 +724,14 @@ export default function DashboardPage() {
 
       {/* ── Fila: Categorías + Top Merchants ── */}
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Categorías */}
         <Card>
           <CardHeader>
             <CardTitle>Gastos por categoría</CardTitle>
             <CardDescription>
               Top 8{filtersActive ? ` · ${periodLabel}` : ""}
               {selectedCategory && (
-                <button
-                  onClick={() => setSelectedCategory(null)}
-                  className="ml-2 inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary hover:bg-primary/20"
-                >
+                <button onClick={() => setSelectedCategory(null)}
+                  className="ml-2 inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary hover:bg-primary/20">
                   {capitalize(selectedCategory)} ✕
                 </button>
               )}
@@ -348,27 +742,19 @@ export default function DashboardPage() {
               ? <p className="text-sm text-muted-foreground">Sin datos</p>
               : (
                 <ResponsiveContainer width="100%" height={240}>
-                  <BarChart
-                    data={categoryData}
-                    layout="vertical"
-                    margin={{ left: 8 }}
+                  <BarChart data={categoryData} layout="vertical" margin={{ left: 8 }}
                     onClick={(data) => {
                       if (!data?.activePayload?.[0]) return
                       const rawKey = data.activePayload[0].payload.rawKey
                       setSelectedCategory(prev => prev === rawKey ? null : rawKey)
-                    }}
-                    style={{ cursor: "pointer" }}
-                  >
+                    }} style={{ cursor: "pointer" }}>
                     <XAxis type="number" tickFormatter={v => `$${v}`} tick={{ fontSize: 11 }} />
                     <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={105} />
                     <Tooltip formatter={(v: number) => formatCurrency(v)} />
                     <Bar dataKey="value" radius={[0,4,4,0]}>
                       {categoryData.map((entry, i) => (
-                        <Cell
-                          key={i}
-                          fill={CAT_COLORS[i % CAT_COLORS.length]}
-                          opacity={!selectedCategory || selectedCategory === entry.rawKey ? 1 : 0.3}
-                        />
+                        <Cell key={i} fill={CAT_COLORS[i % CAT_COLORS.length]}
+                          opacity={!selectedCategory || selectedCategory === entry.rawKey ? 1 : 0.3} />
                       ))}
                     </Bar>
                   </BarChart>
@@ -377,7 +763,6 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Top Merchants */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -397,18 +782,16 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             {merchantData.length === 0
-              ? <p className="text-sm text-muted-foreground">{selectedCategory ? `Sin comercios categorizados como "${capitalize(selectedCategory)}"` : filtersActive ? "Sin datos para el filtro seleccionado" : "Activa un filtro para ver el desglose por comercio"}</p>
+              ? <p className="text-sm text-muted-foreground">{selectedCategory ? `Sin comercios en "${capitalize(selectedCategory)}"` : filtersActive ? "Sin datos" : "Activa un filtro para ver el desglose"}</p>
               : (
                 <ResponsiveContainer width="100%" height={280}>
                   <BarChart data={merchantData} layout="vertical" margin={{ left: 4, right: 8 }}>
                     <XAxis type="number" tickFormatter={v => `$${v}`} tick={{ fontSize: 11 }} />
                     <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={160} />
-                    <Tooltip
-                      formatter={(v: number, _, props) => [
-                        `${formatCurrency(v)} · ${props.payload.count} transacciones`,
-                        props.payload.category ? capitalize(props.payload.category) : "Comercio"
-                      ]}
-                    />
+                    <Tooltip formatter={(v: number, _, props) => [
+                      `${formatCurrency(v)} · ${props.payload.count} transacciones`,
+                      props.payload.category ? capitalize(props.payload.category) : "Comercio"
+                    ]} />
                     <Bar dataKey="value" fill="#6366f1" radius={[0,4,4,0]} />
                   </BarChart>
                 </ResponsiveContainer>
@@ -419,7 +802,6 @@ export default function DashboardPage() {
 
       {/* ── Fila: Rol en presupuesto + Por tipo económico ── */}
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Rol en presupuesto — donut */}
         <Card>
           <CardHeader>
             <CardTitle>Rol en presupuesto</CardTitle>
@@ -431,32 +813,20 @@ export default function DashboardPage() {
               : (
                 <ResponsiveContainer width="100%" height={260}>
                   <PieChart>
-                    <Pie
-                      data={budgetRoleData}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={55}
-                      outerRadius={90}
-                    >
+                    <Pie data={budgetRoleData} dataKey="value" nameKey="name"
+                      cx="50%" cy="50%" innerRadius={55} outerRadius={90}>
                       {budgetRoleData.map((e, i) => <Cell key={i} fill={e.fill} />)}
                     </Pie>
                     <Tooltip formatter={(v: number, _, props) => [
-                      `${formatCurrency(v)} · ${props.payload.count} transacciones`,
-                      props.payload.name
+                      `${formatCurrency(v)} · ${props.payload.count} transacciones`, props.payload.name
                     ]} />
-                    <Legend
-                      formatter={(value) => <span className="text-xs">{value}</span>}
-                      wrapperStyle={{ fontSize: 11 }}
-                    />
+                    <Legend formatter={(value) => <span className="text-xs">{value}</span>} wrapperStyle={{ fontSize: 11 }} />
                   </PieChart>
                 </ResponsiveContainer>
               )}
           </CardContent>
         </Card>
 
-        {/* Por tipo económico — pie chart */}
         <Card>
           <CardHeader>
             <CardTitle>Por tipo económico</CardTitle>
@@ -468,25 +838,14 @@ export default function DashboardPage() {
               : (
                 <ResponsiveContainer width="100%" height={260}>
                   <PieChart>
-                    <Pie
-                      data={etypeData}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={55}
-                      outerRadius={90}
-                    >
+                    <Pie data={etypeData} dataKey="value" nameKey="name"
+                      cx="50%" cy="50%" innerRadius={55} outerRadius={90}>
                       {etypeData.map((e, i) => <Cell key={i} fill={e.fill} />)}
                     </Pie>
                     <Tooltip formatter={(v: number, _, props) => [
-                      `${formatCurrency(v)} · ${props.payload.count} transacciones`,
-                      props.payload.name
+                      `${formatCurrency(v)} · ${props.payload.count} transacciones`, props.payload.name
                     ]} />
-                    <Legend
-                      formatter={(value) => <span className="text-xs">{value}</span>}
-                      wrapperStyle={{ fontSize: 11 }}
-                    />
+                    <Legend formatter={(value) => <span className="text-xs">{value}</span>} wrapperStyle={{ fontSize: 11 }} />
                   </PieChart>
                 </ResponsiveContainer>
               )}
@@ -530,12 +889,45 @@ export default function DashboardPage() {
   )
 }
 
-// ─── Sub-componentes ─────────────────────────────────────────────────────────
+// ─── Sub-componentes ──────────────────────────────────────────────────────────
 
 function PillButton({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: ReactNode; label: string }) {
   return (
     <button onClick={onClick} className={`filter-pill ${active ? "active" : ""}`}>
       {icon}{label}
+    </button>
+  )
+}
+
+function MetricPill({
+  active, onClick, label, color, dot, line,
+}: {
+  active: boolean
+  onClick: () => void
+  label: string
+  color: string
+  dot?: boolean
+  line?: boolean
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-all"
+      style={{
+        background: active ? color + "18" : "transparent",
+        color: active ? color : "#94a3b8",
+        border: `1.5px solid ${active ? color + "60" : "#e2e8f0"}`,
+      }}
+    >
+      {dot && <span className="w-2 h-2 rounded-full inline-block" style={{ background: color }} />}
+      {line && (
+        <span className="flex items-center gap-0.5">
+          <span className="w-3 border-t-2 inline-block" style={{ borderColor: color }} />
+          <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: color }} />
+        </span>
+      )}
+      {!dot && !line && <span className="w-2 h-2 rounded-sm inline-block" style={{ background: color }} />}
+      {label}
     </button>
   )
 }
