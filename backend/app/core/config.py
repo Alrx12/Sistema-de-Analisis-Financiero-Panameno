@@ -8,9 +8,9 @@ class Settings(BaseSettings):
 
     api_v1_prefix: str = "/api/v1"
 
-    database_url: str = "postgresql+psycopg://user:password@localhost:5432/safpro"
+    database_url: str = "postgresql+psycopg://apineda:InsightLex@100.88.92.80:5432/safpro"
 
-    secret_key: str = "change-this-in-production"
+    secret_key: str = "9f4d7a2c8e1b5f0a3d6c9b2e7f1a4c8d9e2b6f0a1c3d5e7f9b2a4c6d8e1f3a5"
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 60 * 24
 
@@ -31,7 +31,7 @@ class Settings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=False,
-        extra="ignore",
+        #extra="ignore",
     )
 
 

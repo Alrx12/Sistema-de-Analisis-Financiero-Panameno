@@ -44,9 +44,9 @@ services:
     container_name: saff_postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-safpro}
-      POSTGRES_USER: ${POSTGRES_USER:-apineda}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: safpro
+      POSTGRES_USER: apineda
+      POSTGRES_PASSWORD: InsightLex
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
