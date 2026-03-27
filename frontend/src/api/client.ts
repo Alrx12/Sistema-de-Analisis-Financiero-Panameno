@@ -1,4 +1,5 @@
 import axios from "axios"
+import { useAuthStore } from "@/stores/authStore"
 
 const apiClient = axios.create({
   baseURL: "/api/v1",
@@ -14,12 +15,14 @@ apiClient.interceptors.request.use((config) => {
   return config
 })
 
-// Si el backend devuelve 401, limpia el token y redirige a login
+// Si el backend devuelve 401, limpia el store completo y redirige a login.
+// Se ignora el endpoint de login para no interferir con errores de credenciales.
 apiClient.interceptors.response.use(
   (res) => res,
   (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem("access_token")
+    const isLoginEndpoint = error.config?.url?.includes("/auth/login")
+    if (error.response?.status === 401 && !isLoginEndpoint) {
+      useAuthStore.getState().logout()
       window.location.href = "/login"
     }
     return Promise.reject(error)
