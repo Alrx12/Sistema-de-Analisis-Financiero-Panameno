@@ -215,25 +215,25 @@ export default function RetrainPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <div className="mx-auto max-w-5xl space-y-5">
 
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="page-header">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Brain className="h-6 w-6 text-primary" />
+          <h1 className="page-title flex items-center gap-2">
+            <Brain className="h-5 w-5 text-primary" />
             Entrenamiento masivo
           </h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
+          <p className="page-subtitle">
             Clasifica grupos de transacciones de una sola vez. Cada corrección entrena el KB.
           </p>
         </div>
         {appliedCount > 0 && (
           <div className="text-right">
-            <p className="text-sm font-medium text-emerald-600">
+            <p className="text-sm font-semibold text-emerald-600">
               {appliedCount} transacciones resueltas ({resolvedPct}%)
             </p>
-            <div className="mt-1 h-1.5 w-32 rounded-full bg-muted overflow-hidden">
+            <div className="mt-1.5 h-1.5 w-32 rounded-full bg-muted overflow-hidden">
               <div
                 className="h-full rounded-full bg-emerald-500 transition-all duration-300"
                 style={{ width: `${resolvedPct}%` }}
@@ -266,11 +266,11 @@ export default function RetrainPage() {
 
       {/* Tabla de grupos */}
       {groups.length > 0 && (
-        <Card>
+        <Card className="zoho-card border-0">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-base">
+                <CardTitle className="text-sm font-semibold">
                   {groups.length} grupos · {groups.reduce((s, g) => s + g.count, 0)} transacciones pendientes
                 </CardTitle>
                 <CardDescription>
@@ -281,15 +281,15 @@ export default function RetrainPage() {
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="zoho-table">
                 <thead>
-                  <tr className="border-b bg-muted/40 text-xs text-muted-foreground">
-                    <th className="py-2 pl-4 pr-2 text-left font-medium">Merchant</th>
-                    <th className="py-2 px-2 text-center font-medium">Txs</th>
-                    <th className="py-2 px-2 text-left font-medium w-44">Categoría</th>
-                    <th className="py-2 px-2 text-left font-medium w-32">Frecuencia</th>
-                    <th className="py-2 px-2 text-left font-medium w-40">Rol presupuesto</th>
-                    <th className="py-2 pl-2 pr-4 text-left font-medium w-28"></th>
+                  <tr>
+                    <th>Merchant</th>
+                    <th className="text-center">Txs</th>
+                    <th className="w-44">Categoría</th>
+                    <th className="w-32">Frecuencia</th>
+                    <th className="w-40">Rol presupuesto</th>
+                    <th className="w-28"></th>
                   </tr>
                 </thead>
                 <tbody>

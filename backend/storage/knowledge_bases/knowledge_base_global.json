@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-03-26T20:38:19.871377+00:00",
+  "last_updated": "2026-03-27T09:02:06.950775+00:00",
   "exact_matches": {
     "DISNEY PLUS": {
       "Economic Type": "gasto",
@@ -593,7 +593,7 @@
       "Economic Type": "ingreso",
       "Economic Type Detail": "transferencia_tercero",
       "SubType Economic": "extraordinario",
-      "Categoría de presupuesto": "alimentacion",
+      "Categoría de presupuesto": "ahorro",
       "budget_role": "no_presupuestable"
     },
     "BUENA VIST": {
@@ -1654,7 +1654,7 @@
         "Economic Type": "ingreso",
         "Economic Type Detail": "transferencia_tercero",
         "SubType Economic": "extraordinario",
-        "Categoría de presupuesto": "alimentacion",
+        "Categoría de presupuesto": "ahorro",
         "budget_role": "no_presupuestable"
       },
       "source": "learned"
@@ -3205,26 +3205,28 @@
       "budget_role=presupuestable": 2.0
     },
     "CREDITO": {
-      "Economic Type=ingreso": 24.0,
-      "Economic Type Detail=transferencia_tercero": 24.0,
+      "Economic Type=ingreso": 26.0,
+      "Economic Type Detail=transferencia_tercero": 26.0,
       "SubType Economic=variable": 8.0,
       "Categoría de presupuesto=servicios": 8.0,
       "budget_role=presupuestable": 8.0,
-      "SubType Economic=extraordinario": 16.0,
+      "SubType Economic=extraordinario": 18.0,
       "Categoría de presupuesto=alimentacion": 6.0,
-      "budget_role=no_presupuestable": 16.0,
-      "Categoría de presupuesto=consumo_desconocido": 10.0
+      "budget_role=no_presupuestable": 18.0,
+      "Categoría de presupuesto=consumo_desconocido": 10.0,
+      "Categoría de presupuesto=ahorro": 2.0
     },
     "TRANSF": {
-      "Economic Type=ingreso": 24.0,
-      "Economic Type Detail=transferencia_tercero": 24.0,
+      "Economic Type=ingreso": 26.0,
+      "Economic Type Detail=transferencia_tercero": 26.0,
       "SubType Economic=variable": 8.0,
       "Categoría de presupuesto=servicios": 8.0,
       "budget_role=presupuestable": 8.0,
-      "SubType Economic=extraordinario": 16.0,
+      "SubType Economic=extraordinario": 18.0,
       "Categoría de presupuesto=alimentacion": 6.0,
-      "budget_role=no_presupuestable": 16.0,
-      "Categoría de presupuesto=consumo_desconocido": 10.0
+      "budget_role=no_presupuestable": 18.0,
+      "Categoría de presupuesto=consumo_desconocido": 10.0,
+      "Categoría de presupuesto=ahorro": 2.0
     },
     "HASTA": {
       "Economic Type=ingreso": 4.0,
@@ -3565,5 +3567,5 @@
       "budget_role=no_presupuestable": 2.0
     }
   },
-  "corrections_count": 149
+  "corrections_count": 150
 }

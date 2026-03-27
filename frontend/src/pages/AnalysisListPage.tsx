@@ -1,11 +1,37 @@
 import { useQuery } from "@tanstack/react-query"
 import { Link } from "react-router-dom"
-import { ArrowRight, Upload, BarChart2, Building2 } from "lucide-react"
+import { Upload, BarChart2, Building2, ArrowRight } from "lucide-react"
 import { listAnalysis } from "@/api/analysis"
-import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { formatCurrency, formatPeriod, formatDate } from "@/lib/utils"
+
+// ─── Badge de banco con color ─────────────────────────────────────────────────
+const BANK_COLORS: Record<string, string> = {
+  "Banco General":  "#1a3a8f",
+  "BAC Credomatic": "#e31837",
+  "Banistmo":       "#00843d",
+}
+
+function BankChip({ bankName, last4 }: { bankName: string; last4?: string | null }) {
+  const color = BANK_COLORS[bankName] ?? "#6b7280"
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-md bg-muted px-2 py-1 text-xs font-medium text-foreground">
+      <span style={{ background: color, width: 7, height: 7, borderRadius: "50%", display: "inline-block", flexShrink: 0 }} />
+      {bankName}{last4 ? ` ····${last4}` : ""}
+    </span>
+  )
+}
+
+function AmountBadge({ value }: { value: number }) {
+  const positive = value >= 0
+  return (
+    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+      positive ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"
+    }`}>
+      {positive ? "+" : ""}{formatCurrency(value)}
+    </span>
+  )
+}
 
 export default function AnalysisListPage() {
   const { data: snapshots, isLoading, isError } = useQuery({
@@ -14,83 +40,113 @@ export default function AnalysisListPage() {
   })
 
   if (isLoading) return <PageSpinner />
-  if (isError) return <ErrorMsg />
+  if (isError)   return <ErrorMsg />
 
   if (!snapshots?.length) {
     return (
       <div className="flex flex-col items-center justify-center gap-4 py-24 text-center">
-        <BarChart2 className="h-10 w-10 text-muted-foreground" />
-        <p className="text-muted-foreground">Aún no hay análisis guardados</p>
-        <Button asChild><Link to="/upload"><Upload className="h-4 w-4" />Subir estado</Link></Button>
+        <div className="rounded-full bg-primary/10 p-6">
+          <BarChart2 className="h-10 w-10 text-primary" />
+        </div>
+        <div>
+          <h2 className="text-lg font-semibold">Aún no hay análisis guardados</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Sube tu primer estado de cuenta para comenzar</p>
+        </div>
+        <Button asChild><Link to="/upload"><Upload className="h-4 w-4" />Subir estado de cuenta</Link></Button>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Mis análisis</h1>
+    <div className="space-y-5 pb-8">
+      {/* Header */}
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Mis análisis</h1>
+          <p className="page-subtitle">{snapshots.length} estados de cuenta procesados</p>
+        </div>
         <Button asChild size="sm">
           <Link to="/upload"><Upload className="h-4 w-4" />Subir nuevo</Link>
         </Button>
       </div>
 
-      <div className="space-y-3">
-        {snapshots.map((s) => {
-          const savingsRate = s.total_income > 0
-            ? ((s.balance / s.total_income) * 100).toFixed(1)
-            : "0.0"
-          const isPositive = s.balance >= 0
+      {/* Tabla */}
+      <div className="overflow-hidden rounded-xl border border-border bg-white shadow-sm">
+        <table className="zoho-table">
+          <thead>
+            <tr>
+              <th>Período</th>
+              <th>Banco</th>
+              <th>Ingresos</th>
+              <th>Gastos</th>
+              <th>Balance</th>
+              <th>Ahorro</th>
+              <th>Txs</th>
+              <th>Procesado</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {snapshots.map((s) => {
+              const savingsRate = s.total_income > 0
+                ? ((s.balance / s.total_income) * 100).toFixed(1)
+                : "0.0"
 
-          return (
-            <Card key={s.snapshot_id} className="hover:shadow-md transition-shadow">
-              <CardContent className="pt-6">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="space-y-1">
-                    <p className="font-semibold">{formatPeriod(s.period_start, s.period_end)}</p>
-                    <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                      {s.bank_account && (
-                        <span className="flex items-center gap-1">
-                          <Building2 className="h-3 w-3" />
-                          {s.bank_account.bank_name}
-                          {s.bank_account.account_last4 && ` ••••${s.bank_account.account_last4}`}
-                        </span>
-                      )}
-                      <span>Procesado {formatDate(s.created_at)}</span>
-                      <span>· {s.total_transactions} transacciones</span>
-                    </div>
-                  </div>
-                  <Badge variant={isPositive ? "success" : "destructive"}>
-                    {isPositive ? "+" : ""}{formatCurrency(s.balance)}
-                  </Badge>
-                </div>
+              return (
+                <tr key={s.snapshot_id}>
+                  {/* Período */}
+                  <td>
+                    <span className="font-semibold text-foreground">
+                      {formatPeriod(s.period_start, s.period_end)}
+                    </span>
+                  </td>
 
-                <div className="mt-4 grid grid-cols-3 gap-3 text-center">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Ingresos</p>
-                    <p className="text-sm font-semibold text-green-600">{formatCurrency(s.total_income)}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Gastos</p>
-                    <p className="text-sm font-semibold text-red-500">{formatCurrency(s.total_expenses)}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Ahorro</p>
-                    <p className="text-sm font-semibold text-purple-600">{savingsRate}%</p>
-                  </div>
-                </div>
+                  {/* Banco */}
+                  <td>
+                    {s.bank_account ? (
+                      <BankChip bankName={s.bank_account.bank_name} last4={s.bank_account.account_last4} />
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                        <Building2 className="h-3 w-3" />Sin banco
+                      </span>
+                    )}
+                  </td>
 
-                <div className="mt-4 flex justify-end">
-                  <Button variant="outline" size="sm" asChild>
-                    <Link to={`/analysis/${s.snapshot_id}`}>
-                      Ver detalle <ArrowRight className="h-3 w-3" />
-                    </Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )
-        })}
+                  {/* Ingresos */}
+                  <td className="text-green-600 font-semibold">{formatCurrency(s.total_income)}</td>
+
+                  {/* Gastos */}
+                  <td className="text-red-500 font-semibold">{formatCurrency(s.total_expenses)}</td>
+
+                  {/* Balance */}
+                  <td><AmountBadge value={s.balance} /></td>
+
+                  {/* Ahorro % */}
+                  <td>
+                    <span className={`text-sm font-semibold ${Number(savingsRate) >= 20 ? "text-green-600" : "text-yellow-600"}`}>
+                      {savingsRate}%
+                    </span>
+                  </td>
+
+                  {/* Total txs */}
+                  <td className="text-muted-foreground">{s.total_transactions}</td>
+
+                  {/* Fecha */}
+                  <td className="text-muted-foreground text-xs">{formatDate(s.created_at)}</td>
+
+                  {/* Acción */}
+                  <td>
+                    <Button variant="outline" size="sm" asChild className="h-7 px-3 text-xs gap-1">
+                      <Link to={`/analysis/${s.snapshot_id}`}>
+                        Ver <ArrowRight className="h-3 w-3" />
+                      </Link>
+                    </Button>
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
       </div>
     </div>
   )

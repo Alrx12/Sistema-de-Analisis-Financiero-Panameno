@@ -61,42 +61,54 @@ export default function TransactionsPage() {
     return true
   })
 
+  const reviewCount = transactions.filter(needsReview).length
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 pb-8">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" asChild>
-          <Link to={`/analysis/${id}`}><ArrowLeft className="h-4 w-4" /></Link>
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold">Transacciones</h1>
-          <p className="text-sm text-muted-foreground">
-            {filtered.length !== transactions.length
-              ? `${filtered.length} de ${transactions.length}`
-              : `${transactions.length} en total`}
-          </p>
+      <div className="page-header">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="icon" asChild className="h-8 w-8 shrink-0">
+            <Link to={`/analysis/${id}`}><ArrowLeft className="h-4 w-4" /></Link>
+          </Button>
+          <div>
+            <h1 className="page-title">Transacciones</h1>
+            <p className="page-subtitle">
+              {filtered.length !== transactions.length
+                ? `${filtered.length} de ${transactions.length}`
+                : `${transactions.length} en total`}
+              {reviewCount > 0 && (
+                <span className="ml-2 text-red-500 font-medium">· {reviewCount} requieren revisión</span>
+              )}
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* Filtros */}
-      <div className="flex flex-wrap items-center gap-3">
-        <Input
-          placeholder="Buscar por descripción o categoría…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="max-w-xs"
-        />
+      {/* Filtros en pills */}
+      <div className="flex flex-wrap items-center gap-2">
+        {/* Search box */}
+        <div className="flex items-center gap-2 rounded-lg border border-border bg-white px-3 py-1.5 shadow-sm min-w-56">
+          <Filter className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+          <Input
+            placeholder="Buscar descripción o categoría…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="h-auto border-0 p-0 shadow-none focus-visible:ring-0 text-sm"
+          />
+        </div>
+
+        {/* Movimiento pills */}
+        <button className={`filter-pill ${filterMovement === "all" ? "active" : ""}`}
+          onClick={() => setFilterMovement("all")}>Todas</button>
+        <button className={`filter-pill ${filterMovement === "credit" ? "active" : ""}`}
+          onClick={() => setFilterMovement("credit")}>Solo créditos</button>
+        <button className={`filter-pill ${filterMovement === "debit" ? "active" : ""}`}
+          onClick={() => setFilterMovement("debit")}>Solo débitos</button>
+
+        {/* Tipo económico select */}
         <select
-          className="rounded-md border border-input bg-background px-3 py-1.5 text-sm shadow-sm"
-          value={filterMovement}
-          onChange={(e) => setFilterMovement(e.target.value as "all" | "credit" | "debit")}
-        >
-          <option value="all">Tipo de movimiento</option>
-          <option value="credit">Crédito</option>
-          <option value="debit">Débito</option>
-        </select>
-        <select
-          className="rounded-md border border-input bg-background px-3 py-1.5 text-sm shadow-sm"
+          className="rounded-full border border-border bg-white px-3 py-1.5 text-xs font-medium text-foreground shadow-sm cursor-pointer outline-none"
           value={filterEtype}
           onChange={(e) => setFilterEtype(e.target.value)}
         >
@@ -108,22 +120,24 @@ export default function TransactionsPage() {
           <option value="transferencia_tercero">Transferencia tercero</option>
           <option value="reembolso">Reembolso</option>
         </select>
-        <Button
-          variant={filterReview ? "default" : "outline"}
-          size="sm"
+
+        {/* Revisión pill */}
+        <button
+          className={`filter-pill ${filterReview ? "active" : ""}`}
+          style={filterReview ? {} : { borderColor: "#ef4444", color: "#ef4444" }}
           onClick={() => setFilterReview(!filterReview)}
         >
-          <Filter className="h-3 w-3" />
-          {filterReview ? "Mostrar todas" : "Solo requieren revisión"}
-        </Button>
+          <AlertTriangle className="h-3 w-3" />
+          {filterReview ? "Mostrar todas" : `Revisar (${reviewCount})`}
+        </button>
+
         {(search || filterMovement !== "all" || filterEtype !== "all") && (
-          <Button
-            variant="ghost"
-            size="sm"
+          <button
+            className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2"
             onClick={() => { setSearch(""); setFilterMovement("all"); setFilterEtype("all") }}
           >
             Limpiar filtros
-          </Button>
+          </button>
         )}
       </div>
 
@@ -133,7 +147,7 @@ export default function TransactionsPage() {
           <div className="h-6 w-6 animate-spin rounded-full border-4 border-primary border-t-transparent" />
         </div>
       ) : filtered.length === 0 ? (
-        <div className="py-12 text-center text-muted-foreground">
+        <div className="rounded-xl border border-border bg-white py-12 text-center text-muted-foreground shadow-sm">
           {filterReview ? "¡No hay transacciones pendientes de revisión!" : "No se encontraron resultados"}
         </div>
       ) : (
@@ -173,37 +187,49 @@ function TransactionRow({
   })
 
   const isIncome = tx.economic_type === "ingreso" || tx.movement_type === "credito" || tx.amount > 0
+  const needsReview =
+    tx.requires_review ||
+    tx.budget_role === "revisar" ||
+    (tx.budget_category ?? "").toLowerCase().includes("desconocido")
 
   return (
-    <Card className={cn(tx.requires_review && "border-yellow-300")}>
-      <CardContent className="pt-4 pb-4">
-        <div className="flex items-start justify-between gap-3">
+    <Card className={cn("zoho-card border-0 overflow-hidden")}
+      style={needsReview ? { borderLeft: "3px solid #f59e0b" } : {}}>
+      <CardContent className="pt-3.5 pb-3.5">
+        <div className="flex items-center justify-between gap-3">
           {/* Info principal */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className={cn("text-xs font-semibold px-2 py-0.5 rounded-full", economicTypeBadgeClass(tx.economic_type ?? ""))}>
-                {capitalize(tx.economic_type ?? tx.movement_type)}
-              </span>
-              <span className="text-xs text-muted-foreground">{formatDate(tx.date)}</span>
-              {tx.requires_review && (
-                <AlertTriangle className="h-3.5 w-3.5 text-yellow-500" />
-              )}
-            </div>
-            <p className="mt-1 text-sm font-medium" title={tx.detail}>{truncate(tx.detail, 50)}</p>
-            <div className="mt-1 flex items-center gap-2 flex-wrap">
-              <span className="text-xs text-muted-foreground">{capitalize(tx.budget_category ?? "sin categoría")}</span>
-              <span className={cn("text-xs font-medium", confidenceColor(tx.confidence))}>
-                {(tx.confidence * 100).toFixed(0)}% conf.
-              </span>
+          <div className="flex-1 min-w-0 flex items-center gap-3">
+            {/* Fecha */}
+            <span className="text-xs text-muted-foreground shrink-0 w-16">{formatDate(tx.date)}</span>
+
+            {/* Descripción */}
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className="text-sm font-semibold text-foreground truncate" title={tx.detail}>
+                  {truncate(tx.detail, 52)}
+                </p>
+                {(tx.requires_review || needsReview) && (
+                  <AlertTriangle className="h-3.5 w-3.5 text-yellow-500 shrink-0" />
+                )}
+              </div>
+              <div className="mt-0.5 flex items-center gap-2 flex-wrap">
+                <span className={cn("text-xs font-semibold px-2 py-0.5 rounded-full", economicTypeBadgeClass(tx.economic_type ?? ""))}>
+                  {capitalize(tx.economic_type ?? tx.movement_type)}
+                </span>
+                <span className="text-xs text-muted-foreground">{capitalize(tx.budget_category ?? "sin categoría")}</span>
+                <span className={cn("text-xs font-medium", confidenceColor(tx.confidence))}>
+                  {(tx.confidence * 100).toFixed(0)}% conf.
+                </span>
+              </div>
             </div>
           </div>
 
           {/* Monto + acciones */}
-          <div className="flex flex-col items-end gap-2 shrink-0">
-            <span className={cn("text-base font-bold", isIncome ? "text-green-600" : "text-red-500")}>
+          <div className="flex items-center gap-3 shrink-0">
+            <span className={cn("text-sm font-bold tabular-nums", isIncome ? "text-green-600" : "text-red-500")}>
               {isIncome ? "+" : "-"}{formatCurrency(Math.abs(tx.amount))}
             </span>
-            <Button variant="outline" size="sm" onClick={onEdit}>
+            <Button variant="outline" size="sm" className="h-7 px-3 text-xs" onClick={onEdit}>
               {isEditing ? "Cancelar" : "Corregir"}
             </Button>
           </div>

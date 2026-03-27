@@ -249,23 +249,23 @@ export default function DashboardPage() {
   const handleMonthChange = (m: number | null) => { setSelectedMonth(m); setSelectedBankKey(null) }
 
   return (
-    <div className="space-y-6 pb-8">
+    <div className="space-y-5 pb-8">
       {/* ── Header ── */}
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="page-header">
         <div>
-          <h1 className="text-2xl font-bold">Dashboard</h1>
-          <p className="text-sm text-muted-foreground">{periodLabel} · {scopeLabel}</p>
+          <h1 className="page-title">Resumen financiero</h1>
+          <p className="page-subtitle">{periodLabel} · {scopeLabel}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {availableYears.length > 0 && (
-            <select className="rounded-md border border-input bg-background px-3 py-1.5 text-sm shadow-sm"
+            <select className="rounded-md border border-input bg-white px-3 py-1.5 text-sm shadow-sm"
               value={selectedYear ?? ""} onChange={e => handleYearChange(e.target.value ? Number(e.target.value) : null)}>
               <option value="">Todos los años</option>
               {availableYears.map(y => <option key={y} value={y}>{y}</option>)}
             </select>
           )}
           {selectedYear && availableMonths.length > 0 && (
-            <select className="rounded-md border border-input bg-background px-3 py-1.5 text-sm shadow-sm"
+            <select className="rounded-md border border-input bg-white px-3 py-1.5 text-sm shadow-sm"
               value={selectedMonth ?? ""} onChange={e => handleMonthChange(e.target.value ? Number(e.target.value) : null)}>
               <option value="">Todos los meses</option>
               {availableMonths.map(m => <option key={m} value={m}>{MONTH_NAMES[m - 1]}</option>)}
@@ -289,16 +289,17 @@ export default function DashboardPage() {
 
       {/* ── KPI Cards ── */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard title="Ingresos"     value={formatCurrency(kpis.total_income)}
-          icon={<TrendingUp className="h-4 w-4 text-green-600" />}  valueClass="text-green-600" />
-        <KpiCard title="Gastos"       value={formatCurrency(kpis.total_expenses)}
-          icon={<TrendingDown className="h-4 w-4 text-red-500" />}  valueClass="text-red-500" />
-        <KpiCard title="Balance"      value={formatCurrency(kpis.balance)}
-          icon={<Wallet className="h-4 w-4 text-primary" />}
-          valueClass={kpis.balance >= 0 ? "text-green-600" : "text-red-500"} />
-        <KpiCard title="Tasa de ahorro" value={`${savingsRate}%`}
-          icon={<BarChart2 className="h-4 w-4 text-purple-600" />}  valueClass="text-purple-600"
-          sub={`${kpis.total_transactions} transacciones${filtersActive ? " · filtradas" : ""}`} />
+        <KpiCard title="Ingresos" value={formatCurrency(kpis.total_income)}
+          icon={<TrendingUp className="h-4 w-4" />} iconClass="kpi-icon-green" valueClass="text-green-600" />
+        <KpiCard title="Gastos" value={formatCurrency(kpis.total_expenses)}
+          icon={<TrendingDown className="h-4 w-4" />} iconClass="kpi-icon-red" valueClass="text-red-500" />
+        <KpiCard title="Balance neto" value={formatCurrency(kpis.balance)}
+          icon={<Wallet className="h-4 w-4" />} iconClass="kpi-icon-blue"
+          valueClass={kpis.balance >= 0 ? "text-green-600" : "text-red-500"}
+          sub={`Tasa de ahorro: ${savingsRate}%`} />
+        <KpiCard title="Transacciones" value={`${kpis.total_transactions}`}
+          icon={<BarChart2 className="h-4 w-4" />} iconClass="kpi-icon-orange"
+          sub={filtersActive ? `${periodLabel} · filtradas` : scopeLabel} />
       </div>
 
       {/* ── Tendencia mensual (solo si hay >1 mes de datos) ── */}
@@ -494,21 +495,25 @@ export default function DashboardPage() {
       </div>
 
       {/* ── Recomendaciones ── */}
-      <Card>
-        <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle>Recomendaciones</CardTitle>
+      <Card className="zoho-card border-0">
+        <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
+          <div>
+            <CardTitle className="text-sm font-semibold">💡 Recomendaciones financieras</CardTitle>
+          </div>
           {highPriority.length > 0 && <Badge variant="destructive">{highPriority.length} urgentes</Badge>}
         </CardHeader>
         <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {activeRecommendations.length === 0
-            ? <p className="text-sm text-muted-foreground">Todo en orden 🎉</p>
+            ? <p className="text-sm text-muted-foreground col-span-3 py-4 text-center">¡Todo en orden! 🎉</p>
             : activeRecommendations.slice(0, 6).map((rec, i) => (
-              <div key={i} className="flex items-start gap-2">
-                <AlertTriangle className={`mt-0.5 h-4 w-4 shrink-0 ${
-                  rec.type === "critical" ? "text-red-500" :
-                  rec.type === "warning"  ? "text-yellow-500" : "text-blue-500"
-                }`} />
-                <p className="text-sm">{rec.message}</p>
+              <div key={i} className="flex items-start gap-3 rounded-lg border border-border bg-background p-3">
+                <div className={`mt-0.5 rounded-lg p-1.5 shrink-0 ${
+                  rec.type === "critical" ? "bg-red-50 text-red-500" :
+                  rec.type === "warning"  ? "bg-yellow-50 text-yellow-500" : "bg-blue-50 text-blue-500"
+                }`}>
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                </div>
+                <p className="text-sm leading-snug">{rec.message}</p>
               </div>
             ))}
         </CardContent>
@@ -529,26 +534,24 @@ export default function DashboardPage() {
 
 function PillButton({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: ReactNode; label: string }) {
   return (
-    <button onClick={onClick}
-      className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm transition-colors ${
-        active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background hover:bg-muted"
-      }`}
-    >
+    <button onClick={onClick} className={`filter-pill ${active ? "active" : ""}`}>
       {icon}{label}
     </button>
   )
 }
 
-function KpiCard({ title, value, icon, valueClass, sub }: { title: string; value: string; icon: ReactNode; valueClass?: string; sub?: string }) {
+function KpiCard({ title, value, icon, iconClass, valueClass, sub }: {
+  title: string; value: string; icon: ReactNode; iconClass?: string; valueClass?: string; sub?: string
+}) {
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <div className="flex items-center justify-between">
-          <p className="text-sm font-medium text-muted-foreground">{title}</p>
-          {icon}
+    <Card className="zoho-card border-0">
+      <CardContent className="pt-5 pb-5">
+        <div className="flex items-start justify-between mb-3">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{title}</p>
+          <div className={iconClass ?? "kpi-icon-blue"}>{icon}</div>
         </div>
-        <p className={`mt-2 text-2xl font-bold ${valueClass}`}>{value}</p>
-        {sub && <p className="mt-1 text-xs text-muted-foreground">{sub}</p>}
+        <p className={`text-2xl font-bold ${valueClass ?? ""}`}>{value}</p>
+        {sub && <p className="mt-1.5 text-xs text-muted-foreground">{sub}</p>}
       </CardContent>
     </Card>
   )
@@ -569,7 +572,7 @@ function ErrorMsg() {
 function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center gap-4 py-24 text-center">
-      <div className="rounded-full bg-muted p-6"><Upload className="h-10 w-10 text-muted-foreground" /></div>
+      <div className="rounded-full bg-primary/10 p-6"><Upload className="h-10 w-10 text-primary" /></div>
       <div>
         <h2 className="text-xl font-semibold">Aún no hay análisis</h2>
         <p className="mt-1 text-sm text-muted-foreground">Sube tu primer estado de cuenta para empezar</p>

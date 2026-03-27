@@ -124,17 +124,17 @@ export default function UploadPage() {
   const isProcessing = state.phase === "uploading" || state.phase === "polling"
 
   return (
-    <div className="mx-auto max-w-xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Subir estado de cuenta</h1>
-        <p className="text-sm text-muted-foreground">
-          Archivos .xlsx o .xls de Banco General, BAC o Banistmo
-        </p>
+    <div className="mx-auto max-w-xl space-y-5">
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Subir estado de cuenta</h1>
+          <p className="page-subtitle">Archivos .xlsx o .xls de Banco General, BAC o Banistmo</p>
+        </div>
       </div>
 
-      <Card>
+      <Card className="zoho-card border-0">
         <CardHeader>
-          <CardTitle>Seleccionar archivo</CardTitle>
+          <CardTitle className="text-sm font-semibold">Seleccionar archivo</CardTitle>
           <CardDescription>
             El sistema detecta automáticamente el banco y extrae las transacciones
           </CardDescription>
@@ -143,7 +143,7 @@ export default function UploadPage() {
           {/* Zona de drop */}
           <div
             className={cn(
-              "relative flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-10 transition-colors cursor-pointer",
+              "relative flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed p-10 transition-colors cursor-pointer",
               dragOver ? "border-primary bg-primary/5" : "border-border hover:border-primary/50",
               isProcessing && "pointer-events-none opacity-60"
             )}
@@ -216,14 +216,24 @@ export default function UploadPage() {
       </Card>
 
       {/* Bancos soportados */}
-      <Card>
-        <CardContent className="pt-6">
-          <p className="text-xs font-medium text-muted-foreground mb-3">Bancos soportados</p>
-          <div className="flex gap-2 flex-wrap">
-            {["Banco General", "BAC Credomatic", "Banistmo"].map((bank) => (
-              <span key={bank} className="rounded-full bg-secondary px-3 py-1 text-xs font-medium">
-                {bank}
-              </span>
+      <Card className="zoho-card border-0">
+        <CardContent className="pt-5">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Bancos compatibles</p>
+          <div className="flex flex-col gap-2">
+            {[
+              { name: "Banco General",  color: "#1a3a8f" },
+              { name: "BAC Credomatic", color: "#e31837" },
+              { name: "Banistmo",       color: "#00843d" },
+            ].map(({ name, color }) => (
+              <div key={name} className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span style={{ background: color, width: 8, height: 8, borderRadius: "50%", display: "inline-block" }} />
+                  <span className="text-sm font-medium">{name}</span>
+                </div>
+                <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-0.5 text-xs font-semibold text-green-700">
+                  Validado
+                </span>
+              </div>
             ))}
           </div>
         </CardContent>

@@ -308,25 +308,27 @@ export default function KBPage() {
   )
 
   return (
-    <div className="space-y-6 pb-8">
+    <div className="space-y-5 pb-8">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold">Knowledge Base</h1>
-        <p className="text-sm text-muted-foreground">Lo que el sistema ha aprendido de tus correcciones.</p>
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Knowledge Base</h1>
+          <p className="page-subtitle">Lo que el sistema ha aprendido de tus correcciones</p>
+        </div>
       </div>
 
       {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard icon={<Brain className="h-4 w-4 text-violet-600" />}
+        <StatCard icon={<Brain className="h-4 w-4" />} iconClass="kpi-icon-purple"
           label="Entradas personales" value={personal?.entries.length ?? 0}
           sub="exact matches aprendidos" />
-        <StatCard icon={<Zap className="h-4 w-4 text-yellow-600" />}
+        <StatCard icon={<Zap className="h-4 w-4" />} iconClass="kpi-icon-orange"
           label="Patrones personales" value={personal?.patterns_count ?? 0}
           sub="reglas regex activas" />
-        <StatCard icon={<BookOpen className="h-4 w-4 text-blue-600" />}
+        <StatCard icon={<BookOpen className="h-4 w-4" />} iconClass="kpi-icon-blue"
           label="Correcciones totales" value={personal?.corrections_count ?? 0}
           sub="veces que entrenaste el sistema" />
-        <StatCard icon={<Globe className="h-4 w-4 text-green-600" />}
+        <StatCard icon={<Globe className="h-4 w-4" />} iconClass="kpi-icon-green"
           label="KB global" value={personal?.global_exact_matches_count ?? 0}
           sub={`+ ${personal?.global_patterns_count ?? 0} patrones compartidos`} />
       </div>
@@ -393,7 +395,7 @@ function TabButton({ active, onClick, icon, label }: {
       className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${
         active
           ? "border-primary text-primary"
-          : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground"
+          : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
       }`}
     >
       {icon}{label}
@@ -401,17 +403,17 @@ function TabButton({ active, onClick, icon, label }: {
   )
 }
 
-function StatCard({ icon, label, value, sub }: {
-  icon: React.ReactNode; label: string; value: number; sub: string
+function StatCard({ icon, iconClass, label, value, sub }: {
+  icon: React.ReactNode; iconClass?: string; label: string; value: number; sub: string
 }) {
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <div className="flex items-center justify-between">
-          <p className="text-sm font-medium text-muted-foreground">{label}</p>
-          {icon}
+    <Card className="zoho-card border-0">
+      <CardContent className="pt-5 pb-5">
+        <div className="flex items-start justify-between mb-3">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{label}</p>
+          <div className={iconClass ?? "kpi-icon-blue"}>{icon}</div>
         </div>
-        <p className="mt-2 text-2xl font-bold">{value.toLocaleString()}</p>
+        <p className="text-2xl font-bold">{value.toLocaleString()}</p>
         <p className="mt-1 text-xs text-muted-foreground">{sub}</p>
       </CardContent>
     </Card>

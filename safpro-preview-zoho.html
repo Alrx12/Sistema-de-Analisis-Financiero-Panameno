@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SAFPRO — Preview Diseño Zoho Invoice</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  /* ─── Reset & Base ──────────────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f4f5f7; color: #1a1f36; font-size: 14px; }
+
+  /* ─── Variables ─────────────────────────────────────────────────────────── */
+  :root {
+    --sidebar-bg: #1c2b4b;
+    --sidebar-active: #e05c19;
+    --sidebar-hover: rgba(255,255,255,0.07);
+    --sidebar-text: rgba(255,255,255,0.72);
+    --sidebar-width: 220px;
+    --orange: #e05c19;
+    --orange-light: #fff0ea;
+    --green: #27ae60;
+    --red: #e74c3c;
+    --yellow: #f39c12;
+    --blue: #2980b9;
+    --purple: #8b5cf6;
+    --header-h: 56px;
+    --border: #e8eaed;
+    --shadow: 0 1px 4px rgba(0,0,0,0.08), 0 2px 12px rgba(0,0,0,0.04);
+  }
+
+  /* ─── Layout ────────────────────────────────────────────────────────────── */
+  .app { display: flex; height: 100vh; overflow: hidden; }
+
+  /* ─── Sidebar ───────────────────────────────────────────────────────────── */
+  .sidebar {
+    width: var(--sidebar-width);
+    background: var(--sidebar-bg);
+    display: flex; flex-direction: column;
+    flex-shrink: 0;
+    user-select: none;
+  }
+  .sidebar-logo {
+    display: flex; align-items: center; gap: 10px;
+    padding: 0 18px; height: var(--header-h);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .sidebar-logo svg { color: var(--orange); }
+  .sidebar-logo span { font-size: 18px; font-weight: 700; color: #fff; letter-spacing: 0.3px; }
+  .sidebar-logo small { font-size: 9px; color: rgba(255,255,255,0.4); font-weight: 400; letter-spacing: 1px; text-transform: uppercase; margin-left: 2px; }
+
+  .sidebar-section { padding: 16px 10px 4px; }
+  .sidebar-section-label { font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.3); padding: 0 8px 6px; }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 10px; border-radius: 6px;
+    cursor: pointer; transition: background 0.15s;
+    color: var(--sidebar-text); font-size: 13.5px; font-weight: 500;
+    margin-bottom: 2px;
+  }
+  .nav-item:hover { background: var(--sidebar-hover); color: #fff; }
+  .nav-item.active { background: var(--orange); color: #fff; }
+  .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; opacity: 0.85; }
+  .nav-item.active svg { opacity: 1; }
+  .nav-badge {
+    margin-left: auto; background: rgba(255,255,255,0.18);
+    font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 99px; color: #fff;
+  }
+  .nav-item.active .nav-badge { background: rgba(255,255,255,0.3); }
+
+  .sidebar-footer {
+    margin-top: auto; border-top: 1px solid rgba(255,255,255,0.08);
+    padding: 12px 10px;
+  }
+  .user-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 6px; cursor: pointer; }
+  .user-row:hover { background: var(--sidebar-hover); }
+  .avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--orange); display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0;
+  }
+  .user-info { min-width: 0; }
+  .user-info strong { display: block; font-size: 12.5px; color: #fff; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-info span { font-size: 11px; color: rgba(255,255,255,0.4); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+
+  /* ─── Main ──────────────────────────────────────────────────────────────── */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* ─── Header ────────────────────────────────────────────────────────────── */
+  .topbar {
+    height: var(--header-h); background: #fff;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 12px;
+    padding: 0 24px; flex-shrink: 0;
+  }
+  .topbar-title { font-size: 16px; font-weight: 600; color: #1a1f36; }
+  .topbar-breadcrumb { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #6b7280; }
+  .topbar-breadcrumb span:last-child { color: #1a1f36; font-weight: 500; }
+  .topbar-breadcrumb .sep { opacity: 0.4; }
+  .topbar-actions { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+  .icon-btn {
+    width: 34px; height: 34px; border-radius: 8px;
+    border: 1px solid var(--border); background: #fff;
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+    color: #6b7280; transition: all 0.15s;
+  }
+  .icon-btn:hover { background: #f9fafb; border-color: #d1d5db; color: #374151; }
+  .icon-btn svg { width: 15px; height: 15px; }
+  .notification-dot { position: relative; }
+  .notification-dot::after {
+    content: ""; position: absolute; top: 6px; right: 6px;
+    width: 7px; height: 7px; border-radius: 50%; background: var(--orange);
+    border: 1.5px solid #fff;
+  }
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 6px; font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: all 0.15s; border: none;
+  }
+  .btn svg { width: 14px; height: 14px; }
+  .btn-primary { background: var(--orange); color: #fff; }
+  .btn-primary:hover { background: #c44e10; }
+  .btn-secondary { background: #fff; color: #374151; border: 1px solid var(--border); }
+  .btn-secondary:hover { background: #f9fafb; }
+
+  /* ─── Content ───────────────────────────────────────────────────────────── */
+  .content { flex: 1; overflow-y: auto; padding: 24px; }
+
+  /* ─── Page selector tabs (for preview) ──────────────────────────────────── */
+  .preview-tabs {
+    display: flex; gap: 2px;
+    background: var(--sidebar-bg); padding: 8px 12px;
+    flex-shrink: 0; border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .preview-tab {
+    padding: 5px 14px; border-radius: 4px; font-size: 12px; font-weight: 500;
+    cursor: pointer; color: rgba(255,255,255,0.5); transition: all 0.15s;
+  }
+  .preview-tab:hover { color: rgba(255,255,255,0.8); }
+  .preview-tab.active { background: var(--orange); color: #fff; }
+
+  /* ─── Section headers ────────────────────────────────────────────────────── */
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .section-title { font-size: 15px; font-weight: 600; color: #1a1f36; }
+  .section-subtitle { font-size: 13px; color: #6b7280; margin-top: 2px; }
+
+  /* ─── KPI Cards ─────────────────────────────────────────────────────────── */
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .kpi-card {
+    background: #fff; border: 1px solid var(--border); border-radius: 10px;
+    padding: 18px 20px; display: flex; flex-direction: column; gap: 10px;
+    box-shadow: var(--shadow);
+  }
+  .kpi-top { display: flex; align-items: flex-start; justify-content: space-between; }
+  .kpi-label { font-size: 12px; color: #6b7280; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+  .kpi-icon {
+    width: 36px; height: 36px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .kpi-icon svg { width: 18px; height: 18px; }
+  .kpi-icon.green { background: #ecfdf5; color: #16a34a; }
+  .kpi-icon.red { background: #fef2f2; color: #dc2626; }
+  .kpi-icon.blue { background: #eff6ff; color: #2563eb; }
+  .kpi-icon.orange { background: var(--orange-light); color: var(--orange); }
+  .kpi-icon.purple { background: #f5f3ff; color: #7c3aed; }
+  .kpi-value { font-size: 22px; font-weight: 700; color: #1a1f36; }
+  .kpi-change { display: flex; align-items: center; gap: 4px; font-size: 12px; }
+  .kpi-change.up { color: var(--green); }
+  .kpi-change.down { color: var(--red); }
+  .kpi-change svg { width: 12px; height: 12px; }
+  .kpi-meta { font-size: 12px; color: #9ca3af; }
+
+  /* ─── Charts grid ────────────────────────────────────────────────────────── */
+  .charts-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; margin-bottom: 24px; }
+  .charts-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  .card {
+    background: #fff; border: 1px solid var(--border); border-radius: 10px;
+    padding: 20px; box-shadow: var(--shadow);
+  }
+  .card-title { font-size: 14px; font-weight: 600; color: #1a1f36; margin-bottom: 4px; }
+  .card-subtitle { font-size: 12px; color: #9ca3af; margin-bottom: 16px; }
+  canvas { width: 100% !important; }
+
+  /* ─── Filter bar ─────────────────────────────────────────────────────────── */
+  .filter-bar {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .filter-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 12px; border-radius: 99px; font-size: 12px; font-weight: 500;
+    border: 1px solid var(--border); background: #fff; cursor: pointer; color: #4b5563;
+    transition: all 0.15s;
+  }
+  .filter-pill:hover { border-color: var(--orange); color: var(--orange); }
+  .filter-pill.active { background: var(--orange-light); border-color: var(--orange); color: var(--orange); }
+  .filter-pill svg { width: 12px; height: 12px; }
+  .search-box {
+    display: flex; align-items: center; gap: 8px;
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: 6px 12px; background: #fff; min-width: 220px;
+  }
+  .search-box svg { width: 14px; height: 14px; color: #9ca3af; flex-shrink: 0; }
+  .search-box input { border: none; outline: none; font-size: 13px; color: #374151; background: transparent; width: 100%; }
+  .search-box input::placeholder { color: #9ca3af; }
+
+  /* ─── Table ──────────────────────────────────────────────────────────────── */
+  .table-wrap { overflow-x: auto; border-radius: 10px; box-shadow: var(--shadow); }
+  table { width: 100%; border-collapse: collapse; background: #fff; }
+  thead tr { background: #f8f9fb; }
+  th {
+    text-align: left; padding: 11px 16px; font-size: 11.5px; font-weight: 600;
+    color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 12px 16px; font-size: 13px; color: #374151;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: #fafbfc; }
+  .td-bold { font-weight: 600; color: #1a1f36; }
+  .td-mono { font-family: 'SF Mono', monospace; font-size: 12.5px; }
+  .td-muted { color: #9ca3af; font-size: 12px; }
+
+  /* ─── Badges ─────────────────────────────────────────────────────────────── */
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 9px; border-radius: 99px; font-size: 11px; font-weight: 600;
+  }
+  .badge::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+  .badge-green { background: #ecfdf5; color: #16a34a; }
+  .badge-red { background: #fef2f2; color: #dc2626; }
+  .badge-yellow { background: #fffbeb; color: #d97706; }
+  .badge-blue { background: #eff6ff; color: #2563eb; }
+  .badge-gray { background: #f3f4f6; color: #6b7280; }
+  .badge-orange { background: var(--orange-light); color: var(--orange); }
+  .badge-purple { background: #f5f3ff; color: #7c3aed; }
+
+  /* ─── Amount colors ──────────────────────────────────────────────────────── */
+  .amount-pos { color: #16a34a; font-weight: 600; }
+  .amount-neg { color: #dc2626; font-weight: 600; }
+
+  /* ─── Upload area ────────────────────────────────────────────────────────── */
+  .upload-area {
+    border: 2px dashed #d1d5db; border-radius: 12px; background: #fafbfc;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 56px 32px; text-align: center; cursor: pointer; transition: all 0.2s;
+  }
+  .upload-area:hover { border-color: var(--orange); background: var(--orange-light); }
+  .upload-area svg { width: 48px; height: 48px; color: #d1d5db; margin-bottom: 16px; }
+  .upload-area:hover svg { color: var(--orange); }
+  .upload-area h3 { font-size: 16px; font-weight: 600; color: #374151; margin-bottom: 6px; }
+  .upload-area p { font-size: 13px; color: #9ca3af; }
+  .upload-area .upload-hint { margin-top: 12px; font-size: 12px; color: #d97706; background: #fffbeb; padding: 4px 12px; border-radius: 99px; }
+
+  /* ─── Bank chip ──────────────────────────────────────────────────────────── */
+  .bank-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #f3f4f6; border-radius: 6px; padding: 4px 10px; font-size: 12px; color: #374151; font-weight: 500;
+  }
+  .bank-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  /* ─── Progress bar ───────────────────────────────────────────────────────── */
+  .progress-wrap { background: #f3f4f6; border-radius: 99px; height: 6px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 99px; transition: width 0.3s; }
+
+  /* ─── Budget cards ───────────────────────────────────────────────────────── */
+  .budget-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+  .budget-card {
+    background: #fff; border: 1px solid var(--border); border-radius: 10px;
+    padding: 20px; box-shadow: var(--shadow);
+  }
+  .budget-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .budget-category-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  /* ─── Recommendation card ────────────────────────────────────────────────── */
+  .rec-list { display: flex; flex-direction: column; gap: 10px; }
+  .rec-item {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 12px 14px; border-radius: 8px; border: 1px solid var(--border);
+    transition: box-shadow 0.15s;
+  }
+  .rec-item:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .rec-icon { width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .rec-icon svg { width: 16px; height: 16px; }
+  .rec-icon.orange { background: var(--orange-light); color: var(--orange); }
+  .rec-icon.green { background: #ecfdf5; color: #16a34a; }
+  .rec-icon.blue { background: #eff6ff; color: #2563eb; }
+  .rec-icon.red { background: #fef2f2; color: #dc2626; }
+  .rec-text strong { display: block; font-size: 13px; font-weight: 600; color: #1a1f36; margin-bottom: 2px; }
+  .rec-text p { font-size: 12px; color: #6b7280; line-height: 1.5; }
+
+  /* ─── KB table ───────────────────────────────────────────────────────────── */
+  .kb-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+  .kb-tab {
+    padding: 10px 18px; font-size: 13px; font-weight: 500; cursor: pointer;
+    color: #6b7280; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.15s;
+  }
+  .kb-tab.active { color: var(--orange); border-bottom-color: var(--orange); }
+  .kb-tab:hover { color: #374151; }
+
+  /* ─── Page-specific visibility ───────────────────────────────────────────── */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ─── Retrain table ──────────────────────────────────────────────────────── */
+  select.inline-select {
+    border: 1px solid var(--border); border-radius: 5px; padding: 4px 8px;
+    font-size: 12px; color: #374151; background: #fff; cursor: pointer; outline: none;
+  }
+  select.inline-select:focus { border-color: var(--orange); }
+
+  /* ─── Scrollbar ──────────────────────────────────────────────────────────── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+  /* ─── Divider ────────────────────────────────────────────────────────────── */
+  .divider { height: 1px; background: var(--border); margin: 20px 0; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ═══════════════════════════════════════════════════════ SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+        <polyline points="17 6 23 6 23 12"></polyline>
+      </svg>
+      <span>SAFPRO<small>PRO</small></span>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Principal</div>
+      <div class="nav-item active" onclick="showPage('dashboard', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+          <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+        </svg>
+        Dashboard
+      </div>
+      <div class="nav-item" onclick="showPage('upload', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        Subir estado de cuenta
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Análisis</div>
+      <div class="nav-item" onclick="showPage('analysis', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
+          <line x1="6" y1="20" x2="6" y2="14"/>
+        </svg>
+        Mis análisis
+        <span class="nav-badge">6</span>
+      </div>
+      <div class="nav-item" onclick="showPage('transactions', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
+          <line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/>
+          <line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+        </svg>
+        Transacciones
+        <span class="nav-badge" style="background:#ef4444;">4</span>
+      </div>
+      <div class="nav-item" onclick="showPage('budget', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+        </svg>
+        Mi Presupuesto
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Inteligencia</div>
+      <div class="nav-item" onclick="showPage('kb', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.46 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-1.14Z"/>
+          <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.46 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-1.14Z"/>
+        </svg>
+        Knowledge Base
+      </div>
+      <div class="nav-item" onclick="showPage('retrain', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+        </svg>
+        Entrenamiento
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="user-row">
+        <div class="avatar">LA</div>
+        <div class="user-info">
+          <strong>Lex Acuña</strong>
+          <span>lex12pineda@hotmail.com</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ═══════════════════════════════════════════════════════ MAIN -->
+  <div class="main">
+
+    <!-- Topbar -->
+    <header class="topbar" id="topbar">
+      <div class="topbar-breadcrumb">
+        <span>SAFPRO</span>
+        <span class="sep">›</span>
+        <span id="topbar-page">Dashboard</span>
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn notification-dot" title="Notificaciones">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+        </button>
+        <button class="icon-btn" title="Configuración">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </button>
+        <div class="avatar" style="width:32px;height:32px;font-size:13px;cursor:pointer;">LA</div>
+      </div>
+    </header>
+
+    <!-- ─────────────────────────── CONTENT AREA ─────────────────────────── -->
+    <div class="content">
+
+      <!-- ══════════ PAGE: DASHBOARD ══════════ -->
+      <div class="page active" id="page-dashboard">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Resumen financiero</div>
+            <div class="section-subtitle">Marzo 2026 · Banco General ·  <span style="color:var(--orange);cursor:pointer;">Ver todos los períodos ›</span></div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-secondary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              Filtrar período
+            </button>
+            <button class="btn btn-primary" onclick="showPage('upload', document.querySelector('.nav-item:nth-child(2)'))">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Subir estado de cuenta
+            </button>
+          </div>
+        </div>
+
+        <!-- KPIs -->
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-top">
+              <div class="kpi-label">Ingresos del mes</div>
+              <div class="kpi-icon green">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+              </div>
+            </div>
+            <div class="kpi-value">$3,200.00</div>
+            <div class="kpi-change up">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+              +8.4% vs mes anterior
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-top">
+              <div class="kpi-label">Gastos del mes</div>
+              <div class="kpi-icon red">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
+              </div>
+            </div>
+            <div class="kpi-value">$2,148.50</div>
+            <div class="kpi-change down">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              +3.1% vs mes anterior
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-top">
+              <div class="kpi-label">Balance neto</div>
+              <div class="kpi-icon blue">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              </div>
+            </div>
+            <div class="kpi-value">$1,051.50</div>
+            <div class="kpi-meta">Tasa de ahorro: 32.8%</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-top">
+              <div class="kpi-label">Transacciones</div>
+              <div class="kpi-icon orange">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+              </div>
+            </div>
+            <div class="kpi-value">89</div>
+            <div class="kpi-change" style="color:#9ca3af;">
+              <span class="badge badge-red" style="font-size:10px;">4 requieren revisión</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts Row 1 -->
+        <div class="charts-grid">
+          <div class="card">
+            <div class="card-title">Tendencia mensual</div>
+            <div class="card-subtitle">Ingresos vs gastos — últimos 6 meses</div>
+            <canvas id="trendChart" height="160"></canvas>
+          </div>
+          <div class="card">
+            <div class="card-title">Tipo económico</div>
+            <div class="card-subtitle">Distribución por categoría</div>
+            <canvas id="etypeChart" height="160"></canvas>
+          </div>
+        </div>
+
+        <!-- Charts Row 2 -->
+        <div class="charts-grid">
+          <div class="card">
+            <div class="card-title">Top comercios</div>
+            <div class="card-subtitle">Gasto acumulado por merchant</div>
+            <canvas id="merchantChart" height="150"></canvas>
+          </div>
+          <div class="card">
+            <div class="card-title">Rol en presupuesto</div>
+            <div class="card-subtitle">Solo gastos, excluye transferencias propias</div>
+            <canvas id="roleChart" height="150"></canvas>
+          </div>
+        </div>
+
+        <!-- Recommendations -->
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px;">💡 Recomendaciones financieras</div>
+          <div class="rec-list">
+            <div class="rec-item">
+              <div class="rec-icon orange">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              </div>
+              <div class="rec-text">
+                <strong>Gasto en restaurantes por encima del promedio</strong>
+                <p>Gastaste $342 en restaurantes este mes (15.9% del total). Tu promedio histórico es $210. Considera establecer un límite semanal.</p>
+              </div>
+            </div>
+            <div class="rec-item">
+              <div class="rec-icon green">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="rec-text">
+                <strong>Buena tasa de ahorro este mes</strong>
+                <p>Ahorraste el 32.8% de tus ingresos. Estás por encima de la meta recomendada del 20%. ¡Sigue así!</p>
+              </div>
+            </div>
+            <div class="rec-item">
+              <div class="rec-icon blue">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+              </div>
+              <div class="rec-text">
+                <strong>4 transacciones con baja confianza</strong>
+                <p>El sistema no pudo categorizar 4 transacciones con certeza. Revísalas en la sección Transacciones para mejorar la precisión.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════ PAGE: UPLOAD ══════════ -->
+      <div class="page" id="page-upload">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Subir estado de cuenta</div>
+            <div class="section-subtitle">Compatible con Banco General, BAC Credomatic y Banistmo</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:20px;">
+          <div>
+            <div class="upload-area">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+                <line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/>
+              </svg>
+              <h3>Arrastra tu archivo aquí</h3>
+              <p>o haz clic para seleccionarlo desde tu computadora</p>
+              <div class="upload-hint">⚡ Detección automática del banco</div>
+            </div>
+            <div style="margin-top:12px;display:flex;gap:8px;align-items:center;">
+              <button class="btn btn-primary" style="flex:1;justify-content:center;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Procesar archivo
+              </button>
+              <button class="btn btn-secondary">Cancelar</button>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div class="card" style="padding:16px;">
+              <div class="card-title" style="margin-bottom:10px;">Bancos compatibles</div>
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f3f4f6;">
+                  <div class="bank-dot" style="background:#1a3a8f;"></div>
+                  <span style="font-size:13px;font-weight:500;">Banco General</span>
+                  <span class="badge badge-green" style="margin-left:auto;">Validado</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f3f4f6;">
+                  <div class="bank-dot" style="background:#e31837;"></div>
+                  <span style="font-size:13px;font-weight:500;">BAC Credomatic</span>
+                  <span class="badge badge-green" style="margin-left:auto;">Validado</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;padding:8px 0;">
+                  <div class="bank-dot" style="background:#00843d;"></div>
+                  <span style="font-size:13px;font-weight:500;">Banistmo</span>
+                  <span class="badge badge-green" style="margin-left:auto;">Validado</span>
+                </div>
+              </div>
+            </div>
+            <div class="card" style="padding:16px;">
+              <div class="card-title" style="margin-bottom:10px;">Historial reciente</div>
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <div class="bank-dot" style="background:#1a3a8f;width:6px;height:6px;"></div>
+                  <span style="font-size:12px;color:#374151;flex:1;">BG · Feb 2026</span>
+                  <span class="badge badge-green">exitoso</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <div class="bank-dot" style="background:#e31837;width:6px;height:6px;"></div>
+                  <span style="font-size:12px;color:#374151;flex:1;">BAC · Ene 2026</span>
+                  <span class="badge badge-green">exitoso</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <div class="bank-dot" style="background:#1a3a8f;width:6px;height:6px;"></div>
+                  <span style="font-size:12px;color:#374151;flex:1;">BG · Dic 2025</span>
+                  <span class="badge badge-green">exitoso</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════ PAGE: ANALYSIS ══════════ -->
+      <div class="page" id="page-analysis">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Mis análisis</div>
+            <div class="section-subtitle">Historial de estados de cuenta procesados</div>
+          </div>
+          <button class="btn btn-primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Nuevo upload
+          </button>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Período</th><th>Banco</th><th>Cuenta</th><th>Ingresos</th><th>Gastos</th><th>Balance</th><th>Txs</th><th>Estado</th><th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="td-bold">Mar 2026</span><div class="td-muted">01/03 – 31/03</div></td>
+                <td><span class="bank-chip"><span class="bank-dot" style="background:#1a3a8f;"></span>Banco General</span></td>
+                <td class="td-mono">····7909</td>
+                <td class="amount-pos">$3,200.00</td>
+                <td class="amount-neg">$2,148.50</td>
+                <td class="amount-pos">$1,051.50</td>
+                <td>89</td>
+                <td><span class="badge badge-green">Completo</span></td>
+                <td><button class="btn btn-secondary" style="padding:4px 10px;font-size:12px;">Ver →</button></td>
+              </tr>
+              <tr>
+                <td><span class="td-bold">Feb 2026</span><div class="td-muted">01/02 – 28/02</div></td>
+                <td><span class="bank-chip"><span class="bank-dot" style="background:#e31837;"></span>BAC Credomatic</span></td>
+                <td class="td-mono">····4521</td>
+                <td class="amount-pos">$2,950.00</td>
+                <td class="amount-neg">$2,311.80</td>
+                <td class="amount-pos">$638.20</td>
+                <td>102</td>
+                <td><span class="badge badge-green">Completo</span></td>
+                <td><button class="btn btn-secondary" style="padding:4px 10px;font-size:12px;">Ver →</button></td>
+              </tr>
+              <tr>
+                <td><span class="td-bold">Ene 2026</span><div class="td-muted">01/01 – 31/01</div></td>
+                <td><span class="bank-chip"><span class="bank-dot" style="background:#00843d;"></span>Banistmo</span></td>
+                <td class="td-mono">····9629</td>
+                <td class="amount-pos">$3,100.00</td>
+                <td class="amount-neg">$1,980.20</td>
+                <td class="amount-pos">$1,119.80</td>
+                <td>78</td>
+                <td><span class="badge badge-green">Completo</span></td>
+                <td><button class="btn btn-secondary" style="padding:4px 10px;font-size:12px;">Ver →</button></td>
+              </tr>
+              <tr>
+                <td><span class="td-bold">Dic 2025</span><div class="td-muted">01/12 – 31/12</div></td>
+                <td><span class="bank-chip"><span class="bank-dot" style="background:#1a3a8f;"></span>Banco General</span></td>
+                <td class="td-mono">····7909</td>
+                <td class="amount-pos">$3,200.00</td>
+                <td class="amount-neg">$2,874.10</td>
+                <td class="amount-pos">$325.90</td>
+                <td>135</td>
+                <td><span class="badge badge-yellow">1 tx pendiente</span></td>
+                <td><button class="btn btn-secondary" style="padding:4px 10px;font-size:12px;">Ver →</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ══════════ PAGE: TRANSACTIONS ══════════ -->
+      <div class="page" id="page-transactions">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Transacciones · Mar 2026</div>
+            <div class="section-subtitle">89 transacciones · <span style="color:#ef4444;">4 requieren revisión</span></div>
+          </div>
+        </div>
+        <div class="filter-bar">
+          <div class="search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" placeholder="Buscar por descripción…" />
+          </div>
+          <div class="filter-pill active">Todas</div>
+          <div class="filter-pill">Solo créditos</div>
+          <div class="filter-pill">Solo débitos</div>
+          <div class="filter-pill" style="border-color:#ef4444;color:#ef4444;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Requieren revisión (4)
+          </div>
+          <div class="filter-pill">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+            Filtros
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Fecha</th><th>Descripción</th><th>Categoría</th><th>Tipo económico</th><th>Monto</th><th>Confianza</th><th>Estado</th><th></th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="td-muted">15/03/26</td>
+                <td><span class="td-bold">SPOTIFY</span><div class="td-muted">gasto_recurrente · recurrente</div></td>
+                <td><span class="badge badge-blue">suscripciones</span></td>
+                <td><span class="badge badge-gray">gasto</span></td>
+                <td class="amount-neg">-$9.99</td>
+                <td>
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    <div class="progress-wrap" style="width:50px;"><div class="progress-fill" style="width:100%;background:#16a34a;"></div></div>
+                    <span style="font-size:11px;color:#16a34a;font-weight:600;">1.00</span>
+                  </div>
+                </td>
+                <td><span class="badge badge-green">Confirmado</span></td>
+                <td><button class="btn btn-secondary" style="padding:3px 8px;font-size:11px;">Editar</button></td>
+              </tr>
+              <tr>
+                <td class="td-muted">14/03/26</td>
+                <td><span class="td-bold">PLANILLA MARZO</span><div class="td-muted">ingreso · recurrente</div></td>
+                <td><span class="badge badge-green">salario</span></td>
+                <td><span class="badge badge-green">ingreso</span></td>
+                <td class="amount-pos">+$3,200.00</td>
+                <td>
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    <div class="progress-wrap" style="width:50px;"><div class="progress-fill" style="width:100%;background:#16a34a;"></div></div>
+                    <span style="font-size:11px;color:#16a34a;font-weight:600;">1.00</span>
+                  </div>
+                </td>
+                <td><span class="badge badge-green">Confirmado</span></td>
+                <td><button class="btn btn-secondary" style="padding:3px 8px;font-size:11px;">Editar</button></td>
+              </tr>
+              <tr>
+                <td class="td-muted">13/03/26</td>
+                <td><span class="td-bold">TRESCUATES</span><div class="td-muted">gasto · extraordinario</div></td>
+                <td><span class="badge badge-orange">restaurantes</span></td>
+                <td><span class="badge badge-gray">gasto</span></td>
+                <td class="amount-neg">-$42.80</td>
+                <td>
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    <div class="progress-wrap" style="width:50px;"><div class="progress-fill" style="width:100%;background:#16a34a;"></div></div>
+                    <span style="font-size:11px;color:#16a34a;font-weight:600;">1.00</span>
+                  </div>
+                </td>
+                <td><span class="badge badge-green">Confirmado</span></td>
+                <td><button class="btn btn-secondary" style="padding:3px 8px;font-size:11px;">Editar</button></td>
+              </tr>
+              <tr style="background:#fffbeb;">
+                <td class="td-muted">12/03/26</td>
+                <td><span class="td-bold">DB POS COMPRA MX4F9Q2</span><div class="td-muted">gasto · desconocido</div></td>
+                <td><span class="badge badge-red">desconocido</span></td>
+                <td><span class="badge badge-gray">gasto</span></td>
+                <td class="amount-neg">-$28.50</td>
+                <td>
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    <div class="progress-wrap" style="width:50px;"><div class="progress-fill" style="width:30%;background:#ef4444;"></div></div>
+                    <span style="font-size:11px;color:#ef4444;font-weight:600;">0.30</span>
+                  </div>
+                </td>
+                <td><span class="badge badge-yellow">⚠ Revisar</span></td>
+                <td><button class="btn btn-primary" style="padding:3px 8px;font-size:11px;">Clasificar</button></td>
+              </tr>
+              <tr>
+                <td class="td-muted">11/03/26</td>
+                <td><span class="td-bold">NETFLIX</span><div class="td-muted">gasto_recurrente · recurrente</div></td>
+                <td><span class="badge badge-blue">suscripciones</span></td>
+                <td><span class="badge badge-gray">gasto</span></td>
+                <td class="amount-neg">-$15.99</td>
+                <td>
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    <div class="progress-wrap" style="width:50px;"><div class="progress-fill" style="width:100%;background:#16a34a;"></div></div>
+                    <span style="font-size:11px;color:#16a34a;font-weight:600;">1.00</span>
+                  </div>
+                </td>
+                <td><span class="badge badge-green">Confirmado</span></td>
+                <td><button class="btn btn-secondary" style="padding:3px 8px;font-size:11px;">Editar</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ══════════ PAGE: BUDGET ══════════ -->
+      <div class="page" id="page-budget">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Mi Presupuesto · Mar 2026</div>
+            <div class="section-subtitle">Regla 50/30/20 — Necesidades · Deseos · Ahorro</div>
+          </div>
+          <button class="btn btn-secondary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Gastos adicionales
+          </button>
+        </div>
+
+        <!-- 50/30/20 summary -->
+        <div class="budget-grid">
+          <div class="budget-card">
+            <div class="budget-card-header">
+              <div>
+                <div style="font-size:12px;color:#6b7280;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;">Necesidades · 50%</div>
+                <div style="font-size:20px;font-weight:700;margin-top:4px;">$1,892.30</div>
+              </div>
+              <div style="width:42px;height:42px;border-radius:8px;background:#eff6ff;display:flex;align-items:center;justify-content:center;color:#2563eb;font-size:20px;">🏠</div>
+            </div>
+            <div style="margin-bottom:6px;display:flex;justify-content:space-between;font-size:12px;color:#6b7280;">
+              <span>Real vs Objetivo ($1,600)</span><span style="font-weight:600;color:#dc2626;">+$292</span>
+            </div>
+            <div class="progress-wrap"><div class="progress-fill" style="width:118%;background:#dc2626;"></div></div>
+            <div style="font-size:11px;color:#9ca3af;margin-top:6px;">118% del objetivo</div>
+          </div>
+          <div class="budget-card">
+            <div class="budget-card-header">
+              <div>
+                <div style="font-size:12px;color:#6b7280;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;">Deseos · 30%</div>
+                <div style="font-size:20px;font-weight:700;margin-top:4px;">$612.40</div>
+              </div>
+              <div style="width:42px;height:42px;border-radius:8px;background:var(--orange-light);display:flex;align-items:center;justify-content:center;font-size:20px;">🎉</div>
+            </div>
+            <div style="margin-bottom:6px;display:flex;justify-content:space-between;font-size:12px;color:#6b7280;">
+              <span>Real vs Objetivo ($960)</span><span style="font-weight:600;color:#16a34a;">-$348</span>
+            </div>
+            <div class="progress-wrap"><div class="progress-fill" style="width:64%;background:#16a34a;"></div></div>
+            <div style="font-size:11px;color:#9ca3af;margin-top:6px;">64% del objetivo · ¡Bajo control!</div>
+          </div>
+          <div class="budget-card">
+            <div class="budget-card-header">
+              <div>
+                <div style="font-size:12px;color:#6b7280;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;">Ahorro · 20%</div>
+                <div style="font-size:20px;font-weight:700;margin-top:4px;">$1,051.50</div>
+              </div>
+              <div style="width:42px;height:42px;border-radius:8px;background:#ecfdf5;display:flex;align-items:center;justify-content:center;font-size:20px;">💰</div>
+            </div>
+            <div style="margin-bottom:6px;display:flex;justify-content:space-between;font-size:12px;color:#6b7280;">
+              <span>Real vs Meta ($640)</span><span style="font-weight:600;color:#16a34a;">+$412</span>
+            </div>
+            <div class="progress-wrap"><div class="progress-fill" style="width:100%;background:#16a34a;"></div></div>
+            <div style="font-size:11px;color:#16a34a;font-weight:500;margin-top:6px;">164% de la meta · Excelente</div>
+          </div>
+        </div>
+
+        <div class="charts-grid">
+          <div class="card">
+            <div class="card-title">Distribución real de gastos</div>
+            <div class="card-subtitle">Por categoría de presupuesto</div>
+            <canvas id="budgetPieChart" height="180"></canvas>
+          </div>
+          <div class="card">
+            <div class="card-title">Categorías vs objetivo</div>
+            <div class="card-subtitle">Real (barras) vs límite (línea)</div>
+            <canvas id="budgetBarChart" height="180"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════ PAGE: KB ══════════ -->
+      <div class="page" id="page-kb">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Knowledge Base</div>
+            <div class="section-subtitle">Reglas de categorización aprendidas por el sistema</div>
+          </div>
+          <button class="btn btn-primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Previsualizar clave
+          </button>
+        </div>
+        <div class="card">
+          <div class="kb-tabs">
+            <div class="kb-tab active">Personal (24 entradas)</div>
+            <div class="kb-tab">Global (165 entradas)</div>
+          </div>
+          <div class="filter-bar" style="margin-bottom:14px;">
+            <div class="search-box" style="min-width:280px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" placeholder="Buscar merchant o categoría…" />
+            </div>
+            <div class="filter-pill active">Todas</div>
+            <div class="filter-pill">Restaurantes</div>
+            <div class="filter-pill">Suscripciones</div>
+            <div class="filter-pill">Transporte</div>
+          </div>
+          <table style="box-shadow:none;">
+            <thead><tr><th>Clave canónica</th><th>Categoría</th><th>Tipo económico</th><th>Rol</th><th>Confianza</th><th></th></tr></thead>
+            <tbody>
+              <tr>
+                <td class="td-bold td-mono">SPOTIFY</td>
+                <td><span class="badge badge-blue">suscripciones</span></td>
+                <td><span class="badge badge-gray">gasto_recurrente</span></td>
+                <td><span class="badge badge-purple">presupuestable</span></td>
+                <td><span style="color:#16a34a;font-weight:600;font-size:12px;">100%</span></td>
+                <td><button class="btn btn-secondary" style="padding:3px 8px;font-size:11px;color:#dc2626;border-color:#fca5a5;">Eliminar</button></td>
+              </tr>
+              <tr>
+                <td class="td-bold td-mono">TRESCUATES</td>
+                <td><span class="badge badge-orange">restaurantes</span></td>
+                <td><span class="badge badge-gray">gasto_variable</span></td>
+                <td><span class="badge badge-orange">no_presupuestable</span></td>
+                <td><span style="color:#16a34a;font-weight:600;font-size:12px;">100%</span></td>
+                <td><button class="btn btn-secondary" style="padding:3px 8px;font-size:11px;color:#dc2626;border-color:#fca5a5;">Eliminar</button></td>
+              </tr>
+              <tr>
+                <td class="td-bold td-mono">UBER</td>
+                <td><span class="badge badge-blue">transporte</span></td>
+                <td><span class="badge badge-gray">gasto_variable</span></td>
+                <td><span class="badge badge-blue">gasto_operativo</span></td>
+                <td><span style="color:#16a34a;font-weight:600;font-size:12px;">100%</span></td>
+                <td><button class="btn btn-secondary" style="padding:3px 8px;font-size:11px;color:#dc2626;border-color:#fca5a5;">Eliminar</button></td>
+              </tr>
+              <tr>
+                <td class="td-bold td-mono">AMAZON PRIME</td>
+                <td><span class="badge badge-blue">suscripciones</span></td>
+                <td><span class="badge badge-gray">gasto_recurrente</span></td>
+                <td><span class="badge badge-purple">presupuestable</span></td>
+                <td><span style="color:#16a34a;font-weight:600;font-size:12px;">100%</span></td>
+                <td><button class="btn btn-secondary" style="padding:3px 8px;font-size:11px;color:#dc2626;border-color:#fca5a5;">Eliminar</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ══════════ PAGE: RETRAIN ══════════ -->
+      <div class="page" id="page-retrain">
+        <div class="section-header">
+          <div>
+            <div class="section-title">✨ Entrenamiento masivo</div>
+            <div class="section-subtitle">Clasifica grupos de transacciones similares en una sola operación</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <span class="badge badge-yellow">12 grupos pendientes</span>
+            <button class="btn btn-primary">Aplicar seleccionadas</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th><input type="checkbox" /></th><th>Descripción</th><th>Ocurrencias</th><th>Monto total</th><th>Categoría</th><th>Frecuencia</th><th>Confianza actual</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><input type="checkbox" checked /></td>
+                <td><span class="td-bold">DB POS COMPRA MX4F9Q2</span><div class="td-muted">Merchant desconocido</div></td>
+                <td><span class="badge badge-orange">5 txs</span></td>
+                <td class="amount-neg">-$142.50</td>
+                <td>
+                  <select class="inline-select" style="min-width:140px;">
+                    <option>Seleccionar…</option>
+                    <option>restaurantes</option>
+                    <option>supermercados</option>
+                    <option>transporte</option>
+                    <option>servicios</option>
+                  </select>
+                </td>
+                <td>
+                  <select class="inline-select">
+                    <option>extraordinario</option>
+                    <option>recurrente</option>
+                    <option>variable</option>
+                  </select>
+                </td>
+                <td><span style="color:#ef4444;font-size:12px;font-weight:600;">30%</span></td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" checked /></td>
+                <td><span class="td-bold">SUPERMERCADO RIBA SMITH</span><div class="td-muted">Merchant desconocido</div></td>
+                <td><span class="badge badge-orange">3 txs</span></td>
+                <td class="amount-neg">-$218.90</td>
+                <td>
+                  <select class="inline-select" style="min-width:140px;">
+                    <option>supermercados</option>
+                    <option>restaurantes</option>
+                    <option>otros</option>
+                  </select>
+                </td>
+                <td>
+                  <select class="inline-select">
+                    <option>recurrente</option>
+                    <option>extraordinario</option>
+                    <option>variable</option>
+                  </select>
+                </td>
+                <td><span style="color:#ef4444;font-size:12px;font-weight:600;">30%</span></td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" /></td>
+                <td><span class="td-bold">YAPPY BG A 6XXX</span><div class="td-muted">Transferencia a tercero</div></td>
+                <td><span class="badge badge-blue">4 txs</span></td>
+                <td class="amount-neg">-$340.00</td>
+                <td>
+                  <select class="inline-select" style="min-width:140px;">
+                    <option>transferencias</option>
+                    <option>otros</option>
+                  </select>
+                </td>
+                <td>
+                  <select class="inline-select">
+                    <option>variable</option>
+                    <option>recurrente</option>
+                    <option>extraordinario</option>
+                  </select>
+                </td>
+                <td><span style="color:#d97706;font-size:12px;font-weight:600;">85%</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+/* ─── Page switcher ────────────────────────────────────────────────────────── */
+const pageLabels = {
+  dashboard: 'Dashboard',
+  upload: 'Subir estado de cuenta',
+  analysis: 'Mis análisis',
+  transactions: 'Transacciones',
+  budget: 'Mi Presupuesto',
+  kb: 'Knowledge Base',
+  retrain: 'Entrenamiento',
+}
+
+function showPage(id, navEl) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'))
+  document.getElementById('page-' + id).classList.add('active')
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'))
+  if (navEl) navEl.classList.add('active')
+  document.getElementById('topbar-page').textContent = pageLabels[id] || id
+  // init charts for budget page
+  if (id === 'budget') { setTimeout(initBudgetCharts, 50) }
+}
+
+/* ─── Charts ────────────────────────────────────────────────────────────────── */
+window.addEventListener('DOMContentLoaded', () => {
+  // Trend chart
+  new Chart(document.getElementById('trendChart'), {
+    type: 'bar',
+    data: {
+      labels: ['Oct','Nov','Dic','Ene','Feb','Mar'],
+      datasets: [
+        { label: 'Ingresos', data: [3100,3100,3200,3100,2950,3200], backgroundColor: 'rgba(22,163,74,0.18)', borderColor: '#16a34a', borderWidth: 2, borderRadius: 4, type: 'bar' },
+        { label: 'Gastos',   data: [1980,2100,2874,1980,2312,2148], backgroundColor: 'rgba(224,92,25,0.18)', borderColor: '#e05c19', borderWidth: 2, borderRadius: 4, type: 'bar' },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { position: 'top', labels: { font: { size: 11 }, boxWidth: 12, usePointStyle: true } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+        y: { grid: { color: '#f3f4f6' }, ticks: { font: { size: 10 }, callback: v => '$' + (v/1000).toFixed(1) + 'k' } }
+      }
+    }
+  })
+
+  // Economic type donut
+  new Chart(document.getElementById('etypeChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Gasto','Ingreso','Cargo financiero','Trans. propia','Trans. tercero'],
+      datasets: [{ data: [2148, 3200, 82, 400, 150], backgroundColor: ['#ef4444','#16a34a','#f59e0b','#94a3b8','#6366f1'], borderWidth: 0, hoverOffset: 6 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true, cutout: '62%',
+      plugins: { legend: { position: 'right', labels: { font: { size: 11 }, boxWidth: 10, usePointStyle: true, padding: 10 } } }
+    }
+  })
+
+  // Top merchants
+  new Chart(document.getElementById('merchantChart'), {
+    type: 'bar',
+    data: {
+      labels: ['Supermercado Riba Smith','Trescuates','Automercado','Netflix','Spotify','PriceSmart','Uber','Amazon Prime'],
+      datasets: [{ data: [342, 218, 187, 160, 110, 89, 78, 45], backgroundColor: '#e05c19', borderRadius: 4, borderSkipped: false }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: '#f3f4f6' }, ticks: { font: { size: 10 }, callback: v => '$'+v } },
+        y: { grid: { display: false }, ticks: { font: { size: 11 } } }
+      }
+    }
+  })
+
+  // Budget role donut
+  new Chart(document.getElementById('roleChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Presupuestable','No presupuestable','Gasto operativo','Gasto financiero','Revisar'],
+      datasets: [{ data: [1200, 612, 240, 82, 14], backgroundColor: ['#16a34a','#f97316','#3b82f6','#f59e0b','#ef4444'], borderWidth: 0, hoverOffset: 6 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true, cutout: '62%',
+      plugins: { legend: { position: 'right', labels: { font: { size: 11 }, boxWidth: 10, usePointStyle: true, padding: 10 } } }
+    }
+  })
+})
+
+function initBudgetCharts() {
+  if (window._budgetChartsInit) return
+  window._budgetChartsInit = true
+
+  new Chart(document.getElementById('budgetPieChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Alimentación','Suscripciones','Transporte','Servicios','Entretenimiento','Otros'],
+      datasets: [{ data: [820, 180, 240, 480, 420, 365], backgroundColor: ['#16a34a','#6366f1','#3b82f6','#f59e0b','#f97316','#94a3b8'], borderWidth: 0 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true, cutout: '58%',
+      plugins: { legend: { position: 'right', labels: { font: { size: 11 }, boxWidth: 10, usePointStyle: true, padding: 8 } } }
+    }
+  })
+
+  new Chart(document.getElementById('budgetBarChart'), {
+    type: 'bar',
+    data: {
+      labels: ['Alimentación','Servicios','Entret.','Transport.','Suscr.','Otros'],
+      datasets: [
+        { label: 'Real', data: [820,480,420,240,180,365], backgroundColor: 'rgba(224,92,25,0.75)', borderRadius: 4 },
+        { label: 'Objetivo', data: [600,400,300,250,200,250], backgroundColor: 'rgba(22,163,74,0.2)', borderColor: '#16a34a', borderWidth: 2, borderRadius: 4, type: 'bar' }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { position: 'top', labels: { font: { size: 11 }, boxWidth: 10, usePointStyle: true } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+        y: { grid: { color: '#f3f4f6' }, ticks: { font: { size: 10 }, callback: v => '$'+v } }
+      }
+    }
+  })
+}
+</script>
+</body>
+</html>
