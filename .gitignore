@@ -14,9 +14,13 @@ __pycache__/
 # ========================
 .env
 **/.env
-#.env.*
+.env.local
+**/.env.local
 *.pem
 *.key
+# Credenciales de cloudflared (contienen tokens de acceso)
+.cloudflared/*.json
+.cloudflared/cert.pem
 
 # ========================
 # Logs
@@ -65,3 +69,16 @@ backend/alembic_old/
 # Codex / local tooling
 # ========================
 .codex/
+# ========================
+# Legacy / código obsoleto
+# ========================
+legacy/
+Backups/
+docs/
+
+# Docker Compose de deploy antiguo (ahora usamos systemd)
+# (movidos a legacy/docker/)
+
+# Pytest cache
+.pytest_cache/
+**/.pytest_cache/

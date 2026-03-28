@@ -95,11 +95,20 @@ if [ ! -f "$ENV_FILE" ]; then
     echo ">>> [5/8] Creando backend/.env..."
     SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_hex(32))")
     DETECTED_URL="http://${PUBLIC_IP:-localhost}"
+
+    # Pedir credenciales de la base de datos (no hardcodeadas en el script)
+    echo ""
+    echo "    Credenciales de PostgreSQL:"
+    read -rp "    Usuario de la DB [safpro]: " DB_USER
+    DB_USER="${DB_USER:-safpro}"
+    read -rsp "    Contraseña de la DB: " DB_PASS
+    echo ""
+
     cat > "$ENV_FILE" << ENVEOF
 APP_NAME=SAFPRO API
 APP_VERSION=0.1.0
 DEBUG=false
-DATABASE_URL=postgresql+psycopg://apineda:InsightLex@localhost:5432/safpro
+DATABASE_URL=postgresql+psycopg://${DB_USER}:${DB_PASS}@localhost:5432/safpro
 SECRET_KEY=${SECRET_KEY}
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=1440
@@ -109,11 +118,12 @@ TEMP_DIR=${APP_DIR}/storage/temp
 KNOWLEDGE_BASES_DIR=${APP_DIR}/storage/knowledge_bases
 REDIS_URL=redis://localhost:6379/0
 RESEND_API_KEY=re_placeholder_cambia_esto
-EMAIL_FROM=SAFPRO <noreply@safpro.com>
+EMAIL_FROM=SAFPRO <noreply@safpro.us>
 FRONTEND_URL=${DETECTED_URL}
 ENVEOF
-    echo "    .env creado en $ENV_FILE"
-    echo "    ⚠️  Edita $ENV_FILE y pon tu RESEND_API_KEY real si usas emails."
+    chmod 600 "$ENV_FILE"
+    echo "    .env creado en $ENV_FILE (permisos 600)"
+    echo "    ⚠️  Edita $ENV_FILE para poner tu RESEND_API_KEY real."
 else
     echo ">>> [5/8] .env ya existe — omitiendo creación."
     echo "    Ubicación: $ENV_FILE"
