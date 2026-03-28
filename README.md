@@ -1,7 +1,6 @@
-# Guía Completa de SAFPRO
+# SAFPRO — Sistema de Análisis Financiero
 
-**Última actualización:** 2026-03-26 (sesión 18)
-**Estado general:** Pipeline E2E validado. Backend completo para MVP. **Frontend completo para MVP (sesión 18):** Auth, Dashboard (con donut por rol de presupuesto), Upload con trigger de onboarding, Análisis (lista/detalle), Transacciones con reclasificación inline + select de categoría + filtros crédito/débito/tipo económico, Knowledge Base (personal + global), Presupuesto 50/30/20 con gastos adicionales manuales, Onboarding post-primer-análisis, **Entrenamiento masivo** (`/retrain`). Tests backend 183 passed, 3 warnings. TypeScript limpio.
+> Analiza tus estados de cuenta bancarios automáticamente. SAFPRO categoriza cada transacción, calcula tus KPIs mensuales y aprende de tus correcciones para mejorar con el tiempo.
 
 ---
 
@@ -28,52 +27,98 @@ Le das tu estado de cuenta del banco y él te dice, sin que hagas nada manual, c
 
 ---
 
-## Comandos — cómo arrancar todo
+## Stack tecnológico
 
-**Todo se corre desde la carpeta `backend/` con el virtualenv activo (`.venv`).**
+| Componente | Versión | Para qué sirve |
+|---|---|---|
+| FastAPI | 0.135.1 | Framework de la API REST |
+| slowapi | 0.1.9 | Rate limiting en auth endpoints |
+| SQLAlchemy | 2.0.48 | ORM (estilo `Mapped[]`) |
+| pydantic-settings | 2.13.1 | Lee las variables del .env |
+| PyJWT | 2.12.1 | Genera y verifica JWT |
+| pwdlib | 0.3.0 | Hashing de passwords |
+| alembic | 1.18.4 | Migraciones de la DB |
+| openpyxl | 3.1.5 | Leer archivos .xlsx |
+| pandas | 3.0.1 | Procesar filas del Excel |
+| celery + redis | 5.6.2 / 7.3.0 | Procesamiento asíncrono de uploads |
+| uvicorn | 0.42.0 | Servidor HTTP |
+| Python | 3.12+ | |
+
+**Frontend:** React + Vite + TypeScript + shadcn/ui + Tailwind CSS
+
+---
+
+## Instalación y arranque
+
+### Requisitos previos
+
+- Python 3.12+
+- PostgreSQL 15+
+- Redis 7+
+- Node.js 20+
+
+### Backend
 
 ```bash
-# 1. Arrancar el servidor de la API
-uvicorn app.main:app --reload --port 8001
-# --reload = se reinicia solo cuando cambias el código
-# Swagger UI en: http://127.0.0.1:8001/docs
+# 1. Clonar el repositorio
+git clone <repo-url>
+cd Sistema_de_Analisis_Financiero/backend
 
-# 2. Arrancar el worker Celery (proceso separado, otra terminal)
-celery -A app.workers.celery_app worker --loglevel=info --concurrency=2
-# IMPORTANTE: el worker NO se recarga automáticamente con --reload
-# Si cambias código del pipeline, hay que matar el worker y volverlo a arrancar
+# 2. Crear entorno virtual e instalar dependencias
+python -m venv .venv
+source .venv/bin/activate       # Linux/Mac
+# .venv\Scripts\activate        # Windows
 
-# 3. Tests (no necesitan Redis, Celery ni PostgreSQL reales — usan mocks)
-python -m pytest -q                                         # todos (174 tests; e2e requieren infra real)
-python -m pytest tests/unit/ -q                             # solo unitarios
-python -m pytest tests/unit/test_parsers.py -q              # un archivo
-python -m pytest tests/unit/test_parsers.py::nombre_test -v # un test específico
+pip install -r requirements.txt
 
-# 4. Tests E2E (SÍ necesitan infra real: API + Redis + Celery + PostgreSQL)
-python -m pytest tests/e2e/test_celery_e2e.py -v -m e2e
+# 3. Configurar variables de entorno
+cp .env.example .env
+# Editar .env con tus valores (ver sección Variables de entorno)
 
-# 5. Migraciones de base de datos
-alembic revision --autogenerate -m "descripcion del cambio"
+# 4. Aplicar migraciones
 alembic upgrade head
 
-# 6. Scripts de utilidad
-python scripts/seed_personal_kb.py <uuid-del-usuario>       # copiar KB personal de usuario legacy
-python scripts/seed_personal_kb.py <uuid> --force           # sobreescribir si ya existe
-python scripts/seed_demo.py                                 # datos de prueba
+# 5. Arrancar el servidor de la API
+uvicorn app.main:app --reload --port 8001
+# Swagger UI en: http://127.0.0.1:8001/docs
+
+# 6. Arrancar el worker Celery (terminal separada)
+celery -A app.workers.celery_app worker --loglevel=info --concurrency=2
+# IMPORTANTE: el worker NO se recarga automáticamente con --reload
+# Si cambias código del pipeline, hay que reiniciarlo manualmente
 ```
+
+### Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev     # http://localhost:3000 (proxy → backend en :8001)
+npm run build   # build de producción
+```
+
+### Desarrollo local con Docker (PostgreSQL + Redis)
+
+Para levantar la base de datos y Redis sin instalarlos nativamente:
+
+```bash
+docker compose -f docker-compose.dev.yml up -d
+```
+
+Esto levanta PostgreSQL en el puerto 5432 y Redis en el 6379.
 
 ---
 
 ## Variables de entorno
 
-Crear el archivo `backend/.env` con esto:
+Crea `backend/.env` basándote en `backend/.env.example`:
 
 ```env
 APP_NAME=SAFPRO API
 APP_VERSION=0.1.0
-DEBUG=true                          # En true: muestra errores reales en la API y retorna token en forgot-password
-DATABASE_URL=postgresql+psycopg://user:password@host:5432/safpro
-SECRET_KEY=clave_segura_larga
+DEBUG=true                          # true: errores detallados + token en forgot-password response
+DATABASE_URL=postgresql+psycopg://usuario:contraseña@localhost:5432/safpro
+SECRET_KEY=genera-una-clave-larga-y-aleatoria
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=1440    # JWT dura 24 horas
 UPLOAD_DIR=storage/uploads
@@ -81,354 +126,209 @@ PROCESSED_DIR=storage/processed
 TEMP_DIR=storage/temp
 KNOWLEDGE_BASES_DIR=storage/knowledge_bases
 REDIS_URL=redis://localhost:6379/0
-RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxx   # Para emails de reset de password
+RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxx   # Para emails de reset de password (resend.com)
 EMAIL_FROM=SAFPRO <noreply@tudominio.com>
 FRONTEND_URL=http://localhost:3000
 ```
 
-### Para poner en producción (checklist)
-
-Cambia estas variables en `.env`:
+### Para producción
 
 ```env
-DEBUG=false              # ← Activa: rate limiting, errores genéricos, email real en forgot-password
-SECRET_KEY=<genera una clave larga y aleatoria — nunca uses la default>
-DATABASE_URL=postgresql+psycopg://user:password@host:5432/safpro_prod
-REDIS_URL=redis://tu-servidor-redis:6379/0
-RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxx   # Obtén la key en resend.com
-EMAIL_FROM=SAFPRO <noreply@tudominio.com>  # El dominio debe estar verificado en Resend
-FRONTEND_URL=https://tu-app.tudominio.com  # URL base del frontend para el link de reset
+DEBUG=false              # Activa: rate limiting, errores genéricos, email real en forgot-password
+SECRET_KEY=<clave larga y aleatoria — nunca uses la default>
+DATABASE_URL=postgresql+psycopg://usuario:contraseña@localhost:5432/safpro
+REDIS_URL=redis://localhost:6379/0
+RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxx
+EMAIL_FROM=SAFPRO <noreply@tudominio.com>
+FRONTEND_URL=https://tu-dominio.com
 ```
 
-**Pasos para Resend:**
-1. Crear cuenta en [resend.com](https://resend.com)
-2. Ir a Domains → Add Domain → verificar tu dominio (agrega los registros DNS que te pide)
-3. Ir a API Keys → Create API Key → copiar y poner en `RESEND_API_KEY`
-4. Cambiar `EMAIL_FROM` con el dominio verificado (ej: `SAFPRO <noreply@safpro.tudominio.com>`)
-
-**Rate limiting (automático con `DEBUG=false`):**
+**Rate limiting automático con `DEBUG=false`:**
 - `POST /auth/login` → 10 intentos/minuto por IP
 - `POST /auth/forgot-password` → 5 intentos/minuto por IP
 - `POST /auth/register` → 10 intentos/minuto por IP
-- Los contadores viven en Redis y sobreviven reinicios del servidor
 
 ---
 
-## Stack tecnológico
+## Tests
 
-| Componente | Versión | Estado | Para qué sirve |
-|---|---|---|---|
-| FastAPI | 0.135.1 | ✅ | Framework de la API REST |
-| slowapi | 0.1.9 | ✅ | Rate limiting en auth endpoints (activo cuando DEBUG=false) |
-| SQLAlchemy | 2.0.48 | ✅ (estilo `Mapped[]`) | ORM para la base de datos |
-| pydantic-settings | 2.13.1 | ✅ | Lee las variables del .env |
-| PyJWT | 2.12.1 | ✅ | Genera y verifica JWT (`security.py`, `deps.py`) — reemplazó python-jose |
-| passlib | 1.7.4 | ⚠️ Sin mantenimiento | Hashing de passwords (legado) |
-| pwdlib | 0.3.0 | ✅ | Hashing de passwords (nuevo) — ya adoptado en security.py |
-| alembic | 1.18.4 | ✅ | Migraciones de la DB (4 aplicadas) |
-| openpyxl | 3.1.5 | ✅ | Leer archivos .xlsx |
-| pandas | 3.0.1 | ✅ | Procesar filas del Excel |
-| celery + redis | 5.6.2 / 7.3.0 | ✅ | Procesar uploads en background |
-| uvicorn | 0.42.0 | ✅ | Servidor HTTP |
-| Python | 3.14 | ✅ | Versión en Windows. El VM Linux de Cowork usa Python 3.10 |
+```bash
+# Todos los tests unitarios e integración (no requieren infra real)
+python -m pytest -q
+
+# Solo unitarios
+python -m pytest tests/unit/ -q
+
+# Un archivo específico
+python -m pytest tests/unit/test_parsers.py -q
+
+# Tests E2E (requieren API + Redis + Celery + PostgreSQL corriendo)
+python -m pytest tests/e2e/test_celery_e2e.py -v -m e2e
+```
+
+| Módulo | Tests |
+|---|---|
+| `tests/unit/test_financial_classifier.py` | 38 |
+| `tests/unit/test_parsers.py` | 5 |
+| `tests/services/test_financial_classifier.py` | 12 |
+| `tests/services/test_analysis_service.py` | 7 |
+| `tests/services/test_detail_normalizer.py` | 32 |
+| `tests/api/` (varios archivos) | 45 |
+| `tests/services/test_recommendation_engine.py` | 31 |
+| `tests/integration/test_files_upload_api.py` | 8 |
+| `tests/e2e/test_celery_e2e.py` | 7 |
+| **TOTAL** | **183 passed** |
 
 ---
 
-## Mapa de archivos — qué hace cada uno
+## Migraciones de base de datos
 
-### API (`app/api/v1/`)
-Estos archivos definen los endpoints HTTP. Reciben requests, llaman servicios, devuelven JSON.
+```bash
+alembic upgrade head                                      # aplicar todas las pendientes
+alembic revision --autogenerate -m "descripcion"          # crear una nueva
+```
 
-| Archivo | Endpoints | Qué hace |
-|---|---|---|
-| `auth.py` | POST /register, /login, /forgot-password, /reset-password, /change-password | Todo lo de cuentas de usuario y contraseñas |
-| `files.py` | POST /upload | Recibe el archivo Excel, computa SHA-256 para deduplicación (HTTP 409 si ya existe), encola en Celery, retorna job_id inmediatamente (HTTP 202) |
-| `accounts.py` | GET/POST/PUT/DELETE /accounts | CRUD de cuentas bancarias del usuario |
-| `users.py` | GET /me | Datos del usuario actual |
-| `jobs.py` | GET /jobs/, GET /jobs/{id} | Ver el estado y historial de uploads procesados |
-| `analysis.py` | GET /analysis, GET /analysis/{id}, GET /analysis/{id}/transactions, GET /analysis/{id}/confidence-stats, GET /analysis/{id}/features, POST /analysis/{id}/reclassify-bulk, GET /analysis/aggregated | Ver análisis (incluye `bank_account` con nombre del banco + last4), transacciones, KPIs de confianza, features de ingeniería financiera, re-categorización bulk. **`/aggregated`**: queries `analysis_transactions` directo con filtros `?year=&month=&bank_account_id=`; devuelve top_merchants (via `canonicalize_detail`), by_economic_type, monthly_trend + KPIs. La ruta `/aggregated` debe ir ANTES de `/{snapshot_id}` en el archivo para evitar captura de parámetro. |
-| `kb.py` | GET /kb, GET /kb/global, DELETE /kb/{key}, GET /kb/preview | Ver KB personal, ver KB global completo (read-only), borrar una entrada incorrecta, previsualizar clave canónica. Las rutas literales (`/global`, `/preview`) deben ir ANTES de `/{key}`. |
-| `transactions.py` | POST /transactions/learn | El usuario corrige una categorización y el sistema aprende |
-| `health.py` | GET /health | Ping de salud del servidor |
-| `deps.py` | — | Funciones de dependencia: verifica JWT, inyecta sesión de DB |
-
-### Servicios (`app/services/`)
-Aquí vive la lógica de negocio. Los endpoints los llaman.
-
-| Archivo | Qué hace |
+| Revisión | Descripción |
 |---|---|
-| `processing_service.py` | **Orquestador principal.** Coordina el pipeline completo: parsear → detectar cuenta → analizar → guardar en DB |
-| `file_service.py` | Valida que el archivo sea un Excel válido y lo guarda en temp/ |
-| `account_detection_service.py` | Detecta o crea la cuenta bancaria usando un fingerprint (hash de banco + últimos 4 dígitos) |
-| `account_service.py` | CRUD de cuentas bancarias usando el repositorio |
-| `analysis_service.py` | Calcula KPIs, guarda snapshot y transacciones. Llama a `recommendation_engine` y a `_get_merchant_history` para detección cross-snapshot. **Upsert en `save_snapshot()`**: antes de insertar, busca snapshot existente con mismo `(user_id, bank_account_id, año, mes)` usando `extract()` de SQLAlchemy y lo elimina junto con sus transacciones (con `flush()`). Evita duplicados al re-subir el mismo período. |
-| `recommendation_engine.py` | **Motor de recomendaciones.** Módulo puro (sin DB). 10 reglas: no_income_detected, expenses_exceed_income, good_savings_rate, top_expense_category, category_concentration, high_bank_charges, high_unknown_spend, recurring_spend_summary, low_confidence_transactions, merchant_price_increase. |
-| `feature_engineering_service.py` | **Pipeline de features.** Módulo puro. Recibe transacciones persistidas, devuelve: by_week, by_day_of_week, spending_velocity (curva acumulada + proyección), category_ratios, merchant_concentration (top 10), recurrence_stats, income_stats. |
-| `financial_classifier.py` | **Motor de categorización.** Busca en KB personal → KB global → patrones builtin → fallback. Métodos: `list_personal_kb()`, `list_global_kb()` (devuelve entradas completas), `list_global_kb_summary()` (solo conteos), `delete_personal_entry()`. |
-| `detail_normalizer.py` | **Limpia descriptores bancarios.** Convierte raw → clave canónica. |
-| `categorization_service.py` | Puente entre el pipeline y el clasificador. |
-| `auth_service.py` | Registro de usuarios y verificación de contraseñas |
-| `email_service.py` | Envío de email de reset de password vía API de Resend |
-| `file_fingerprint_service.py` | Calcula SHA-256. HTTP 409 si el usuario sube el mismo archivo dos veces. |
-| `transaction_service.py` | Reclasificación de transacciones: `reclassify_transaction()` actualiza DB y enseña al KB. |
-
-### Parsers (`app/parsers/`)
-Cada parser sabe cómo leer el Excel de un banco específico.
-
-| Archivo | Banco | Estado | Score en su propio archivo |
-|---|---|---|---|
-| `factory.py` | — | ✅ | Puntúa todos los parsers, elige el que tenga score > 0.3 |
-| `base.py` | — | ✅ | Clase base con lógica compartida: normalizar montos, parsear fechas, encontrar columnas |
-| `banco_general.py` | Banco General | ✅ Validado con archivo real | 1.0 en BG, 0.0 en otros |
-| `bac.py` | BAC Credomatic | ✅ Validado con archivo real (35 tx, last4='7909') | 1.0 en BAC, 0.0 en otros |
-| `banistmo.py` | Banistmo | ✅ Validado con archivo real (222 tx, last4='9629') | 1.0 en Banistmo, 0.0 en otros |
-
-**Regla crítica de parsers:** La detección del banco es SIEMPRE por estructura del Excel (número de columnas, nombres del header, metadatos). NUNCA por nombre del archivo ni por contenido de las transacciones. "MCD CTE", "DB POS COMPRA", "BANCO GENERAL" aparecen en los descriptores de transacciones de Banistmo — si se usaran como señal, Banistmo sería detectado como Banco General.
-
-### Modelos (`app/models/`)
-Representan las tablas de la base de datos.
-
-| Archivo | Tabla | Qué guarda |
-|---|---|---|
-| `user.py` | `users` | Cuentas de usuario: email, password_hash, nombre |
-| `bank_account.py` | `bank_accounts` | Cuentas bancarias detectadas: banco, últimos 4, fingerprint |
-| `processing_job.py` | `processing_jobs` | Cada upload: status (queued/processing/success/error), error_message, timestamps |
-| `analysis_snapshot.py` | `analysis_snapshots` | KPIs del análisis: total_income, total_expenses, balance, categorías (JSON), period_start/end, **bank_account_id FK → bank_accounts** |
-| `analysis_transaction.py` | `analysis_transactions` | Cada transacción individual: fecha, detalle, monto, categorización completa, confidence |
-| `uploaded_file.py` | `uploaded_files` | Registro del archivo original subido |
-| `transaction.py` | — | **STUB VACÍO / DEPRECATED** |
-| `category_override.py` | — | **STUB VACÍO / DEPRECATED** |
-
-### Workers (`app/workers/`)
-
-| Archivo | Qué hace |
-|---|---|
-| `celery_app.py` | Configura la instancia de Celery (conexión a Redis, configuración de reintentos, TTL de resultados) |
-| `tasks.py` | Define `process_file_task`: la tarea que Celery ejecuta en background. Abre su propia conexión a DB, carga el User y ProcessingJob, llama `ProcessingService.run_pipeline()`, reintenta hasta 3 veces si hay error de DB |
-| `job_runner.py` | **Archivo vacío (0 bytes). Pendiente de eliminar con `git rm`.** No tiene ningún rol — `tasks.py` es el único worker. |
-
-### Knowledge Bases (`storage/knowledge_bases/`)
-Archivos JSON que el clasificador usa para categorizar transacciones.
-
-| Archivo | Qué contiene |
-|---|---|
-| `knowledge_base_global.json` | KB universal: 165 exact_matches + 44 patrones. Copiado de datos legacy. Guarda claves canónicas como "SPOTIFY", "NETFLIX", "UBER" |
-| `knowledge_base_user_{uuid}.json` | KB personal de cada usuario. Se crea y actualiza cuando el usuario usa `/learn`. Las correcciones del usuario se guardan aquí |
-
-**Cómo funciona el KB:** Las claves son strings canónicos (ya normalizados). El clasificador canonicaliza el detalle de la transacción antes de buscarlo. Si "TRESCUATES-4187-94XX-XXXX-6798" se canonicaliza a "TRESCUATES", busca "TRESCUATES" en el KB.
+| `aee0d9a03b5b` | Tablas base: users, bank_accounts, uploaded_files |
+| `74c3709235b6` | processing_jobs, analysis_snapshots |
+| `b91e024a922a` | original_filename y file_type en processing_jobs |
+| `c4f9e2a1d8ab` | analysis_transactions |
+| `d7e3f1a2b9c4` | Agrega `economic_type_detail`, elimina `transaction_category` |
+| `e5b3f8a2c1d9` | Agrega `bank_account_id` (FK nullable) a analysis_snapshots |
+| `f6a1b2c3d4e5` | Tabla `user_profiles`: industry, income, financial_goals, onboarding |
+| `g7b4c9d2e1f6` | Agrega `manual_expenses` (JSON) a user_profiles |
 
 ---
 
-## Flujo completo de un upload
+## Arquitectura
+
+### Flujo completo de un upload
 
 ```
 PASO 1: Usuario sube archivo
-POST /api/v1/files/upload  →  HTTP 202  {status: "queued", job_id: "xxxx-..."}
-  ├── FileService.validate_upload()          ← verifica que sea Excel válido, no muy grande
-  ├── compute_checksum(content)              ← SHA-256 del contenido (O(n) sobre el archivo)
-  ├── query uploaded_files WHERE user_id + checksum
-  │     └── si existe → HTTP 409 {error: "duplicate_file", original_filename, uploaded_at, detected_bank}
-  ├── save_temp_file()                       ← guarda en storage/temp/
-  ├── ProcessingService.create_job()         ← crea registro en processing_jobs (status="queued")
-  └── process_file_task.delay(..., content_hash, file_size) ← manda la tarea a Redis/Celery
-      → retorna INMEDIATAMENTE sin esperar el resultado
+POST /api/v1/files/upload  →  HTTP 202  {status: "queued", job_id: "..."}
+  ├── Valida que sea Excel válido
+  ├── Computa SHA-256 del contenido
+  │     └── si ya existe → HTTP 409 {error: "duplicate_file"}
+  ├── Guarda en storage/temp/
+  ├── Crea registro en processing_jobs (status="queued")
+  └── Encola tarea en Celery → retorna INMEDIATAMENTE
 
 PASO 2: Worker Celery procesa en background
-process_file_task(file_path, original_filename, user_id, job_id)
-  ├── Carga User y ProcessingJob desde DB
-  └── ProcessingService.run_pipeline(job, file_path, user)
-        ├── Job → status="processing"
-        ├── ParserFactory.get_parser(file_path)
-        │     └── Puntúa BG, BAC, Banistmo — elige el de mayor score (mínimo 0.3)
-        ├── parser.parse(file_path)
-        │     └── Devuelve: {transactions: [...], account_signatures: [...], detected_last4: "XXXX"}
-        ├── [ERROR si hay más de 1 account_signature — significa múltiples cuentas en un archivo]
-        ├── AccountDetectionService.detect_or_create_account(...)
-        │     └── Calcula fingerprint → busca en DB → crea si no existe
-        ├── AnalysisService.build_analysis(transactions, user_id, user_name)
-        │     ├── categorize_transactions() → por cada tx: FinancialClassifier.predict()
-        │     └── Acumula: total_income, total_expenses, balance, categorías, recomendaciones
-        ├── AnalysisService.save_snapshot()
-        │     └── Persiste en analysis_snapshots (SIN la lista de transacciones en el JSON)
-        ├── AnalysisService.save_transactions()
-        │     └── Persiste cada transacción en analysis_transactions
-        ├── Job → status="success"
-        └── Elimina archivo temporal
+  ├── Detecta el banco por estructura del Excel (BG / BAC / Banistmo)
+  ├── Parsea transacciones
+  ├── Detecta o crea la cuenta bancaria (por fingerprint)
+  ├── Categoriza cada transacción:
+  │     KB personal → KB global → builtins → fallback
+  ├── Calcula KPIs: total_income, total_expenses, balance, categorías
+  ├── Guarda snapshot y transacciones en DB
+  └── Job → status="success"
 
 PASO 3: Usuario consulta resultados
-GET /api/v1/jobs/{job_id}                          ← ver si terminó y si fue success o error
-GET /api/v1/analysis                               ← lista todos los análisis del usuario
-GET /api/v1/analysis/{snapshot_id}                 ← KPIs del análisis
-GET /api/v1/analysis/{snapshot_id}/transactions    ← transacciones individuales
-  Filtros opcionales:
-    ?requires_review=true   ← solo las que tienen confidence < 0.8
-    ?max_confidence=0.5     ← solo las que tienen confidence ≤ 0.5
+GET /api/v1/jobs/{job_id}
+GET /api/v1/analysis
+GET /api/v1/analysis/{snapshot_id}
+GET /api/v1/analysis/{snapshot_id}/transactions
 ```
+
+### Mapa de archivos
+
+**API (`app/api/v1/`)**
+
+| Archivo | Endpoints | Qué hace |
+|---|---|---|
+| `auth.py` | POST /register, /login, /forgot-password, /reset-password, /change-password | Autenticación y cuentas |
+| `files.py` | POST /upload | Recibe Excel, deduplicación SHA-256, encola en Celery |
+| `accounts.py` | GET/POST/PUT/DELETE /accounts | CRUD de cuentas bancarias |
+| `users.py` | GET /me, GET/PUT /profile | Datos del usuario y perfil financiero |
+| `jobs.py` | GET /jobs/, GET /jobs/{id} | Estado e historial de uploads |
+| `analysis.py` | GET /analysis, GET /analysis/{id}, GET /analysis/{id}/transactions, GET /analysis/aggregated | Análisis y transacciones |
+| `kb.py` | GET /kb, GET /kb/global, DELETE /kb/{key}, GET /kb/preview | Knowledge Base |
+| `transactions.py` | POST /learn, GET /review-groups, POST /review-groups/apply | Aprendizaje y entrenamiento masivo |
+| `health.py` | GET /health | Ping de salud |
+
+**Servicios (`app/services/`)**
+
+| Archivo | Qué hace |
+|---|---|
+| `processing_service.py` | Orquestador principal del pipeline |
+| `financial_classifier.py` | Motor de categorización (KB personal → global → builtins → fallback) |
+| `detail_normalizer.py` | Limpia descriptores bancarios crudos → claves canónicas |
+| `analysis_service.py` | Calcula KPIs, guarda snapshots y transacciones |
+| `recommendation_engine.py` | 10 reglas de recomendación financiera |
+| `feature_engineering_service.py` | Features: velocidad de gasto, concentración de merchants, recurrencia |
+| `account_detection_service.py` | Detecta o crea cuentas bancarias por fingerprint |
+| `transaction_service.py` | Reclasificación de transacciones |
+
+**Parsers (`app/parsers/`)**
+
+| Archivo | Banco | Estado |
+|---|---|---|
+| `banco_general.py` | Banco General | ✅ Validado con archivo real |
+| `bac.py` | BAC Credomatic | ✅ Validado con archivo real |
+| `banistmo.py` | Banistmo | ✅ Validado con archivo real |
+| `factory.py` | — | Puntúa los 3 parsers, elige el de mayor score (mínimo 0.3) |
+
+> **Regla crítica:** La detección del banco es SIEMPRE por estructura del Excel (columnas, headers, metadatos). Nunca por nombre del archivo ni por contenido de las transacciones.
 
 ---
 
-## detail_normalizer — Cómo limpia los descriptores
+## Motor de categorización
 
-**Problema:** Los bancos ponen ruido en los descriptores. "SPOTIFY" puede aparecer como:
-- `DB COMPRA E-COMMERCE INTL MCD CTE-FRA-SPOTIFY P3-5925-15858680` (Banco General, vía internet)
-- `SPOTIFY-4187-94XX-XXXX-6798` (Banco General, cargo directo con tarjeta)
+### Orden de búsqueda (se detiene en el primer match)
 
-Si guardamos la versión sucia en el KB, nunca habrá match porque cada transacción tiene IDs distintos.
+| Paso | Qué revisa | Confidence |
+|---|---|---|
+| 0 | ¿El nombre del usuario aparece en el detalle? → transferencia propia | 1.0 |
+| 0b | ¿Dice "ACH" o "XPRESS" sin nombre del usuario? → transferencia tercero | 0.85 |
+| 1 | ¿Clave canónica en KB personal? | 1.0 |
+| 2 | ¿Patrón regex en KB personal? | 0.92 |
+| 3 | ¿Clave canónica en KB global? | 1.0 |
+| 4 | ¿Patrón regex en KB global? | 0.90 |
+| 5 | ¿Patrón builtin hardcodeado? | 0.90–0.95 |
+| 6 | Fallback por tipo de movimiento | 0.3 |
 
-**Solución:** `canonicalize_detail(raw_detail) → str` limpia el descriptor en 4 pasos:
+Las transacciones con `confidence < 0.8` tienen `requires_review=true` (campo calculado, no existe en DB).
 
-```
-1. normalize_text          → Mayúsculas, quitar acentos, colapsar espacios
-2. strip_variable_suffixes → Quitar: IDs numéricos largos, sufijos de tarjeta (-4187-94XX-XXXX-6798),
-                              códigos de referencia alfanuméricos (7006M4Z73), etc.
-3. detect_canonical_merchant → Si hay una regla para el merchant (SPOTIFY, NETFLIX, UBER...),
-                               devolver directo el nombre canónico
-4. remove_noise_tokens + truncar a 5 tokens → Quitar "DB", "CR", "POS", "COMPRA", "MCD CTE", etc.
-```
+### Normalización de descriptores
 
-**Ejemplos reales:**
+El `detail_normalizer` convierte descriptores bancarios crudos en claves canónicas para que el KB pueda matchear independientemente del ruido:
 
-| Descriptor raw (como llega del banco) | Clave canónica resultante |
+| Descriptor raw | Clave canónica |
 |---|---|
 | `DB COMPRA E-COMMERCE INTL MCD CTE-FRA-SPOTIFY P3-5925-15858680` | `SPOTIFY` |
 | `SPOTIFY-4187-94XX-XXXX-6798` | `SPOTIFY` |
-| `CRUNCHYROLL  PAB-4187-94XX-XXXX-6798` | `CRUNCHYROLL` |
-| `AMAZON PRIME 7006M4Z73-4187-94XX-XXXX-6798` | `AMAZON PRIME` |
 | `TRESCUATES-4187-94XX-XXXX-6798` | `TRESCUATES` |
 | `SUBWAY VILLA LUCRE 201-4187-94XX-XXXX-6798` | `SUBWAY` |
-| `DB POS COMPRA MCD CTE-XTRA MARKE` | `SUPERMERCADO XTRA` |
-| `GOOGLE CRU-4187-94XX-XXXX-6798` | `CRUNCHYROLL` (Banistmo nombra Crunchyroll como "GOOGLE CRU") |
-| `GOOGLE MOB` | `GOOGLE MOB` (suscripción Play Store — sufijo preservado, no colapsa a GOOGLE) |
-| `GOOGLE YTU` | `GOOGLE YTU` (sufijo Play Store desconocido — ídem) |
-| `GOOGLE ONE` | `GOOGLE ONE` (almacenamiento Google — regla explícita) |
+| `GOOGLE CRU-4187-94XX-XXXX-6798` | `CRUNCHYROLL` |
+| `GOOGLE MOB` | `GOOGLE MOB` (sufijo preservado) |
 
-**Regla general de Play Store (Banistmo):** Banistmo trunca el nombre del app como `GOOGLE XXX` (3 letras). La regla `\bGOOGLE\s+([A-Z]{2,6})\b` → `"GOOGLE " + suffix` preserva cada sufijo como clave distinta. Las reglas explícitas (`GOOGLE CRU`, `GOOGLE ONE`, `GOOGLE GRI`) tienen precedencia y se revisan primero.
+### Taxonomía de categorías
 
-**Cómo agregar una regla de merchant:**
+El sistema usa **5 campos** para clasificar cada transacción:
 
-```python
-# En app/services/detail_normalizer.py
+**`economic_type`** — 6 valores: `ingreso`, `gasto`, `cargo_financiero`, `transferencia_propia`, `transferencia_tercero`, `reembolso`
 
-# Si el merchant puede confundirse con otro → va en SPECIFIC_MERCHANT_RULES (se revisan PRIMERO)
-# Acepta string fijo o callable que recibe el re.Match:
-(re.compile(r"\bMI_MERCHANT_ESPECIFICO\b", re.IGNORECASE), "NOMBRE CANÓNICO"),
-(re.compile(r"\bPREFIJO\s+(\w+)\b", re.IGNORECASE), lambda m: "PREFIJO " + m.group(1).upper()),
+**`economic_type_detail`** — granular: `salario`, `otros_ingresos`, `gasto_variable`, `gasto_recurrente`, `comision`, `impuesto`, `cargo_bancario`, `transferencia_propia`, `transferencia_tercero`, `reembolso`
 
-# Si es un merchant único sin ambigüedad → va en GENERIC_MERCHANT_RULES
-(re.compile(r"\bMI_MERCHANT\b", re.IGNORECASE), "NOMBRE CANÓNICO"),
-```
+**`subtype_economic`** — auto-detectado por frecuencia: 3+ ocurrencias del mismo merchant → `recurrente`; 1–2 → `extraordinario`
 
----
+**`budget_role`** — 7 valores: `presupuestable`, `no_presupuestable`, `gasto_operativo`, `gasto_financiero`, `ahorro_inversion`, `solo_balance`, `revisar`. Solo `solo_balance` se excluye de los totales de income/expenses.
 
-## FinancialClassifier — Cómo categoriza transacciones
+**`budget_category`** — categoría semántica: restaurantes, supermercados, transporte, suscripciones, etc.
 
-Cuando llega una transacción, el clasificador busca en este orden (se detiene en el primer match):
+### Patrones builtin más importantes
 
-| Paso | Qué revisa | Si hace match | Confidence |
-|---|---|---|---|
-| 0 | ¿El nombre del usuario aparece en el detalle? | → `own_transfer` (transferencia propia) | 1.0 |
-| 0b | ¿Dice "ACH" o "XPRESS" sin nombre del usuario? | → `third_party_transfer` (transferencia a tercero) | 0.85 |
-| 1 | ¿La clave canónica existe en el KB personal? | → categoría del KB personal | 1.0 |
-| 1b | ¿El raw descriptor existe en KB personal (legacy)? | → categoría del KB personal | 1.0 |
-| 2 | ¿Algún patrón regex del KB personal coincide? | → categoría del patrón personal | 0.92 |
-| 3 | ¿La clave canónica existe en el KB global? | → categoría del KB global | 1.0 |
-| 3b | ¿El raw descriptor existe en KB global (legacy)? | → categoría del KB global | 1.0 |
-| 4 | ¿Algún patrón regex del KB global coincide? | → categoría del patrón global | 0.90 |
-| 5 | ¿Algún patrón builtin hardcodeado coincide? | → categoría hardcodeada | 0.90–0.95 |
-| 6 | Ninguno de los anteriores | → fallback por tipo de movimiento | 0.3 |
-
-**¿Qué significa confidence=0.3?** Que el clasificador no sabe qué es la transacción y usó el fallback (si es débito → gasto genérico desconocido, si es crédito → ingreso genérico). Estas transacciones tienen `requires_review=true`.
-
-**Patrones builtin hardcodeados más importantes:**
-
-| Patrón en el detalle | economic_type | economic_type_detail | budget_role |
-|---|---|---|---|
-| `ENTRE CUENTAS` | `transferencia_propia` | `transferencia_propia` | `solo_balance` |
-| `PLANILLA`, `SALARIO`, `NOMINA`, `PAYROLL` | `ingreso` | `salario` | `presupuestable` |
-| `^YAPPY BG DE ` (recibir dinero) | `ingreso` | `otros_ingresos` | `presupuestable` |
-| `^YAPPY BG A `, `^PAGO YAPPY BG A ` (enviar) | `transferencia_tercero` | `transferencia_tercero` | `revisar` |
-| `COMISION`, `CARGO ANUAL` | `cargo_financiero` | `comision` | `gasto_financiero` |
-| `ITBMS` | `cargo_financiero` | `impuesto` | `gasto_financiero` |
-| `CR DEVOLUCION`, `REVERSO` | `reembolso` | `reembolso` | `solo_balance` |
-| `CREDITO TRANSF. DE CC/AH A CC/AH` | `transferencia_propia` | `transferencia_propia` | `solo_balance` |
-| `PAGO DE TARJETA DE CREDITO`, `PAGO DEBITADO PARA TDC`, `PAGO XXXX-XX**-****-XXXX` | `cargo_financiero` | `cargo_bancario` | `gasto_financiero` |
-| `COMPASS` | `cargo_financiero` | `cargo_bancario` | `gasto_financiero` |
-
-**Cómo agregar un patrón builtin:**
-
-```python
-# En app/services/financial_classifier.py, en BUILTIN_PATTERNS:
-(
-    r"MI_REGEX_PATRON",          # expresión regular que buscar en el detalle
-    {
-        "Economic Type": "gasto",              # uno de los 6 valores generales
-        "Economic Type Detail": "gasto_variable",  # valor granular
-        "SubType Economic": "recurrente",
-        "Categoría de presupuesto": "servicios",
-        "budget_role": "presupuestable",       # ver tabla de budget_role abajo
-    },
-    0.90,                        # confidence (usar 0.90 como estándar)
-    "builtin:nombre_descriptivo",
-),
-```
-
----
-
-## Taxonomía de categorías — Estructura actual
-
-El sistema usa **5 campos** para clasificar cada transacción. `"Tipo de transacción"` fue eliminado completamente.
-
-### economic_type — 6 valores generales
-| Valor | Cuándo usarlo |
-|---|---|
-| `ingreso` | Cualquier entrada de dinero (salario, otros ingresos) |
-| `gasto` | Cualquier salida de dinero (variable, recurrente) |
-| `cargo_financiero` | Comisiones bancarias, impuestos (ITBMS), cargos automáticos |
-| `transferencia_propia` | Movimiento entre cuentas del mismo usuario |
-| `transferencia_tercero` | Envío de dinero a otra persona (Yappy, ACH a tercero) |
-| `reembolso` | Devolución o reverso de un cargo previo |
-
-### economic_type_detail — valores granulares
-| Valor | Cuándo usarlo |
-|---|---|
-| `salario` | Nómina, planilla, PAYROLL |
-| `otros_ingresos` | Ingresos no clasificados como salario |
-| `gasto_variable` | Gasto no recurrente (fallback para gastos desconocidos) |
-| `gasto_recurrente` | Suscripciones, servicios fijos |
-| `comision` | Comisión bancaria, cargo anual |
-| `impuesto` | ITBMS |
-| `cargo_bancario` | Protección tarjeta, membresía, valor de tarjeta |
-| `transferencia_propia` | Espeja `economic_type` para transferencias propias |
-| `transferencia_tercero` | Espeja `economic_type` para transferencias a terceros |
-| `reembolso` | Espeja `economic_type` para reembolsos |
-
-### SubType Economic — auto-detección por frecuencia
-El campo `subtype_economic` se asigna en **dos pasadas**:
-
-1. **Primera pasada** (clasificador): el valor viene del KB o del patrón builtin.
-2. **Segunda pasada** (`_apply_subtype_auto_detection` en `build_analysis`): se reemplaza según la frecuencia del merchant en el archivo subido:
-   - `economic_type == "cargo_financiero"` → siempre `"financiero"` (sin importar frecuencia)
-   - `economic_type in {"transferencia_propia", "transferencia_tercero"}` → se mantiene el valor del clasificador
-   - método builtin + subtype no-soft → se mantiene (ej: salario con `builtin:salario` → `"recurrente"`)
-   - todo lo demás: 3+ ocurrencias del mismo merchant → `"recurrente"`, 1–2 → `"extraordinario"`
-
-Valores posibles: `recurrente`, `extraordinario`, `variable`, `operativo`, `fijo`, `interno`, `financiero`, `desconocido`.
-
----
-
-## budget_role — Los 7 valores canónicos
-
-Define el rol de la transacción en el presupuesto. **Solo `solo_balance` se excluye de los totales (income/expenses).** Los demás 6 sí cuentan.
-
-| Valor | Cuándo usarlo | ¿Cuenta en KPIs? |
+| Patrón en el detalle | economic_type | budget_role |
 |---|---|---|
-| `presupuestable` | Ingreso o gasto planeado y regular (ej: salario, supermercado, servicios del hogar) | ✅ Sí |
-| `no_presupuestable` | Gasto real pero fuera del presupuesto (ej: cena de ocasión, compra extraordinaria) | ✅ Sí |
-| `gasto_operativo` | Gasto operativo recurrente del día a día (ej: transporte, gasolina) | ✅ Sí |
-| `gasto_financiero` | Cargos del banco, comisiones, impuestos (ITBMS) | ✅ Sí |
-| `ahorro_inversion` | Depósito a ahorro o inversión | ✅ Sí |
-| `solo_balance` | Transferencia entre cuentas propias del mismo usuario (no es ingreso ni gasto real) | ❌ No — se excluye de totales |
-| `revisar` | No se sabe bien qué es, baja confianza, el usuario debe revisar | ✅ Sí |
+| `ENTRE CUENTAS` | `transferencia_propia` | `solo_balance` |
+| `PLANILLA`, `SALARIO`, `NOMINA`, `PAYROLL` | `ingreso` | `presupuestable` |
+| `^YAPPY BG DE` (recibir) | `ingreso` | `presupuestable` |
+| `^YAPPY BG A`, `^PAGO YAPPY BG A` (enviar) | `transferencia_tercero` | `revisar` |
+| `COMISION`, `CARGO ANUAL` | `cargo_financiero` | `gasto_financiero` |
+| `ITBMS` | `cargo_financiero` | `gasto_financiero` |
+| `CR DEVOLUCION`, `REVERSO` | `reembolso` | `solo_balance` |
 
 ---
 
@@ -436,20 +336,15 @@ Define el rol de la transacción en el presupuesto. **Solo `solo_balance` se exc
 
 `POST /api/v1/transactions/learn`
 
-Cuando el usuario ve una transacción mal categorizada, la corrige con este endpoint. El clasificador guarda el ejemplo en el KB y la próxima vez que vea un descriptor similar, lo categorizará correctamente.
-
-**Request:**
 ```json
 {
-  "detail": "TRESCUATES-4187-94XX-XXXX-6798",  ← descriptor raw completo (el sistema lo limpia internamente)
+  "detail": "TRESCUATES-4187-94XX-XXXX-6798",
   "economic_type": "gasto",
   "subtype_economic": "extraordinario",
-  "transaction_type": "gasto",
   "budget_category": "restaurantes",
   "budget_role": "no_presupuestable",
-  "weight": 2,            ← 2 = corrección explícita del usuario (valor recomendado)
-  "force_personal": false ← false = el sistema decide si va a KB global o personal
-                            true = forzar KB personal aunque sea un merchant global
+  "weight": 2,
+  "force_personal": false
 }
 ```
 
@@ -457,17 +352,14 @@ Cuando el usuario ve una transacción mal categorizada, la corrige con este endp
 ```json
 {
   "message": "KB personal actualizado correctamente.",
-  "detail_learned": "TRESCUATES",   ← IMPORTANTE: esta es la clave canónica que quedó guardada,
-                                       NO el descriptor raw. Confirma que el normalizer funcionó.
-  "kb_target": "personal",          ← dónde se guardó: "personal" o "global"
-  "personal_exact_matches": 2,      ← cuántas entradas exactas tiene ahora el KB personal
-  "personal_patterns": 2            ← cuántos patrones regex tiene ahora el KB personal
+  "detail_learned": "TRESCUATES",
+  "kb_target": "personal",
+  "personal_exact_matches": 2,
+  "personal_patterns": 2
 }
 ```
 
-**¿KB personal o global?**
-- Si el descriptor contiene keywords globales (UBER, NETFLIX, SPOTIFY, etc.) y `force_personal=false` → va al KB **global** (beneficia a todos los usuarios)
-- Si es un merchant local (restaurante panameño, negocio local) → va al KB **personal** (solo te aplica a ti)
+`detail_learned` muestra la clave canónica que quedó guardada. Si el merchant es global (UBER, NETFLIX, etc.) y `force_personal=false`, el sistema lo guarda en el KB global para beneficio de todos los usuarios.
 
 ---
 
@@ -477,256 +369,65 @@ Cuando el usuario ve una transacción mal categorizada, la corrige con este endp
 |---|---|---|---|
 | `/auth/register` | POST | JSON: email, password, full_name | Crea cuenta nueva |
 | `/auth/login` | POST | Form: username, password | `application/x-www-form-urlencoded`. Devuelve JWT |
-| `/auth/forgot-password` | POST | JSON: email | En DEBUG=true devuelve el token en el response. En producción manda email |
-| `/auth/reset-password` | POST | JSON: token, new_password | Token tiene TTL de 15 minutos |
+| `/auth/forgot-password` | POST | JSON: email | `DEBUG=true` devuelve token en el response; producción envía email |
+| `/auth/reset-password` | POST | JSON: token, new_password | TTL de 15 minutos |
 | `/auth/change-password` | POST | JSON: current_password, new_password | Requiere Bearer token |
-| `/users/me` | GET | — | Requiere Bearer token. Devuelve datos del usuario |
-
----
-
-## Decisiones de diseño — Por qué las cosas son como son
-
-- **Parser detection por estructura, nunca por nombre de archivo.** El usuario puede subir "estado_cuenta.xlsx" o "archivo_random.xlsx" — el nombre no importa.
-
-- **Nunca pasar `UploadFile.file` directamente a los parsers.** FastAPI's UploadFile es un stream en memoria. Siempre guardar a path temporal primero o pandas no puede leerlo.
-
-- **Las transacciones se persisten en `analysis_transactions`, NO en el JSON del snapshot.** `analysis_snapshots.summary` guarda solo los KPIs agregados (totales, categorías). Las transacciones individuales van a su propia tabla. Razón histórica: guardarlo en el JSON causaba un `TypeError: Object of type datetime is not JSON serializable`.
-
-- **El KB guarda claves canónicas, no descriptores raw.** "TRESCUATES" en el KB matchea cualquier versión sucia del descriptor (con tarjeta, con ID de referencia, con cualquier ruido).
-
-- **`requires_review` no existe en la base de datos.** Es un campo calculado en el endpoint: si `confidence < 0.8` → `requires_review=true`. El schema tiene `bool = False` como default — no eliminarlo o la serialización falla.
-
-- **Fingerprint de cuenta** = `hash(user_id + bank_name + account_type + nickname + last4)`. Permite detectar si ya existe la cuenta sin buscar por nombre.
-
-- **Deduplicación por SHA-256 sobre bytes del archivo, no por nombre.** Los exports de BAC siempre se llaman igual (e.g., "Estado de cuenta.xls"). Usar el nombre sería inútil. El hash se computa sincrónicamente en el endpoint (antes de encolar), así el usuario recibe feedback instantáneo (HTTP 409) en lugar de esperar que el worker falle. El hash se registra en `uploaded_files` solo DESPUÉS de un pipeline exitoso — si el job falla, el usuario puede reintentar con el mismo archivo sin recibir un falso 409. La `UniqueConstraint("user_id", "checksum")` en `uploaded_files` actúa como red de seguridad para race conditions.
-
-- **Un solo archivo = una sola cuenta.** Si el Excel tiene transacciones de dos cuentas distintas, el pipeline lo rechaza con HTTP 422. Cada archivo debe ser de una sola cuenta.
-
-- **Nunca usar descriptores de transacciones para identificar el banco.** "MCD CTE", "DB POS COMPRA", "BANCO GENERAL" aparecen dentro de los descriptores de transacciones de Banistmo. Si se usaran como señal → Banistmo sería mal identificado.
-
-- **Compatibilidad Python 3.10/3.14.** El proyecto corre en Python 3.14 en Windows pero el VM Linux de Cowork usa Python 3.10. `datetime.UTC` solo existe desde 3.11. El código usa `from datetime import timezone as _tz; UTC = _tz.utc`.
-
-- **`BacParser` y `BanistmoParser` extraen `account_number` de `row.iloc[1]` únicamente.** Extraerlo del texto completo de la fila concatena dígitos de saldos adyacentes y produce números falsos.
-
-- **`solo_balance` se excluye de `categories` además de los totales.** Un diseño anterior acumulaba `categories[budget_cat]` para todas las transacciones, causando que una transferencia a ahorros de $835 apareciera en el dict `categories` aunque estuviera excluida de `total_income` y `total_expenses`. Ahora `categories` solo acumula las transacciones que cuentan en los totales. Las transacciones `solo_balance` sí quedan registradas en `budget_roles` para trazabilidad.
-
-- **Los nombres de categoría se normalizan quitando acentos antes de acumular.** Los KBs pueden devolver `"alimentación"` (con tilde) mientras otros paths devuelven `"alimentacion"` (sin tilde), creando dos claves distintas en el dict de categorías. El fix aplica `unicodedata.normalize("NFD", cat).encode("ascii", "ignore").decode("ascii")` al nombre de categoría antes de usarlo como key. Resultado: siempre `"alimentacion"`, nunca `"alimentación"`.
-
-- **`analysis_snapshots.bank_account_id` es nullable con ON DELETE SET NULL.** Si el usuario elimina la cuenta bancaria, los snapshots históricos se conservan con `bank_account_id=NULL` en lugar de borrarse. Los snapshots creados antes de la migración también tendrán `bank_account_id=NULL`. Los endpoints de análisis retornan `bank_account: null` en esos casos — el frontend debe manejarlo.
-
-- **`GET /analysis` usa batch-query para evitar N+1.** Hace un único `SELECT * FROM bank_accounts WHERE account_id IN (...)` para todos los snapshots de la página en lugar de un query por snapshot.
-
-- **Los fixtures XLSX de tests deben tener al menos una fila con col6 != None.** Si todas las filas de la columna de crédito (col6) son `None`, openpyxl no persiste esa columna en el archivo → pandas lee solo 6 columnas → `_extraer_format1` descarta todas las filas con `if len(row) < 7`. Esto aplica a cualquier fixture BG que solo tenga débitos. Solución: incluir siempre una fila con crédito, o usar una fila dummy con col6=0.01.
-
----
-
-## Estado actual — Qué funciona y qué no
-
-### ✅ Funciona completamente
-
-- **Pipeline E2E**: Upload XLSX → Celery → Parse → Categorize → Save → job="success" (validado con archivos reales de BG, BAC y Banistmo)
-- **Parsers**: BG (Format 1), BAC (.xls), Banistmo (.xlsx) — los tres con score=1.0 en sus archivos y 0.0 en los demás. Validados E2E contra DB real.
-- **KB y /learn**: Usado en producción con los 3 bancos. Reglas de normalización extendidas: PAGO TDC (número enmascarado), COMPASS (comisión BAC dispositivo), PEDIDOSYA/PEDIDOS YA, GOOGLE Play Store (sufijos preservados)
-- **Persistencia**: `analysis_transactions` se llena correctamente con nueva columna `economic_type_detail`
-- **Normalizer**: stripea sufijo de tarjeta BG/BAC (`-4187-94XX-XXXX-6798`), IDs alfanuméricos, ruido bancario
-- **Clasificador**: KB global + personal con claves canónicas. `learn()` retorna la clave canónica guardada
-- **/learn**: Funciona. `detail_learned` en el response muestra la clave canónica real (no el raw input)
-- **/reclassify**: Funciona. Actualiza DB + enseña al KB. `confidence=1.0`, `method="user_reclassified"`
-- **Deduplicación de archivos**: SHA-256 sobre el contenido del archivo. Retorna HTTP 409 si el usuario sube el mismo archivo dos veces (independiente del nombre). El hash se registra en `uploaded_files` al finalizar el pipeline exitosamente.
-- **Taxonomía**: 2 columnas de tipo económico (`economic_type` general + `economic_type_detail` granular). `"Tipo de transacción"` eliminado. SubType auto-detectado por frecuencia de merchant en el archivo.
-- **budget_role**: 7 valores canónicos alineados entre schema, normalizer y KB
-- **Auth**: registro, login, forgot/reset/change password (email vía Resend en prod, token en response en DEBUG)
-- **Tests**: 183 passed, 3 warnings en verde (`tests/unit/`, `tests/services/`, `tests/api/`, `tests/integration/`)
-- **`bank_account_id` en snapshots**: cada análisis ahora sabe de qué banco proviene. `GET /analysis` y `GET /analysis/{id}` retornan `bank_account: {account_id, bank_name, account_last4, nickname}` (batch-query, sin N+1)
-- **Celery + Redis**: validado E2E (7/7 tests)
-
-### ⚠️ Implementado pero sin prueba E2E completa
-
-- **Email de reset**: solo probado en DEBUG=true (retorna token). La integración real con Resend no ha sido probada.
-
-### 🔲 Pendiente / No implementado
-
-- **`app/workers/job_runner.py`**: archivo vacío (0 bytes). Pendiente de `git rm` desde Windows.
-- **Frontend (MVP completo, sesión 17)**: Auth, Dashboard (filtros + 5 charts incluyendo donut por rol de presupuesto + recomendaciones), Upload, Análisis (lista/detalle), Transacciones (filtros crédito/débito + tipo económico + economic_type_detail en reclasificación), KBPage (personal + global con tabs), Presupuesto (50/30/20 + gastos adicionales + onboarding). Ver sección Frontend más abajo.
-- **`transaction_repository.py`**: stub vacío. Necesario si se quiere re-categorización masiva o queries filtradas avanzadas.
-
----
-
-## Tests
-
-| Archivo | Cobertura | Tests |
-|---|---|---|
-| `tests/unit/test_financial_classifier.py` | predict (exact/pattern/builtin/fallback), learn, canonical keys, ambiguity, reload, Python 3.10 compat | 38 |
-| `tests/unit/test_parsers.py` | BG, BAC, Banistmo — scores, transacciones, account signatures | 5 |
-| `tests/services/test_financial_classifier.py` | predict, learn, canonical keys, builtin, ambiguity, reload (taxonomía nueva: Economic Type Detail) | 12 |
-| `tests/services/test_analysis_service.py` | build_analysis, save_snapshot (sin transactions en summary), save_transactions, solo_balance excluido de categories, normalización de acentos | 7 |
-| `tests/services/test_detail_normalizer.py` | canonicalize_detail, normalize_categories (nueva taxonomía, sin Tipo de transacción), is_ambiguous_key, GOOGLE Play Store sufijos | 32 |
-| `tests/api/test_analysis_transactions_endpoint.py` | list, filter requires_review, filter max_confidence, 404s | 5 |
-| `tests/api/test_reclassify_endpoint.py` | happy path, also_learn=False, 404 not found, 404 wrong user, budget_role solo_balance | 5 |
-| `tests/api/test_bulk_reclassify_endpoint.py` | happy path (todas actualizadas), skip_user_reclassified=True, skip=False (fuerza manuales), 404 not found, 404 wrong user | 5 |
-| `tests/api/test_kb_endpoint.py` | list entries sorted, list categories, list empty, preview canonical, preview ambiguous, delete entry, delete 404 | 7 |
-| `tests/api/test_confidence_stats_endpoint.py` | confidence-stats: counts, empty snapshot, all-high, 404s | 5 |
-| `tests/api/test_features_endpoint.py` | features: happy path, by_week, by_dow (7 entries), velocity, category_ratios sum 100%, merchant_concentration, 404s | 13 |
-| `tests/services/test_recommendation_engine.py` | 10 reglas: no_income, expenses_exceed, savings_rate, top_category, concentration, bank_charges, unknown_spend, low_confidence, recurring, price_increase, all_clear, output structure | 31 |
-| `tests/api/test_snapshot_bank_account_endpoint.py` | bank_account en GET /analysis (con y sin cuenta), GET /analysis/{id}, 404 wrong user, BankAccountSummary schema | 7 |
-| `tests/integration/test_files_upload_api.py` | upload → job creado → pipeline ejecutado síncronamente con mock. Usa XLSX real generado con `_make_bg_xlsx()`. Incluye test de 409 por duplicate_file. | 8 |
-| `tests/e2e/test_celery_e2e.py` | Flujo completo contra infra real: HTTP → Celery → Redis → Worker → PostgreSQL. Requiere servidor + worker corriendo. | 7 |
-| **TOTAL** | | **183 passed, 3 warnings (e2e requieren infra real)** |
-
-**Nota sobre fixtures XLSX:** Los tests de integración y e2e usan `_make_bg_xlsx(*rows)` (definida en cada archivo de test) para generar XLSX en formato Banco General. Regla crítica: si todas las filas de col6 (crédito) son `None`, openpyxl no persiste esa columna → pandas lee solo 6 columnas → `_extraer_format1` descarta todas las filas con `len(row) < 7`. Siempre incluir al menos una fila con col6 != None en fixtures BG.
-
----
-
-## Migraciones aplicadas
-
-| Revisión | Descripción |
-|---|---|
-| `aee0d9a03b5b` | Tablas base: users, bank_accounts, uploaded_files |
-| `74c3709235b6` | processing_jobs, analysis_snapshots |
-| `b91e024a922a` | original_filename y file_type (nullable) en processing_jobs |
-| `c4f9e2a1d8ab` | analysis_transactions |
-| `d7e3f1a2b9c4` | Agrega `economic_type_detail`, elimina `transaction_category` de analysis_transactions |
-| `e5b3f8a2c1d9` | Agrega `bank_account_id` (FK nullable → bank_accounts, ON DELETE SET NULL) a analysis_snapshots |
-| `f6a1b2c3d4e5` | Tabla `user_profiles` con industry, expected_monthly_income, financial_goals, onboarding_completed |
-| `g7b4c9d2e1f6` | Agrega `manual_expenses` (JSON nullable) a user_profiles |
+| `/users/me` | GET | — | Requiere Bearer token |
 
 ---
 
 ## Frontend
 
-**Stack:** React + Vite + TypeScript + shadcn/ui + Tailwind CSS. Meta a largo plazo: portar a React Native + Expo reutilizando la lógica de hooks y API client.
+**Páginas disponibles:**
 
-**Arrancar el frontend:**
-```bash
-cd frontend
-npm install
-npm run dev     # http://localhost:3000 (proxy → backend en :8001)
-npm run build   # build de producción
-```
+| Ruta | Descripción |
+|---|---|
+| `/` | Dashboard con KPIs, gráficas de tendencia, top merchants y recomendaciones |
+| `/upload` | Drag & drop para subir estados de cuenta con polling de progreso |
+| `/analysis` | Lista de análisis con info del banco |
+| `/analysis/:id` | Detalle: KPIs, donut chart de categorías, recomendaciones |
+| `/analysis/:id/transactions` | Transacciones con filtros y reclasificación inline |
+| `/kb` | Knowledge Base personal (editable) y global (read-only) |
+| `/budget` | Presupuesto 50/30/20 con gastos adicionales manuales |
+| `/retrain` | Entrenamiento masivo: reclasifica grupos de transacciones por merchant |
+| `/onboarding` | Configuración inicial (industria, ingreso esperado, metas financieras) |
 
-**Estructura:**
-```
-frontend/src/
-├── api/        ← cliente axios + funciones tipadas por dominio
-│   ├── client.ts     ← instancia axios, interceptors JWT + 401
-│   ├── auth.ts       ← login, register, forgot/reset password
-│   ├── files.ts      ← uploadFile (multipart)
-│   ├── jobs.ts       ← getJob, listJobs
-│   ├── analysis.ts   ← listAnalysis, getAnalysis, getTransactions, reclassify, getAggregatedSummary
-│   ├── kb.ts         ← listKB, listGlobalKB, deleteKBEntry, previewCanonical
-│   └── users.ts      ← getMe
-├── stores/
-│   └── authStore.ts  ← Zustand + persist: token, user, isAuthenticated
-├── types/index.ts    ← interfaces TypeScript (User, ProcessingJob, AnalysisSnapshot, KBEntry, etc.)
-├── components/
-│   ├── AppShell.tsx  ← sidebar + header móvil + Outlet (nav: /, /upload, /analysis, /kb)
-│   └── ui/           ← shadcn/ui: button, card, badge, input, label, toast
-├── pages/
-│   ├── LoginPage.tsx
-│   ├── RegisterPage.tsx
-│   ├── ForgotPasswordPage.tsx   ← muestra debug token si DEBUG=true
-│   ├── ResetPasswordPage.tsx    ← lee ?token= de la URL
-│   ├── DashboardPage.tsx        ← ver notas abajo
-│   ├── UploadPage.tsx           ← drag&drop, polling de job, redirect a /analysis
-│   ├── AnalysisListPage.tsx     ← historial de snapshots con info del banco
-│   ├── AnalysisDetailPage.tsx   ← KPIs, pie chart, recomendaciones
-│   ├── TransactionsPage.tsx     ← listado + filtro requires_review + reclasificación inline
-│   └── KBPage.tsx               ← tabs Personal/Global, preview canónico, eliminar entradas
-└── lib/utils.ts    ← cn, formatCurrency, formatDate, formatPeriod (null-safe), capitalize, etc.
-```
-
-**DashboardPage — arquitectura de datos:**
-- Siempre llama a `GET /analysis/aggregated` (con los filtros activos) cuando hay snapshots cargados. Sin filtros devuelve el consolidado completo.
-- Filtros: año (de period_start Y period_end), mes (cursor loop por todo el rango del snapshot), banco (pill).
-- `filtersActive = !!(selectedYear || selectedBankKey)` — solo se usa para el label "filtradas" en el KPI card.
-- `kpis`: usa `aggregated` del servidor cuando está disponible; fallback a `snapshotAggregate()` client-side mientras carga.
-- Charts: tendencia mensual (ComposedChart, solo si trendData.length > 1), top merchants (BarChart horizontal), tipo económico (PieChart), categorías (BarChart vertical).
-- Months filter: cursor loop de period_start a period_end para incluir todos los meses intermedios.
-- Snapshot filtering: overlap-based (snapshot.period_start ≤ fin_del_mes_seleccionado AND snapshot.period_end ≥ inicio_del_mes_seleccionado).
-
-**KBPage — notas de diseño:**
-- Tab "Personal": editable (delete con confirmación en-línea). Carga al montar.
-- Tab "Global": read-only, carga lazy (solo al hacer clic). Banner informativo. Sin botones de eliminar.
-- `GET /kb/global` debe ir antes de `DELETE /kb/{key}` en el router para evitar captura de parámetro.
-
-**Notas de diseño importantes:**
-- **`job.job_id`** (no `job.id`) — el backend usa `job_id` como primary key.
-- **`ProcessingJob` no tiene `snapshot_id`** — redirige a `/analysis` (lista) al completar upload.
-- **`user.user_id`** (no `user.id`) — el backend usa `user_id` como UUID primario.
-- **`Transaction.transaction_id`** (no `transaction.id`) — crítico para reclasificación inline.
-- **`formatPeriod(start | null, end | null)`** — null-safe; retorna "Período sin fecha" si ambos son null.
-- **Toast global** — `src/components/ui/toast.tsx` implementa un store singleton sin proveedor. Usar `toast("mensaje", "success"|"error"|"info")` desde cualquier componente. `<Toaster />` montado en `main.tsx`.
-- **ForgotPassword DEBUG mode** — cuando `DEBUG=true` el backend retorna el token en el response.
-
-**Notas de TransactionsPage (sesión 17):**
-- `filterMovement: "all" | "credit" | "debit"` — valores en inglés (como los guarda la DB), labels en español "Crédito"/"Débito"
-- `filterEtype: string` — filtra por `economic_type`
-- `needsReview(t)` = `t.requires_review || t.budget_role === "revisar" || t.budget_category?.includes("desconocido")`
-- Formulario de reclasificación inline incluye `economic_type_detail` como select
-
-**Notas de BudgetPage (sesión 17):**
-- `manual_expenses === null` → primera visita → muestra modal automáticamente
-- `manual_expenses === []` → ya configurado sin gastos → no muestra modal
-- Modal editable vía botón "Gastos adicionales" en el header
-- `toMonthly(amount, freq)`: weekly×4.33, annual÷12, monthly sin cambio
-- `manualMonthly` = suma de `monthly_amount` de todos los gastos manuales
-- `buckets` merges `aggregated.categories` + gastos manuales por categoría antes de clasificar en 50/30/20
-- `totalExpenses = aggregated.total_expenses + manualMonthly`
-
-**Notas de RetrainPage (sesión 18):**
-- Ruta `/retrain` — nav item "Entrenamiento" con ícono `Sparkles`
-- Carga `GET /transactions/review-groups` (solo débitos, excluye `user_reclassified`, con confidence < 0.8 o budget_role="revisar" o category contiene "desconocido")
-- Cada fila: dropdown "Frecuencia" → `subtype_economic` (extraordinario/recurrente/variable/financiero). `inferEtypeDetail(cat, subtype)` calcula `economic_type_detail` automáticamente: cargo_financiero/deuda → "cargo_bancario", recurrente → "gasto_recurrente", resto → "gasto_variable"
-- Al aplicar: `POST /transactions/review-groups/apply` actualiza todas las txs del grupo + entrena KB
-- `defaultRole(cat)` auto-infiere `budget_role` al cambiar categoría
-
-**Notas de categorías compartidas (sesión 18):**
-- `src/lib/categories.ts` exporta `BUDGET_CATEGORIES` (array `as const`) — fuente única para TransactionsPage y RetrainPage
-- `budget_category` en TransactionsPage cambió de `Input` texto libre a `<select>` con `BUDGET_CATEGORIES`
-
-**Pendiente del frontend:**
-- Estadísticas de confianza visibles en AnalysisDetailPage
-- Página de cuentas bancarias → **DESCARTADA por ahora**: nicknames no se usan en UI, cuentas se crean automáticamente al subir, delete es destructivo (ON DELETE SET NULL rompe asociación de snapshots históricos)
+**UI:** Estilo Zoho Invoice — sidebar navy `#1c2b4b`, acento naranja `#e05c19`, cards blancas, animaciones staggered.
 
 ---
 
-## Roadmap
+## Decisiones de diseño
 
-### Prioridad Alta
+- **Parser detection por estructura, nunca por nombre de archivo.** El banco se detecta por la estructura interna del Excel, no por el nombre del archivo ni por el contenido de las transacciones.
 
-- **Seguir entrenando el KB**: subir archivos periódicamente, revisar con `?requires_review=true`, usar `/learn` y `/reclassify` para bajar la tasa de fallback.
-- **Medir tasa de confianza**: usar `/confidence-stats` antes y después de cada sesión de entrenamiento.
-- **~~Frontend — campo `economic_type_detail`~~**: ✅ Agregado al formulario de reclasificación inline en TransactionsPage (sesión 17).
+- **El KB guarda claves canónicas, no descriptores raw.** "TRESCUATES" en el KB matchea cualquier versión sucia del descriptor (con número de tarjeta, con ID de referencia, con cualquier ruido bancario).
 
-### Prioridad Media
+- **Deduplicación por SHA-256 sobre bytes del archivo.** Evita reprocesar el mismo archivo aunque se renombre. El hash se registra en `uploaded_files` solo tras un pipeline exitoso — si el job falla, el usuario puede reintentar sin recibir un falso 409.
 
-- **Estadísticas de confianza en AnalysisDetailPage**: mostrar los datos de `/confidence-stats` de forma visual.
-- **Resend en producción**: configurar dominio verificado y RESEND_API_KEY real.
-- **`transaction_repository.py`**: implementar si se necesita re-categorización masiva o queries filtradas avanzadas.
-- **Eliminar `job_runner.py`**: confirmado vacío (0 bytes). Hacer `git rm backend/app/workers/job_runner.py` desde Windows.
+- **Las transacciones se persisten en `analysis_transactions`, no en el JSON del snapshot.** `analysis_snapshots.summary` guarda solo KPIs agregados. Esto evita problemas de serialización y permite queries eficientes.
 
-### Prioridad Baja / Deuda Técnica
+- **`requires_review` es un campo calculado.** No existe en la DB. Si `confidence < 0.8` → `requires_review=true`.
 
-- **~~Migrar `python-jose` → `PyJWT`~~**: ✅ completado. PyJWT 2.12.1 en uso.
-- **~~Verificar passlib~~**: ✅ confirmado. Solo pwdlib en `security.py`. passlib no está en uso.
-- **~~Eliminar stubs~~**: ✅ `transaction.py`, `category_override.py`, `dto.py`, `enums.py`, `auth_service.py`, `financial_classifier_backup.py` — eliminados con `git rm`.
-- **~~Migrar `@app.on_event("startup")` a `lifespan`~~**: ✅ completado.
-- **~~Migrar `AnalysisTransactionResponse` a `ConfigDict`~~**: ✅ completado.
-- **~~Rate limiting~~**: ✅ implementado con `slowapi`. Activo automáticamente cuando `DEBUG=false`.
-- **~~Recomendaciones financieras~~**: ✅ 10 reglas en producción (cross-snapshot incluido).
-- **~~Dashboard visualizaciones~~**: ✅ Tendencia mensual, top merchants, tipo económico (sesión 15).
-- **~~KBPage~~**: ✅ Tabs Personal/Global, preview canónico, eliminar en-línea (sesión 15).
-- **~~`GET /analysis/aggregated`~~**: ✅ Endpoint con filtros year/month/bank_account_id (sesión 15).
-- **~~`GET /kb/global`~~**: ✅ Endpoint read-only con entradas completas (sesión 15).
-- **~~Upsert en re-upload~~**: ✅ `save_snapshot()` elimina snapshot previo del mismo período antes de insertar (sesión 15).
-- **~~Cuentas bancarias CRUD~~**: ❌ Descartado — nicknames sin uso en UI, cuentas auto-detectadas, delete destructivo.
-- **~~Onboarding post-primer-análisis~~**: ✅ Flujo de 3 pasos (industria, ingreso, metas) activado tras primer upload exitoso (sesión 16).
-- **~~Página de Presupuesto~~**: ✅ `/budget` con 50/30/20 real vs objetivo, PieChart, BarChart, acciones por meta, guía educativa (sesión 16).
-- **~~UserProfile model/API~~**: ✅ `GET/PUT /users/profile` · tabla `user_profiles` · migración `f6a1b2c3d4e5` (sesión 16).
-- **~~Recommendation engine: metas~~**: ✅ 4 reglas nuevas: `goal_emergency_fund`, `goal_debt_payment`, `goal_savings_gap`, `income_below_expected` (sesión 16).
-- **~~Gastos adicionales manuales~~**: ✅ `manual_expenses` en UserProfile (JSON, migración `g7b4c9d2e1f6`), modal de configuración en BudgetPage con descripción/monto/frecuencia/categoría/origen multi-select, integrado en cálculo 50/30/20 (sesión 17).
-- **~~Filtros TransactionsPage~~**: ✅ Filtro tipo de movimiento (crédito/débito) + tipo económico. `economic_type_detail` en formulario de reclasificación. Filtro "requiere revisión" ampliado a `budget_role==="revisar"` y `budget_category` contiene "desconocido" (sesión 17).
-- **~~Dashboard: donut por rol de presupuesto~~**: ✅ Gráfica "Rol en presupuesto" en Dashboard. `by_budget_role` acumulado en `/analysis/aggregated` backend (solo gastos, excluye `solo_balance`) (sesión 17).
-- **~~Fix YAPPY BG DE clasificación~~**: ✅ Patrón builtin corregido: `^YAPPY BG DE` → `ingreso/otros_ingresos` (antes era transferencia_tercero) (sesión 17).
-- **~~Entrenamiento masivo (`/retrain`)~~**: ✅ `RetrainPage` con tabla de grupos por merchant; `GET /transactions/review-groups` + `POST /transactions/review-groups/apply`; dropdown "Frecuencia" manda `subtype_economic`; `inferEtypeDetail()` calcula `economic_type_detail` automáticamente; `defaultRole()` auto-infiere budget_role (sesión 18).
-- **~~Categorías compartidas~~**: ✅ `src/lib/categories.ts` → `BUDGET_CATEGORIES`; `budget_category` en TransactionsPage cambió de input libre a select (sesión 18).
+- **Un solo archivo = una sola cuenta.** Si el Excel tiene transacciones de dos cuentas distintas, el pipeline lo rechaza con HTTP 422.
+
+- **`solo_balance` se excluye de `categories` además de los totales.** Las transferencias entre cuentas propias no son ni ingreso ni gasto real.
+
+- **`GET /analysis` usa batch-query para evitar N+1.** Un solo `SELECT IN (...)` por página para cargar datos de cuentas bancarias asociadas.
+
+- **Los nombres de categoría se normalizan quitando acentos.** Evita que "alimentación" y "alimentacion" generen dos claves distintas en el dict de categorías.
+
+---
+
+## Scripts de utilidad
+
+```bash
+# Sembrar KB personal desde datos legacy de otro usuario
+python scripts/seed_personal_kb.py <uuid-del-usuario>
+python scripts/seed_personal_kb.py <uuid> --force   # sobreescribir si ya existe
+```
+
+---
+
+## Licencia
+
+Uso privado.

@@ -82,3 +82,10 @@ docs/
 # Pytest cache
 .pytest_cache/
 **/.pytest_cache/
+
+# ========================
+# Documentación interna
+# (contiene notas de sesiones, decisiones de diseño internas y detalles de infra)
+# ========================
+CLAUDE.md
+memory.md
