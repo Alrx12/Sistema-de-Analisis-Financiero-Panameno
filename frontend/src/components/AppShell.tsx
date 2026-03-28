@@ -11,6 +11,7 @@ import {
   PiggyBank,
   Sparkles,
   PenLine,
+  Wallet,
 } from "lucide-react"
 import { useState } from "react"
 import { useAuthStore } from "@/stores/authStore"
@@ -24,6 +25,7 @@ const navSections = [
       { to: "/",        label: "Dashboard",             icon: LayoutDashboard, end: true  },
       { to: "/upload",  label: "Subir estado de cuenta", icon: Upload,          end: false },
       { to: "/manual",  label: "Entrada Manual",          icon: PenLine,         end: false },
+      { to: "/cuentas", label: "Cuentas y Metas",         icon: Wallet,          end: false },
     ],
   },
   {
