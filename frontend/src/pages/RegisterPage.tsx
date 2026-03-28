@@ -3,14 +3,13 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { Link, useNavigate } from "react-router-dom"
-import { TrendingUp, Loader2 } from "lucide-react"
+import { TrendingUp, Loader2, Eye, EyeOff } from "lucide-react"
 import { register as apiRegister } from "@/api/auth"
 import { login } from "@/api/auth"
 import { getMe } from "@/api/users"
 import { getProfile } from "@/api/profile"
 import { useAuthStore } from "@/stores/authStore"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { parseApiError } from "@/lib/utils"
@@ -31,6 +30,8 @@ export default function RegisterPage() {
   const setToken = useAuthStore((s) => s.setToken)
   const setUser = useAuthStore((s) => s.setUser)
   const [apiError, setApiError] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -97,7 +98,24 @@ export default function RegisterPage() {
 
               <div className="space-y-1.5">
                 <Label htmlFor="password">Contraseña</Label>
-                <Input id="password" type="password" placeholder="Mínimo 8 caracteres" {...register("password")} />
+                <div className="auth-input-wrap">
+                  <input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Mínimo 8 caracteres"
+                    className="auth-input auth-input-password"
+                    {...register("password")}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="auth-eye-btn"
+                    tabIndex={-1}
+                    aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  >
+                    {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                </div>
                 {errors.password && (
                   <p className="text-xs text-destructive">{errors.password.message}</p>
                 )}
@@ -105,7 +123,24 @@ export default function RegisterPage() {
 
               <div className="space-y-1.5">
                 <Label htmlFor="confirm">Confirmar contraseña</Label>
-                <Input id="confirm" type="password" placeholder="••••••••" {...register("confirm")} />
+                <div className="auth-input-wrap">
+                  <input
+                    id="confirm"
+                    type={showConfirm ? "text" : "password"}
+                    placeholder="••••••••"
+                    className="auth-input auth-input-password"
+                    {...register("confirm")}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirm((v) => !v)}
+                    className="auth-eye-btn"
+                    tabIndex={-1}
+                    aria-label={showConfirm ? "Ocultar confirmación" : "Mostrar confirmación"}
+                  >
+                    {showConfirm ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                </div>
                 {errors.confirm && (
                   <p className="text-xs text-destructive">{errors.confirm.message}</p>
                 )}

@@ -5,6 +5,7 @@ import secrets
 from typing import Any
 
 import jwt
+import pyotp
 from pwdlib import PasswordHash
 from pwdlib.exceptions import HasherNotAvailable
 
@@ -96,3 +97,117 @@ def decode_password_reset_token(token: str) -> str:
         raise ValueError("Token sin subject")
 
     return str(user_id)
+
+
+# ── Email verification token ────────────────────────────────────────────────
+_EMAIL_VERIFY_EXPIRE_HOURS = 24
+_EMAIL_VERIFY_PURPOSE = "email_verification"
+
+
+def create_email_verification_token(user_id: str) -> str:
+    """Genera un JWT para verificar el email del usuario. Expira en 24 horas."""
+    expire = datetime.now(timezone.utc) + timedelta(hours=_EMAIL_VERIFY_EXPIRE_HOURS)
+    payload: dict[str, Any] = {
+        "sub": user_id,
+        "exp": expire,
+        "purpose": _EMAIL_VERIFY_PURPOSE,
+    }
+    return jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
+
+
+def decode_email_verification_token(token: str) -> str:
+    """Valida el token de verificación de email y retorna el user_id."""
+    try:
+        payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+    except Exception as exc:
+        raise ValueError("Token inválido o expirado") from exc
+
+    if payload.get("purpose") != _EMAIL_VERIFY_PURPOSE:
+        raise ValueError("Token no es de verificación de email")
+
+    user_id = payload.get("sub")
+    if not user_id:
+        raise ValueError("Token sin subject")
+
+    return str(user_id)
+
+
+# ── 2FA pending token (login step 1 → step 2) ───────────────────────────────
+_TWO_FACTOR_EXPIRE_MINUTES = 5
+_TWO_FACTOR_PURPOSE = "two_factor_pending"
+
+
+def create_two_factor_token(user_id: str) -> str:
+    """JWT de corta duración (5 min) que identifica el paso pendiente de 2FA durante el login."""
+    expire = datetime.now(timezone.utc) + timedelta(minutes=_TWO_FACTOR_EXPIRE_MINUTES)
+    payload: dict[str, Any] = {
+        "sub": user_id,
+        "exp": expire,
+        "purpose": _TWO_FACTOR_PURPOSE,
+    }
+    return jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
+
+
+def decode_two_factor_token(token: str) -> str:
+    """Valida el 2FA pending token y retorna el user_id."""
+    try:
+        payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+    except Exception as exc:
+        raise ValueError("Token inválido o expirado") from exc
+
+    if payload.get("purpose") != _TWO_FACTOR_PURPOSE:
+        raise ValueError("Token no es de 2FA pendiente")
+
+    user_id = payload.get("sub")
+    if not user_id:
+        raise ValueError("Token sin subject")
+
+    return str(user_id)
+
+
+# ── OAuth state token (CSRF protection) ────────────────────────────────────
+_OAUTH_STATE_EXPIRE_MINUTES = 10
+_OAUTH_STATE_PURPOSE = "oauth_state"
+
+
+def create_oauth_state(provider: str) -> str:
+    """Genera un JWT firmado como parámetro state para OAuth (protección CSRF)."""
+    expire = datetime.now(timezone.utc) + timedelta(minutes=_OAUTH_STATE_EXPIRE_MINUTES)
+    payload: dict[str, Any] = {
+        "exp": expire,
+        "purpose": _OAUTH_STATE_PURPOSE,
+        "provider": provider,
+        "nonce": secrets.token_hex(8),
+    }
+    return jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
+
+
+def verify_oauth_state(state: str, expected_provider: str) -> bool:
+    """Verifica que el state de OAuth sea válido y del proveedor correcto."""
+    try:
+        payload = jwt.decode(state, settings.secret_key, algorithms=[settings.algorithm])
+        return (
+            payload.get("purpose") == _OAUTH_STATE_PURPOSE
+            and payload.get("provider") == expected_provider
+        )
+    except Exception:
+        return False
+
+
+# ── TOTP (2FA) helpers ───────────────────────────────────────────────────────
+
+def generate_totp_secret() -> str:
+    """Genera un secreto TOTP aleatorio en base32."""
+    return pyotp.random_base32()
+
+
+def get_totp_provisioning_uri(secret: str, email: str) -> str:
+    """Retorna el URI otpauth:// para registrar en apps como Google Authenticator."""
+    totp = pyotp.TOTP(secret)
+    return totp.provisioning_uri(name=email, issuer_name="SAFPRO")
+
+
+def verify_totp(secret: str, code: str) -> bool:
+    """Verifica un código TOTP de 6 dígitos. Acepta ±1 ventana (30 s de margen)."""
+    totp = pyotp.TOTP(secret)
+    return totp.verify(code, valid_window=1)

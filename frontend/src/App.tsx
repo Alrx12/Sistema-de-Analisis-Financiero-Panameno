@@ -6,6 +6,9 @@ import LoginPage from "@/pages/LoginPage"
 import RegisterPage from "@/pages/RegisterPage"
 import ForgotPasswordPage from "@/pages/ForgotPasswordPage"
 import ResetPasswordPage from "@/pages/ResetPasswordPage"
+import VerifyEmailPage from "@/pages/VerifyEmailPage"
+import OAuthCallbackPage from "@/pages/OAuthCallbackPage"
+import TwoFactorSetupPage from "@/pages/TwoFactorSetupPage"
 import DashboardPage from "@/pages/DashboardPage"
 import UploadPage from "@/pages/UploadPage"
 import AnalysisListPage from "@/pages/AnalysisListPage"
@@ -37,6 +40,8 @@ export default function App() {
         <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
         <Route path="/forgot-password" element={<PublicRoute><ForgotPasswordPage /></PublicRoute>} />
         <Route path="/reset-password" element={<PublicRoute><ResetPasswordPage /></PublicRoute>} />
+        <Route path="/verify-email" element={<VerifyEmailPage />} />
+        <Route path="/oauth-callback" element={<OAuthCallbackPage />} />
 
         {/* Onboarding — protegida pero fuera del AppShell (pantalla completa) */}
         <Route path="/onboarding" element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />
@@ -53,6 +58,7 @@ export default function App() {
           <Route path="kb" element={<KBPage />} />
           <Route path="budget" element={<BudgetPage />} />
           <Route path="retrain" element={<RetrainPage />} />
+          <Route path="2fa-setup" element={<TwoFactorSetupPage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

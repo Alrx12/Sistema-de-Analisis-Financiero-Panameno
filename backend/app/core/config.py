@@ -25,7 +25,16 @@ class Settings(BaseSettings):
     # Email (Resend) — requerido en producción (DEBUG=false)
     resend_api_key: str = ""
     email_from: str = "SAFPRO <noreply@tudominio.com>"
-    frontend_url: str = "http://localhost:3000"  # base URL del frontend para el link de reset
+    frontend_url: str = "http://localhost:3000"   # base URL del frontend
+    backend_url: str = "http://localhost:8001"    # base URL del backend (para callbacks OAuth)
+
+    # OAuth — Google
+    google_client_id: str = ""
+    google_client_secret: str = ""
+
+    # OAuth — GitHub
+    github_client_id: str = ""
+    github_client_secret: str = ""
 
     model_config = SettingsConfigDict(
         env_file=".env",

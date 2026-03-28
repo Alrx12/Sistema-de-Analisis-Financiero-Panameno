@@ -13,6 +13,14 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
 
 
+# Respuesta del login: puede ser token completo o paso 2FA pendiente
+class LoginResponse(BaseModel):
+    access_token: str | None = None
+    token_type: str = "bearer"
+    requires_2fa: bool = False
+    two_factor_token: str | None = None
+
+
 class ForgotPasswordRequest(BaseModel):
     email: EmailStr
 
@@ -32,3 +40,31 @@ class ResetPasswordRequest(BaseModel):
 class ChangePasswordRequest(BaseModel):
     current_password: str
     new_password: str = Field(min_length=8, max_length=128)
+
+
+# ── Email verification ───────────────────────────────────────────────────────
+class VerifyEmailRequest(BaseModel):
+    token: str
+
+
+# ── 2FA ─────────────────────────────────────────────────────────────────────
+class TwoFactorVerifyRequest(BaseModel):
+    """Envía el código TOTP junto con el token temporal del paso 1 del login."""
+    two_factor_token: str
+    code: str = Field(min_length=6, max_length=6)
+
+
+class TwoFactorSetupResponse(BaseModel):
+    secret: str
+    provisioning_uri: str
+
+
+class TwoFactorEnableRequest(BaseModel):
+    """Verifica el primer código TOTP para activar 2FA."""
+    code: str = Field(min_length=6, max_length=6)
+
+
+class TwoFactorDisableRequest(BaseModel):
+    """Requiere contraseña + código TOTP para desactivar 2FA."""
+    password: str
+    code: str = Field(min_length=6, max_length=6)
