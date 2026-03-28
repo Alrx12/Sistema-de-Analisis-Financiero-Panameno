@@ -7,7 +7,8 @@ asociado a ella. Las transacciones manuales se almacenan ahí.
 
 import uuid
 import logging
-from datetime import date, datetime, timezone
+import datetime as _dt
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
@@ -31,7 +32,7 @@ MANUAL_FINGERPRINT_PREFIX = "manual_account_"
 # ─── Schemas de entrada ───────────────────────────────────────────────────────
 
 class ManualTransactionCreate(BaseModel):
-    date: date = Field(default_factory=date.today)
+    date: _dt.date = Field(default_factory=_dt.date.today)
     detail: str = Field(..., min_length=1, max_length=500, description="Nombre o descripción del gasto (texto libre)")
     amount: float = Field(..., gt=0, description="Monto positivo — el sistema distingue por movement_type")
     movement_type: str = Field(..., pattern="^(debito|credito)$", description="'debito' = gasto, 'credito' = ingreso")
