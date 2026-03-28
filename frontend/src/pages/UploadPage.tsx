@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { Upload, FileSpreadsheet, CheckCircle2, XCircle, Loader2 } from "lucide-react"
+import { Upload, FileSpreadsheet, CheckCircle2, XCircle, Loader2, PenLine } from "lucide-react"
+import { Link } from "react-router-dom"
 import { uploadFile } from "@/api/files"
 import { getJob } from "@/api/jobs"
 import { getProfile } from "@/api/profile"
@@ -214,6 +215,18 @@ export default function UploadPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Alternativa: entrada manual */}
+      <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+        <span>¿No tienes el estado de cuenta?</span>
+        <Link
+          to="/manual"
+          className="inline-flex items-center gap-1.5 font-medium text-primary hover:underline"
+        >
+          <PenLine className="h-3.5 w-3.5" />
+          Ingresar gastos manualmente
+        </Link>
+      </div>
 
       {/* Bancos soportados */}
       <Card className="zoho-card border-0">

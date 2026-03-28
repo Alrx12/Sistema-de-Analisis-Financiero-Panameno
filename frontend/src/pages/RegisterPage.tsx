@@ -7,6 +7,7 @@ import { TrendingUp, Loader2 } from "lucide-react"
 import { register as apiRegister } from "@/api/auth"
 import { login } from "@/api/auth"
 import { getMe } from "@/api/users"
+import { getProfile } from "@/api/profile"
 import { useAuthStore } from "@/stores/authStore"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -44,14 +45,24 @@ export default function RegisterPage() {
       setToken(tokenRes.access_token)
       const me = await getMe()
       setUser(me)
-      navigate("/")
+      // Los nuevos usuarios siempre van al onboarding
+      try {
+        const profile = await getProfile()
+        if (!profile.onboarding_completed) {
+          navigate("/onboarding")
+        } else {
+          navigate("/")
+        }
+      } catch {
+        navigate("/onboarding")
+      }
     } catch (err: unknown) {
       setApiError(parseApiError(err, "Error al crear la cuenta"))
     }
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/40 p-4">
+    <div className="flex min-h-screen min-h-dvh items-center justify-center bg-muted/40 p-4">
       <div className="w-full max-w-sm space-y-6">
         <div className="flex flex-col items-center gap-2">
           <div className="flex items-center gap-2">

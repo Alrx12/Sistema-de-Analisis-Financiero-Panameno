@@ -6,6 +6,7 @@ import { Link, useNavigate } from "react-router-dom"
 import { TrendingUp, Loader2 } from "lucide-react"
 import { login } from "@/api/auth"
 import { getMe } from "@/api/users"
+import { getProfile } from "@/api/profile"
 import { useAuthStore } from "@/stores/authStore"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -36,14 +37,24 @@ export default function LoginPage() {
       setToken(tokenRes.access_token)
       const me = await getMe()
       setUser(me)
-      navigate("/")
+      // Si el onboarding no se ha completado, enviarlo al onboarding primero
+      try {
+        const profile = await getProfile()
+        if (!profile.onboarding_completed) {
+          navigate("/onboarding")
+        } else {
+          navigate("/")
+        }
+      } catch {
+        navigate("/")
+      }
     } catch (err: unknown) {
       setApiError(parseApiError(err, "Credenciales incorrectas"))
     }
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/40 p-4">
+    <div className="flex min-h-screen min-h-dvh items-center justify-center bg-muted/40 p-4">
       <div className="w-full max-w-sm space-y-6">
         {/* Logo */}
         <div className="flex flex-col items-center gap-2">

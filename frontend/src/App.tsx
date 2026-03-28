@@ -15,6 +15,7 @@ import KBPage from "@/pages/KBPage"
 import BudgetPage from "@/pages/BudgetPage"
 import OnboardingPage from "@/pages/OnboardingPage"
 import RetrainPage from "@/pages/RetrainPage"
+import ManualEntryPage from "@/pages/ManualEntryPage"
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
@@ -43,6 +44,7 @@ export default function App() {
         <Route path="/" element={<ProtectedRoute><AppShell /></ProtectedRoute>}>
           <Route index element={<DashboardPage />} />
           <Route path="upload" element={<UploadPage />} />
+          <Route path="manual" element={<ManualEntryPage />} />
           <Route path="analysis" element={<AnalysisListPage />} />
           <Route path="analysis/:id" element={<AnalysisDetailPage />} />
           <Route path="analysis/:id/transactions" element={<TransactionsPage />} />

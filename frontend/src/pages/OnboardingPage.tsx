@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { TrendingUp, ChevronRight, ChevronLeft, Target, Briefcase, DollarSign, CheckCircle2 } from "lucide-react"
+import { TrendingUp, ChevronRight, ChevronLeft, Target, Briefcase, DollarSign, CheckCircle2, BookOpen, Smartphone, Monitor, Download } from "lucide-react"
 import { updateProfile } from "@/api/profile"
 import type { IndustryType, GoalType } from "@/types"
 import { Button } from "@/components/ui/button"
@@ -61,7 +61,7 @@ const GOALS: { value: GoalType; label: string; description: string; emoji: strin
 
 export default function OnboardingPage() {
   const navigate = useNavigate()
-  const [step, setStep] = useState<1 | 2 | 3>(1)
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1)
   const [industry, setIndustry] = useState<IndustryType | null>(null)
   const [income, setIncome] = useState<string>("")
   const [goals, setGoals] = useState<GoalType[]>([])
@@ -73,7 +73,8 @@ export default function OnboardingPage() {
     )
   }
 
-  async function handleFinish() {
+  async function handleGoToHowTo() {
+    // Guardar perfil y avanzar al paso 4
     setSaving(true)
     try {
       await updateProfile({
@@ -82,19 +83,19 @@ export default function OnboardingPage() {
         financial_goals: goals,
         onboarding_completed: true,
       })
-      navigate("/budget")
     } catch {
-      // Si falla, igual navegar — no bloquear al usuario
-      navigate("/budget")
+      // Si falla el guardado, igual avanzar
+    } finally {
+      setSaving(false)
+      setStep(4)
     }
   }
 
   function handleSkip() {
-    navigate("/")
+    navigate("/upload")
   }
 
   const canContinueStep1 = industry !== null
-  const canContinueStep2 = true // ingreso es opcional
   const canFinish = goals.length > 0
 
   return (
@@ -110,7 +111,7 @@ export default function OnboardingPage() {
         <div className="w-full max-w-lg">
           {/* Progress dots */}
           <div className="flex items-center justify-center gap-2 mb-8">
-            {[1, 2, 3].map((s) => (
+            {[1, 2, 3, 4].map((s) => (
               <div
                 key={s}
                 className={cn(
@@ -261,8 +262,86 @@ export default function OnboardingPage() {
                 <Button variant="ghost" size="sm" onClick={() => setStep(2)}>
                   <ChevronLeft className="h-4 w-4 mr-1" /> Atrás
                 </Button>
-                <Button disabled={!canFinish || saving} onClick={handleFinish}>
-                  {saving ? "Guardando…" : "Ver mi presupuesto"} <ChevronRight className="h-4 w-4 ml-1" />
+                <Button disabled={!canFinish || saving} onClick={handleGoToHowTo}>
+                  {saving ? "Guardando…" : "Continuar"} <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Paso 4: Cómo obtener tu estado de cuenta */}
+          {step === 4 && (
+            <div className="space-y-6">
+              <div className="text-center space-y-2">
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 mb-2">
+                  <BookOpen className="h-6 w-6 text-primary" />
+                </div>
+                <h1 className="text-2xl font-bold">¿Cómo obtener tu estado de cuenta?</h1>
+                <p className="text-muted-foreground text-sm">
+                  Para empezar, necesitas descargar tu estado de cuenta del banco. Aquí te explicamos cómo hacerlo según tu banco.
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                {/* Banco General */}
+                <div className="rounded-lg border border-border bg-white p-4 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span style={{ background: "#1a3a8f", width: 10, height: 10, borderRadius: "50%", display: "inline-block", flexShrink: 0 }} />
+                    <p className="text-sm font-semibold">Banco General</p>
+                    <Monitor className="h-4 w-4 text-muted-foreground ml-auto" />
+                  </div>
+                  <ol className="text-xs text-muted-foreground space-y-1 pl-4 list-decimal">
+                    <li>Entra a <span className="font-medium text-foreground">bgeneral.com</span> → Banca en Línea</li>
+                    <li>Ve a <span className="font-medium text-foreground">Mis cuentas → Movimientos</span></li>
+                    <li>Selecciona el período que deseas analizar</li>
+                    <li>Descarga el estado de cuenta en formato <span className="font-medium text-foreground">Excel (.xlsx)</span></li>
+                  </ol>
+                </div>
+
+                {/* BAC Credomatic */}
+                <div className="rounded-lg border border-border bg-white p-4 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span style={{ background: "#e31837", width: 10, height: 10, borderRadius: "50%", display: "inline-block", flexShrink: 0 }} />
+                    <p className="text-sm font-semibold">BAC Credomatic</p>
+                    <Monitor className="h-4 w-4 text-muted-foreground ml-auto" />
+                  </div>
+                  <ol className="text-xs text-muted-foreground space-y-1 pl-4 list-decimal">
+                    <li>Entra a <span className="font-medium text-foreground">bac.net</span> → Banca en Línea</li>
+                    <li>Ve a <span className="font-medium text-foreground">Cuentas → Estado de cuenta</span></li>
+                    <li>Selecciona el período deseado</li>
+                    <li>Descarga en formato <span className="font-medium text-foreground">Excel (.xlsx)</span></li>
+                  </ol>
+                </div>
+
+                {/* Banistmo */}
+                <div className="rounded-lg border border-border bg-white p-4 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span style={{ background: "#00843d", width: 10, height: 10, borderRadius: "50%", display: "inline-block", flexShrink: 0 }} />
+                    <p className="text-sm font-semibold">Banistmo</p>
+                    <Smartphone className="h-4 w-4 text-muted-foreground ml-auto" />
+                  </div>
+                  <ol className="text-xs text-muted-foreground space-y-1 pl-4 list-decimal">
+                    <li>Abre la <span className="font-medium text-foreground">app de Banistmo</span> en tu celular</li>
+                    <li>Ve a <span className="font-medium text-foreground">Mis cuentas → Movimientos</span></li>
+                    <li>Selecciona el período que deseas</li>
+                    <li>Usa la opción <span className="font-medium text-foreground">Descargar</span> directamente desde la app</li>
+                  </ol>
+                </div>
+
+                <div className="rounded-lg bg-primary/5 border border-primary/20 p-3 flex items-start gap-2">
+                  <Download className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                  <p className="text-xs text-primary">
+                    <span className="font-semibold">Tip:</span> También puedes ingresar tus gastos manualmente desde la opción <span className="font-semibold">"Entrada Manual"</span> en el menú lateral, si no tienes acceso al estado de cuenta en este momento.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex justify-between pt-2">
+                <Button variant="ghost" size="sm" onClick={() => setStep(3)}>
+                  <ChevronLeft className="h-4 w-4 mr-1" /> Atrás
+                </Button>
+                <Button onClick={() => navigate("/upload")}>
+                  Ir a subir mi estado de cuenta <ChevronRight className="h-4 w-4 ml-1" />
                 </Button>
               </div>
             </div>
