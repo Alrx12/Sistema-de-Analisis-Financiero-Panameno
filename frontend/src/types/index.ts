@@ -285,6 +285,74 @@ export interface ApplyGroupResponse {
   kb_target: string | null
 }
 
+// ─── Manual Wallets ───────────────────────────────────────────────────────────
+
+export type WalletType = "card" | "cash" | "savings" | "other"
+
+export interface ManualWallet {
+  wallet_id: string
+  user_id: string
+  name: string
+  wallet_type: WalletType
+  icon: string        // nombre del ícono lucide-react
+  color: string       // hex color
+  current_balance: number
+  is_default: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface WalletCreate {
+  name: string
+  wallet_type?: WalletType
+  icon?: string
+  color?: string
+  current_balance?: number
+  is_default?: boolean
+}
+
+export interface WalletUpdate {
+  name?: string
+  wallet_type?: WalletType
+  icon?: string
+  color?: string
+  current_balance?: number
+  is_default?: boolean
+}
+
+// ─── Savings Goals ────────────────────────────────────────────────────────────
+
+export interface SavingsGoal {
+  goal_id: string
+  user_id: string
+  name: string
+  icon: string
+  color: string
+  target_amount: number
+  current_amount: number
+  progress_pct: number   // 0–100
+  deadline: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface GoalCreate {
+  name: string
+  icon?: string
+  color?: string
+  target_amount: number
+  current_amount?: number
+  deadline?: string | null
+}
+
+export interface GoalUpdate {
+  name?: string
+  icon?: string
+  color?: string
+  target_amount?: number
+  deadline?: string | null
+}
+
 // ─── API Error ────────────────────────────────────────────────────────────────
 
 export interface ApiError {

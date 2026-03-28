@@ -129,7 +129,7 @@ export default function UploadPage() {
       <div className="page-header">
         <div>
           <h1 className="page-title">Subir estado de cuenta</h1>
-          <p className="page-subtitle">Archivos .xlsx o .xls de Banco General, BAC o Banistmo</p>
+          <p className="page-subtitle">Archivos .xlsx o .xls de Banco General, BAC, Banistmo o Banesco</p>
         </div>
       </div>
 
@@ -237,6 +237,7 @@ export default function UploadPage() {
               { name: "Banco General",  color: "#1a3a8f" },
               { name: "BAC Credomatic", color: "#e31837" },
               { name: "Banistmo",       color: "#00843d" },
+              { name: "Banesco",        color: "#f5a623" },
             ].map(({ name, color }) => (
               <div key={name} className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
