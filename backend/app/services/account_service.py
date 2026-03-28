@@ -84,6 +84,8 @@ class AccountService:
         account.account_fingerprint = new_fingerprint
         if payload.is_active is not None:
             account.is_active = payload.is_active
+        if payload.available_balance is not None:
+            account.available_balance = payload.available_balance
 
         return self._save_account(account)
 

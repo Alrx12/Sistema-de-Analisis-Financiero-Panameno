@@ -16,6 +16,7 @@ class AccountUpdate(BaseModel):
     account_type: str | None = Field(default=None, min_length=2, max_length=50)
     account_number_last4: str | None = Field(default=None, max_length=4)
     is_active: bool | None = None
+    available_balance: float | None = Field(default=None, ge=0, description="Saldo disponible real en la cuenta (ingresado manualmente)")
 
 
 class AccountResponse(BaseModel):
@@ -28,6 +29,7 @@ class AccountResponse(BaseModel):
     detection_source: str
     confidence_score: float | None
     is_active: bool
+    available_balance: float | None = None
     created_at: datetime
 
     model_config = {"from_attributes": True}

@@ -11,6 +11,7 @@ class BankAccountSummary(BaseModel):
     bank_name: str
     account_last4: str | None = None
     nickname: str
+    available_balance: float | None = None   # saldo real ingresado manualmente por el usuario
 
 
 class RecommendationItem(BaseModel):
@@ -75,6 +76,7 @@ class AnalysisSnapshotResponse(BaseModel):
                     bank_name=bank_account.bank_name,
                     account_last4=bank_account.account_number_last4,
                     nickname=bank_account.nickname,
+                    available_balance=float(bank_account.available_balance) if bank_account.available_balance is not None else None,
                 )
             data = {
                 "snapshot_id": obj.snapshot_id,

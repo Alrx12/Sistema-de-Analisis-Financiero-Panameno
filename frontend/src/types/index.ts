@@ -75,6 +75,7 @@ export interface BankAccountSummary {
   bank_name: string
   account_last4: string | null
   nickname: string
+  available_balance: number | null
 }
 
 export interface AnalysisSnapshot {
@@ -195,6 +196,7 @@ export interface BankAccount {
   is_active: boolean
   detection_source: string
   confidence_score: number
+  available_balance: number | null
   created_at: string
 }
 

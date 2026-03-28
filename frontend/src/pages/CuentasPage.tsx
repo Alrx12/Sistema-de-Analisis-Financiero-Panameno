@@ -14,6 +14,7 @@ import type { LucideIcon } from "lucide-react"
 import { listWallets, createWallet, updateWallet, deleteWallet } from "@/api/wallets"
 import { listGoals, createGoal, updateGoal, depositToGoal, deleteGoal } from "@/api/goals"
 import { listAnalysis } from "@/api/analysis"
+import { updateAccount } from "@/api/accounts"
 import type { ManualWallet, SavingsGoal, AnalysisSnapshot, WalletCreate, GoalCreate } from "@/types"
 import { formatCurrency, cn } from "@/lib/utils"
 
@@ -404,6 +405,11 @@ export default function CuentasPage() {
   // Linked bank accounts (snapshots)
   const [snapshots, setSnapshots]   = useState<AnalysisSnapshot[]>([])
 
+  // Edición de saldo disponible por cuenta bancaria
+  const [editingBalanceId, setEditingBalanceId] = useState<string | null>(null)
+  const [balanceInput, setBalanceInput]         = useState("")
+  const [savingBalance, setSavingBalance]       = useState(false)
+
   useEffect(() => {
     fetchWallets()
     fetchGoals()
@@ -491,11 +497,37 @@ export default function CuentasPage() {
     finally { setDeletingGId(null) }
   }
 
+  async function handleSaveAvailableBalance(accountId: string) {
+    const val = parseFloat(balanceInput)
+    if (isNaN(val) || val < 0) return
+    setSavingBalance(true)
+    try {
+      await updateAccount(accountId, { available_balance: val })
+      // Actualizar el available_balance en el snapshot local
+      setSnapshots(prev => prev.map(s => {
+        if (s.bank_account?.account_id === accountId) {
+          return { ...s, bank_account: { ...s.bank_account!, available_balance: val } }
+        }
+        return s
+      }))
+      setEditingBalanceId(null)
+    } catch { /* silent */ }
+    finally { setSavingBalance(false) }
+  }
+
   // ── Totales ──
   const totalWallets  = wallets.reduce((s, w) => s + w.current_balance, 0)
   const totalGoalsCur = goals.reduce((s, g) => s + g.current_amount, 0)
   const totalGoalsTgt = goals.reduce((s, g) => s + g.target_amount, 0)
   const totalBankBal  = snapshots.reduce((s, snap) => s + (snap.balance ?? 0), 0)
+
+  // Cuentas bancarias reales (excluye Manual)
+  const linkedAccounts = snapshots.filter(s => s.bank_account && s.bank_account.bank_name !== "Manual")
+  // Saldo disponible: suma de los que tienen available_balance configurado
+  const accountsWithAvailBalance = linkedAccounts.filter(s => s.bank_account!.available_balance != null)
+  const totalAvailableBank = accountsWithAvailBalance.reduce(
+    (s, snap) => s + (snap.bank_account!.available_balance ?? 0), 0
+  )
 
   // ─── Render ────────────────────────────────────────────────────────────────
 
@@ -517,10 +549,24 @@ export default function CuentasPage() {
           <p className="text-lg font-bold text-foreground">{formatCurrency(totalWallets)}</p>
         </div>
         <div className="zoho-card border-0 p-4 text-center">
-          <p className="text-xs text-muted-foreground">Bancos (balance)</p>
-          <p className={cn("text-lg font-bold", totalBankBal >= 0 ? "text-green-600" : "text-destructive")}>
-            {formatCurrency(totalBankBal)}
-          </p>
+          {accountsWithAvailBalance.length > 0 ? (
+            <>
+              <p className="text-xs text-muted-foreground">Disponible en bancos</p>
+              <p className={cn("text-lg font-bold", totalAvailableBank >= 0 ? "text-green-600" : "text-destructive")}>
+                {formatCurrency(totalAvailableBank)}
+              </p>
+              <p className="text-[10px] text-muted-foreground/70 mt-0.5">
+                Balance: {formatCurrency(totalBankBal)}
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-xs text-muted-foreground">Bancos (balance)</p>
+              <p className={cn("text-lg font-bold", totalBankBal >= 0 ? "text-green-600" : "text-destructive")}>
+                {formatCurrency(totalBankBal)}
+              </p>
+            </>
+          )}
         </div>
         <div className="zoho-card border-0 p-4 text-center">
           <p className="text-xs text-muted-foreground">En metas</p>
@@ -613,18 +659,19 @@ export default function CuentasPage() {
           </div>
 
           {/* ── Cuentas bancarias vinculadas a análisis ── */}
-          {snapshots.filter(s => s.bank_account && s.bank_account.bank_name !== "Manual").length > 0 && (
+          {linkedAccounts.length > 0 && (
             <div>
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Cuentas Bancarias Vinculadas</p>
               <div className="space-y-2">
-                {snapshots
-                  .filter(s => s.bank_account && s.bank_account.bank_name !== "Manual")
-                  .map((snap) => {
-                    const ba = snap.bank_account!
-                    const bal = snap.balance
-                    return (
-                      <div key={snap.snapshot_id}
-                        className="flex items-center gap-4 bg-white rounded-xl px-4 py-3.5 shadow-sm border border-border/50">
+                {linkedAccounts.map((snap) => {
+                  const ba = snap.bank_account!
+                  const bal = snap.balance
+                  const avail = ba.available_balance
+                  const isEditingThis = editingBalanceId === ba.account_id
+                  return (
+                    <div key={snap.snapshot_id}
+                      className="bg-white rounded-xl px-4 py-3.5 shadow-sm border border-border/50">
+                      <div className="flex items-center gap-4">
                         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-blue-50">
                           <Landmark className="h-6 w-6 text-blue-600" />
                         </div>
@@ -634,19 +681,71 @@ export default function CuentasPage() {
                             {ba.account_last4 ? `···· ${ba.account_last4}` : "Sin número"} · Auto-detectada
                           </p>
                         </div>
-                        <div className="text-right">
+                        <div className="text-right min-w-[90px]">
                           <p className={cn("text-base font-bold", bal >= 0 ? "text-green-600" : "text-destructive")}>
                             {formatCurrency(bal)}
                           </p>
-                          <p className="text-xs text-muted-foreground">Balance</p>
+                          <p className="text-xs text-muted-foreground">Balance calculado</p>
                         </div>
-                        <ChevronRight className="h-4 w-4 text-muted-foreground/50 shrink-0" />
                       </div>
-                    )
-                  })}
+
+                      {/* Saldo disponible */}
+                      <div className="mt-2.5 pt-2.5 border-t border-border/40 flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-1.5">
+                          <DollarSign className="h-3.5 w-3.5 text-muted-foreground/60" />
+                          <span className="text-xs text-muted-foreground font-medium">Saldo disponible</span>
+                        </div>
+
+                        {isEditingThis ? (
+                          <div className="flex items-center gap-1.5">
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={balanceInput}
+                              onChange={e => setBalanceInput(e.target.value)}
+                              className="w-28 rounded-lg border border-input px-2 py-1 text-sm text-right focus:outline-none focus:ring-1 focus:ring-primary"
+                              placeholder="0.00"
+                              autoFocus
+                            />
+                            <button type="button"
+                              onClick={() => handleSaveAvailableBalance(ba.account_id)}
+                              disabled={savingBalance}
+                              className="p-1.5 rounded-lg bg-primary text-white hover:bg-primary/90 disabled:opacity-60">
+                              {savingBalance ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                            </button>
+                            <button type="button"
+                              onClick={() => setEditingBalanceId(null)}
+                              className="p-1.5 rounded-lg text-muted-foreground hover:bg-muted">
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        ) : avail != null ? (
+                          <div className="flex items-center gap-2">
+                            <span className={cn("text-sm font-bold", avail >= 0 ? "text-green-600" : "text-destructive")}>
+                              {formatCurrency(avail)}
+                            </span>
+                            <button type="button"
+                              onClick={() => { setEditingBalanceId(ba.account_id); setBalanceInput(String(avail)) }}
+                              className="p-1.5 rounded-lg text-muted-foreground hover:text-primary hover:bg-muted transition-colors">
+                              <Pencil className="h-3 w-3" />
+                            </button>
+                          </div>
+                        ) : (
+                          <button type="button"
+                            onClick={() => { setEditingBalanceId(ba.account_id); setBalanceInput("") }}
+                            className="text-xs text-primary font-semibold hover:underline flex items-center gap-1">
+                            <Plus className="h-3 w-3" /> Configurar
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
               <p className="text-xs text-muted-foreground mt-2 text-center">
-                Calculado a partir de tus estados de cuenta subidos
+                El balance calculado se basa en tus estados de cuenta subidos.
+                Configura el saldo disponible para ver lo que realmente tienes.
               </p>
             </div>
           )}

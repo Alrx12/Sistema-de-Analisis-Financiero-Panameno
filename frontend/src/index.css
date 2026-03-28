@@ -221,6 +221,7 @@
 /* No se puede hacer el fallback dvh con dos clases Tailwind porque el orden    */
 /* en el stylesheet no está garantizado. Aquí ambas declaraciones van juntas.   */
 .auth-page {
+  width: 100%;         /* ocupa todo el ancho del viewport */
   min-height: 100vh;   /* fallback browsers sin soporte dvh */
   min-height: 100dvh;  /* browsers modernos: excluye la barra del navegador  */
 }

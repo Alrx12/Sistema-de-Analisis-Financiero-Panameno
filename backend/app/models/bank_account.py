@@ -28,6 +28,10 @@ class BankAccount(Base):
     detection_source: Mapped[str] = mapped_column(String, nullable=False)
     confidence_score: Mapped[float | None] = mapped_column(Numeric(5, 2), nullable=True)
 
+    # Saldo disponible real ingresado manualmente por el usuario
+    # None = el usuario no lo ha configurado; 0.0 = cuenta configurada en cero
+    available_balance: Mapped[float | None] = mapped_column(Numeric(14, 2), nullable=True)
+
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(

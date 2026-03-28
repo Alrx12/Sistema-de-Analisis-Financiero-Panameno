@@ -4,7 +4,7 @@ import { Link } from "react-router-dom"
 import {
   TrendingUp, TrendingDown, Wallet, AlertTriangle,
   Upload, ArrowRight, BarChart2, Building2, Layers, ShoppingBag,
-  TrendingUp as SavingsIcon, Activity,
+  TrendingUp as SavingsIcon, Activity, DollarSign,
 } from "lucide-react"
 import { listAnalysis, getAggregatedSummary } from "@/api/analysis"
 import { getProfile } from "@/api/profile"
@@ -277,6 +277,25 @@ export default function DashboardPage() {
     ) as AggregatedSummary
   }, [aggregated, filteredSnapshots, selectedBankKey, bankGroups])
 
+  // Saldo disponible: suma de available_balance de cuentas únicas con valor configurado
+  const totalAvailableBalance = useMemo(() => {
+    const src = selectedBankKey
+      ? (bankGroups.find(g => g.key === selectedBankKey)?.snapshots ?? filteredSnapshots)
+      : filteredSnapshots
+    const seen = new Set<string>()
+    let total: number | null = null
+    src.forEach(s => {
+      const ba = s.bank_account
+      if (!ba || ba.bank_name === "Manual") return
+      if (seen.has(ba.account_id)) return
+      seen.add(ba.account_id)
+      if (ba.available_balance != null) {
+        total = (total ?? 0) + ba.available_balance
+      }
+    })
+    return total   // null = ninguna cuenta tiene saldo configurado
+  }, [filteredSnapshots, selectedBankKey, bankGroups])
+
   const loading = isLoading || aggLoading
 
   if (loading)  return <PageSpinner />
@@ -400,7 +419,7 @@ export default function DashboardPage() {
       )}
 
       {/* ── KPI Cards ── */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className={`grid gap-4 sm:grid-cols-2 ${totalAvailableBalance != null ? "lg:grid-cols-5" : "lg:grid-cols-4"}`}>
         <KpiCard title="Ingresos" value={formatCurrency(kpis.total_income)}
           icon={<TrendingUp className="h-4 w-4" />} iconClass="kpi-icon-green" valueClass="text-green-600" />
         <KpiCard title="Gastos" value={formatCurrency(kpis.total_expenses + manualMonthly)}
@@ -410,6 +429,12 @@ export default function DashboardPage() {
           icon={<Wallet className="h-4 w-4" />} iconClass="kpi-icon-blue"
           valueClass={adjustedBalance >= 0 ? "text-green-600" : "text-red-500"}
           sub={`Tasa de ahorro: ${savingsRate}%`} />
+        {totalAvailableBalance != null && (
+          <KpiCard title="Saldo disponible" value={formatCurrency(totalAvailableBalance)}
+            icon={<DollarSign className="h-4 w-4" />} iconClass="kpi-icon-purple"
+            valueClass={totalAvailableBalance >= 0 ? "text-green-600" : "text-red-500"}
+            sub="Lo que realmente tienes en el banco" />
+        )}
         <KpiCard title="Transacciones" value={`${kpis.total_transactions}`}
           icon={<BarChart2 className="h-4 w-4" />} iconClass="kpi-icon-orange"
           sub={filtersActive ? `${periodLabel} · filtradas` : scopeLabel} />
