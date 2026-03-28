@@ -9,8 +9,9 @@ import {
   RefreshCw, Gamepad2, Shirt, Laptop, Dumbbell, Play, Coffee,
   Beer, Cat, CreditCard, AlertCircle, PiggyBank, TrendingUp,
   ArrowLeftRight, MoreHorizontal, Trash2, Loader2, ChevronLeft,
-  CheckCircle2, LucideIcon,
+  CheckCircle2,
 } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
 import {
   createManualTransaction,
   listManualTransactions,

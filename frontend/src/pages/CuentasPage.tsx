@@ -7,9 +7,10 @@ import {
   CreditCard, Wallet, Landmark, Smartphone, DollarSign,
   Star, Home, Car, Plane, GraduationCap, Heart, Shield,
   TrendingUp, Leaf, Gift, Plus, Pencil, Trash2, Loader2,
-  Target, ChevronRight, X, Check, LucideIcon, Banknote,
+  Target, ChevronRight, X, Check, Banknote,
   PiggyBank, RefreshCw,
 } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
 import { listWallets, createWallet, updateWallet, deleteWallet } from "@/api/wallets"
 import { listGoals, createGoal, updateGoal, depositToGoal, deleteGoal } from "@/api/goals"
 import { listAnalysis } from "@/api/analysis"
