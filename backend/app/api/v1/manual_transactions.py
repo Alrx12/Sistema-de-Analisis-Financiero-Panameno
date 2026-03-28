@@ -102,20 +102,25 @@ def _get_or_create_manual_snapshot(db: Session, user_id: uuid.UUID, account_id: 
 
 
 def _refresh_snapshot_summary(db: Session, snapshot: AnalysisSnapshot) -> None:
-    """Recalcula el summary del snapshot manual a partir de sus transacciones."""
+    """Recalcula el summary del snapshot manual a partir de sus transacciones.
+
+    Convención de signos (igual que el motor de análisis del banco):
+      - amount >= 0  → ingreso (crédito)
+      - amount <  0  → gasto   (débito, almacenado como negativo)
+    """
     txns = (
         db.query(AnalysisTransaction)
         .filter(AnalysisTransaction.snapshot_id == snapshot.snapshot_id)
         .all()
     )
 
-    total_income = sum(t.amount for t in txns if t.movement_type == "credito")
-    total_expenses = sum(t.amount for t in txns if t.movement_type == "debito")
+    total_income   = sum(float(t.amount) for t in txns if float(t.amount) >= 0)
+    total_expenses = sum(abs(float(t.amount)) for t in txns if float(t.amount) < 0)
 
     categories: dict[str, float] = {}
     for t in txns:
-        if t.movement_type == "debito" and t.budget_category:
-            categories[t.budget_category] = categories.get(t.budget_category, 0.0) + t.amount
+        if float(t.amount) < 0 and t.budget_category:
+            categories[t.budget_category] = categories.get(t.budget_category, 0.0) + abs(float(t.amount))
 
     snapshot.summary = {
         "total_income": round(total_income, 2),
@@ -145,12 +150,16 @@ def create_manual_transaction(
     account = _get_or_create_manual_account(db, user_id)
     snapshot = _get_or_create_manual_snapshot(db, user_id, account.account_id)
 
+    # Convención de signos del motor de análisis:
+    # crédito (ingreso) → positivo, débito (gasto) → negativo
+    signed_amount = body.amount if body.movement_type == "credito" else -body.amount
+
     txn = AnalysisTransaction(
         snapshot_id=snapshot.snapshot_id,
         user_id=user_id,
         date=body.date,
         detail=body.detail,
-        amount=body.amount,
+        amount=signed_amount,
         movement_type=body.movement_type,
         economic_type=body.economic_type,
         economic_type_detail=None,

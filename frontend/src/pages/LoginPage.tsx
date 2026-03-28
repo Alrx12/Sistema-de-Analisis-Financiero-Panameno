@@ -54,7 +54,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen min-h-dvh items-center justify-center bg-muted/40 p-4">
+    <div className="auth-page flex items-center justify-center bg-muted/40 p-4">
       <div className="w-full max-w-sm space-y-6">
         {/* Logo */}
         <div className="flex flex-col items-center gap-2">

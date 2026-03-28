@@ -7,6 +7,7 @@ import {
   TrendingUp as SavingsIcon, Activity,
 } from "lucide-react"
 import { listAnalysis, getAggregatedSummary } from "@/api/analysis"
+import { getProfile } from "@/api/profile"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -246,6 +247,16 @@ export default function DashboardPage() {
     enabled: !!(snapshots?.length),
   })
 
+  const { data: profile } = useQuery({
+    queryKey: ["profile"],
+    queryFn: getProfile,
+  })
+
+  // Gastos adicionales manuales del perfil → suma mensual
+  const manualMonthly = useMemo(() => {
+    return (profile?.manual_expenses ?? []).reduce((sum, e) => sum + (e.monthly_amount ?? 0), 0)
+  }, [profile])
+
   const activeRecommendations = useMemo(() => {
     const src = selectedBankKey
       ? (bankGroups.find(g => g.key === selectedBankKey)?.snapshots ?? filteredSnapshots)
@@ -272,8 +283,9 @@ export default function DashboardPage() {
   if (isError)  return <ErrorMsg />
   if (!kpis)    return <EmptyState />
 
+  const adjustedBalance = kpis.balance - manualMonthly
   const savingsRate = kpis.total_income > 0
-    ? ((kpis.balance / kpis.total_income) * 100).toFixed(1) : "0.0"
+    ? ((adjustedBalance / kpis.total_income) * 100).toFixed(1) : "0.0"
 
   const normCat = (s: string) => s.toLowerCase().replace(/_/g, " ").trim()
 
@@ -391,11 +403,12 @@ export default function DashboardPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard title="Ingresos" value={formatCurrency(kpis.total_income)}
           icon={<TrendingUp className="h-4 w-4" />} iconClass="kpi-icon-green" valueClass="text-green-600" />
-        <KpiCard title="Gastos" value={formatCurrency(kpis.total_expenses)}
-          icon={<TrendingDown className="h-4 w-4" />} iconClass="kpi-icon-red" valueClass="text-red-500" />
-        <KpiCard title="Balance neto" value={formatCurrency(kpis.balance)}
+        <KpiCard title="Gastos" value={formatCurrency(kpis.total_expenses + manualMonthly)}
+          icon={<TrendingDown className="h-4 w-4" />} iconClass="kpi-icon-red" valueClass="text-red-500"
+          sub={manualMonthly > 0 ? `Incl. $${manualMonthly.toFixed(0)}/mes adicionales` : undefined} />
+        <KpiCard title="Balance neto" value={formatCurrency(adjustedBalance)}
           icon={<Wallet className="h-4 w-4" />} iconClass="kpi-icon-blue"
-          valueClass={kpis.balance >= 0 ? "text-green-600" : "text-red-500"}
+          valueClass={adjustedBalance >= 0 ? "text-green-600" : "text-red-500"}
           sub={`Tasa de ahorro: ${savingsRate}%`} />
         <KpiCard title="Transacciones" value={`${kpis.total_transactions}`}
           icon={<BarChart2 className="h-4 w-4" />} iconClass="kpi-icon-orange"

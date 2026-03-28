@@ -217,6 +217,14 @@
 .anim-d5  { animation-delay: 0.30s;  }
 .anim-d6  { animation-delay: 0.36s;  }
 
+/* ── Auth pages — centrado vertical correcto en iOS Safari ──────────────────── */
+/* No se puede hacer el fallback dvh con dos clases Tailwind porque el orden    */
+/* en el stylesheet no está garantizado. Aquí ambas declaraciones van juntas.   */
+.auth-page {
+  min-height: 100vh;   /* fallback browsers sin soporte dvh */
+  min-height: 100dvh;  /* browsers modernos: excluye la barra del navegador  */
+}
+
 /* ── Scrollbar ──────────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }

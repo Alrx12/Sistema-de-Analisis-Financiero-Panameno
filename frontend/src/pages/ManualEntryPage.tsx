@@ -367,7 +367,7 @@ export default function ManualEntryPage() {
                         txn.movement_type === "debito" ? "text-destructive" : "text-green-600"
                       )}
                     >
-                      {txn.movement_type === "debito" ? "-" : "+"}{formatCurrency(txn.amount)}
+                      {txn.movement_type === "debito" ? "-" : "+"}{formatCurrency(Math.abs(txn.amount))}
                     </span>
                     <button
                       onClick={() => handleDelete(txn.transaction_id)}
