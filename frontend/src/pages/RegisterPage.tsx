@@ -10,6 +10,7 @@ import { getMe } from "@/api/users"
 import { getProfile } from "@/api/profile"
 import { useAuthStore } from "@/stores/authStore"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { parseApiError } from "@/lib/utils"
@@ -41,8 +42,9 @@ export default function RegisterPage() {
     setApiError("")
     try {
       await apiRegister(data.email, data.password, data.full_name)
-      // Tras registrar, hacer login automático
+      // Tras registrar, hacer login automático (nuevos usuarios no tienen 2FA)
       const tokenRes = await login(data.email, data.password)
+      if (!tokenRes.access_token) throw new Error("Error al iniciar sesión automáticamente")
       setToken(tokenRes.access_token)
       const me = await getMe()
       setUser(me)

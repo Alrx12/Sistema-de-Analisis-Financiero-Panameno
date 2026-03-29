@@ -2,6 +2,7 @@ from app.parsers.bac import BacParser
 from app.parsers.banco_general import BancoGeneralParser
 from app.parsers.banesco import BanescoParser
 from app.parsers.banistmo import BanistmoParser
+from app.parsers.banistmo_movimientos import BanistmoMovimientosParser
 from app.parsers.base import BaseStatementParser
 
 
@@ -9,6 +10,7 @@ class ParserFactory:
     parsers = [
         BancoGeneralParser(),
         BanistmoParser(),
+        BanistmoMovimientosParser(),
         BacParser(),
         BanescoParser(),
     ]
