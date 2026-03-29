@@ -1,4 +1,4 @@
-import { Outlet, NavLink, useNavigate } from "react-router-dom"
+import { Outlet, NavLink, Link, useNavigate } from "react-router-dom"
 import {
   LayoutDashboard,
   Upload,
@@ -156,6 +156,15 @@ export default function AppShell() {
             <LogOut className="h-4 w-4 shrink-0" />
             <span>Cerrar sesión</span>
           </button>
+          <div className="px-2 pt-2 pb-1">
+            <Link
+              to="/privacy"
+              className="text-xs hover:underline"
+              style={{ color: "rgba(255,255,255,0.2)" }}
+            >
+              Política de Privacidad
+            </Link>
+          </div>
         </div>
       </aside>
 

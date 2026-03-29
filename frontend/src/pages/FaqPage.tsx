@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { ChevronDown, ChevronUp, ShieldCheck, HelpCircle, Lock, Database, RefreshCw, FileText, AlertTriangle, Star } from "lucide-react"
+import { Link } from "react-router-dom"
 import { cn } from "@/lib/utils"
 
 // ─── Datos de preguntas frecuentes ──────────────────────────────────────────
@@ -220,7 +221,10 @@ export default function FaqPage() {
           <p className="text-xs text-green-700 mt-0.5 leading-relaxed">
             SAFPRO aplica los principios de protección de datos de la Ley 81 de 2019: consentimiento,
             finalidad, proporcionalidad y seguridad. Tus datos financieros son tuyos y no se comparten
-            ni comercializan. Consulta la sección de Seguridad y privacidad para más detalles.
+            ni comercializan.{" "}
+            <Link to="/privacy" className="font-semibold underline text-green-800 hover:text-green-900">
+              Ver Política de Privacidad completa →
+            </Link>
           </p>
         </div>
       </div>

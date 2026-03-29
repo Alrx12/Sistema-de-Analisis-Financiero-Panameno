@@ -218,6 +218,14 @@ export default function RegisterPage() {
             Iniciar sesión
           </Link>
         </p>
+
+        {/* Privacy link */}
+        <p className="text-center text-xs mt-3" style={{ color: "rgba(255,255,255,0.25)" }}>
+          Al registrarte aceptas nuestra{" "}
+          <Link to="/privacy" className="auth-link" style={{ fontSize: "inherit" }}>
+            Política de Privacidad
+          </Link>
+        </p>
       </div>
     </div>
   )
