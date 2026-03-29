@@ -20,6 +20,8 @@ import OnboardingPage from "@/pages/OnboardingPage"
 import RetrainPage from "@/pages/RetrainPage"
 import ManualEntryPage from "@/pages/ManualEntryPage"
 import CuentasPage from "@/pages/CuentasPage"
+import AyudaPage from "@/pages/AyudaPage"
+import FaqPage from "@/pages/FaqPage"
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
@@ -58,6 +60,8 @@ export default function App() {
           <Route path="kb" element={<KBPage />} />
           <Route path="budget" element={<BudgetPage />} />
           <Route path="retrain" element={<RetrainPage />} />
+          <Route path="ayuda" element={<AyudaPage />} />
+          <Route path="faq" element={<FaqPage />} />
           <Route path="2fa-setup" element={<TwoFactorSetupPage />} />
         </Route>
 

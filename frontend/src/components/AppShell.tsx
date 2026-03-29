@@ -12,6 +12,8 @@ import {
   Sparkles,
   PenLine,
   Wallet,
+  HelpCircle,
+  MessageCircleQuestion,
 } from "lucide-react"
 import { useState } from "react"
 import { useAuthStore } from "@/stores/authStore"
@@ -40,6 +42,13 @@ const navSections = [
     items: [
       { to: "/kb",      label: "Knowledge Base",  icon: Brain,    end: false },
       { to: "/retrain", label: "Entrenamiento",   icon: Sparkles, end: false },
+    ],
+  },
+  {
+    label: "Soporte",
+    items: [
+      { to: "/ayuda", label: "Centro de ayuda",       icon: HelpCircle,          end: false },
+      { to: "/faq",   label: "Preguntas frecuentes",  icon: MessageCircleQuestion, end: false },
     ],
   },
 ]
