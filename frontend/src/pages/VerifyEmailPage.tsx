@@ -19,7 +19,7 @@ export default function VerifyEmailPage() {
     }
 
     verifyEmail(token)
-      .then((res) => {
+      .then((res: { message: string }) => {
         setStatus("success")
         setMessage(res.message || "¡Email verificado correctamente!")
       })
