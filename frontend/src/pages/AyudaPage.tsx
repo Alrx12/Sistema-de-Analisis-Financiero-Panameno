@@ -167,11 +167,11 @@ export default function AyudaPage() {
         <div className="zoho-card rounded-xl p-4 space-y-3">
           <ol className="space-y-2">
             {[
-              "Ve a "Subir estado de cuenta" en el menú lateral",
+              'Ve a "Subir estado de cuenta" en el menú lateral',
               "Arrastra y suelta el archivo Excel, o haz clic para seleccionarlo",
               "SAFPRO detecta automáticamente el banco — no necesitas indicarlo",
               "El sistema procesa el archivo en segundo plano (usualmente en segundos)",
-              "Cuando termine, verás el análisis completo en "Mis análisis"",
+              'Cuando termine, verás el análisis completo en "Mis análisis"',
             ].map((step, i) => (
               <li key={i} className="flex items-start gap-3 text-sm">
                 <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-bold mt-0.5">
@@ -205,7 +205,7 @@ export default function AyudaPage() {
             },
             {
               title: "Corrige las categorías",
-              desc: "La primera vez el sistema puede cometer errores. Corrígelos en "Mis análisis" y no volverá a equivocarse.",
+              desc: 'La primera vez el sistema puede cometer errores. Corrígelos en "Mis análisis" y no volverá a equivocarse.',
             },
             {
               title: "Sube archivos históricos",

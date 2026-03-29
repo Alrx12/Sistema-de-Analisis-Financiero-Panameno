@@ -89,14 +89,20 @@ export default function AppShell() {
         {/* Logo */}
         <div
           className="flex h-14 items-center gap-2.5 px-4"
-          style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}
+          style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
         >
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary">
-            <TrendingUp className="h-4 w-4 text-white" />
+          <div
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-white"
+            style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)", boxShadow: "0 3px 10px rgba(99,102,241,0.35)" }}
+          >
+            <TrendingUp className="h-4 w-4" />
           </div>
-          <span className="text-base font-bold text-white tracking-tight">SAFPRO</span>
+          <div className="flex flex-col leading-none">
+            <span className="text-sm font-bold text-white tracking-tight">SAFPRO</span>
+            <span className="text-[9px] font-semibold tracking-widest uppercase" style={{ color: "rgba(255,255,255,0.28)" }}>Financial AI</span>
+          </div>
           <button
-            className="ml-auto lg:hidden text-white/50 hover:text-white"
+            className="ml-auto lg:hidden text-white/40 hover:text-white"
             onClick={() => setSidebarOpen(false)}
           >
             <X className="h-4 w-4" />
@@ -127,16 +133,19 @@ export default function AppShell() {
         </nav>
 
         {/* Footer: usuario + logout */}
-        <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }} className="p-2">
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }} className="p-2">
           {user && (
             <div className="flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-white/5 cursor-default">
-              {/* Avatar */}
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-white text-xs font-bold">
+              {/* Avatar con gradiente */}
+              <div
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white text-xs font-bold"
+                style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}
+              >
                 {initials}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-xs font-semibold text-white leading-tight">{user.full_name}</p>
-                <p className="truncate text-xs text-white/40 leading-tight">{user.email}</p>
+                <p className="truncate text-xs leading-tight" style={{ color: "rgba(255,255,255,0.32)" }}>{user.email}</p>
               </div>
             </div>
           )}
@@ -154,20 +163,23 @@ export default function AppShell() {
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Header móvil */}
         <header
-          className="flex h-14 items-center border-b bg-white px-4 lg:hidden"
-          style={{ borderColor: "hsl(var(--border))" }}
+          className="flex h-14 items-center px-4 lg:hidden"
+          style={{ background: "var(--sidebar-bg)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
         >
           <button
             onClick={() => setSidebarOpen(true)}
-            className="text-muted-foreground hover:text-foreground"
+            className="text-white/40 hover:text-white/80"
           >
             <Menu className="h-5 w-5" />
           </button>
           <div className="ml-3 flex items-center gap-2">
-            <div className="flex h-6 w-6 items-center justify-center rounded bg-primary">
-              <TrendingUp className="h-3.5 w-3.5 text-white" />
+            <div
+              className="flex h-6 w-6 items-center justify-center rounded text-white"
+              style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}
+            >
+              <TrendingUp className="h-3.5 w-3.5" />
             </div>
-            <span className="font-bold text-foreground">SAFPRO</span>
+            <span className="text-sm font-bold text-white">SAFPRO</span>
           </div>
         </header>
 

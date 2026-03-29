@@ -4,39 +4,39 @@
 
 @layer base {
   :root {
-    /* ── Zoho Invoice palette ───────────────────────────────────────────────── */
-    --background: 220 9% 96%;           /* #f4f5f7 — fondo gris claro */
-    --foreground: 224 32% 16%;          /* #1a1f36 — texto oscuro */
+    /* ── Fintech Premium Dark palette ───────────────────────────────────────── */
+    --background: 222 47% 5%;           /* #070c18 — fondo casi negro */
+    --foreground: 210 40% 96%;          /* #f1f5f9 — texto casi blanco */
 
-    --card: 0 0% 100%;                  /* blanco */
-    --card-foreground: 224 32% 16%;
+    --card: 222 47% 8%;                 /* #0d1426 — superficie oscura */
+    --card-foreground: 210 40% 96%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 224 32% 16%;
+    --popover: 222 47% 9%;
+    --popover-foreground: 210 40% 96%;
 
-    --primary: 20 80% 49%;              /* #e05c19 — naranja Zoho */
+    --primary: 239 84% 67%;             /* #6366f1 — índigo */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 9% 94%;
-    --secondary-foreground: 220 9% 30%;
+    --secondary: 222 47% 12%;
+    --secondary-foreground: 210 40% 78%;
 
-    --muted: 220 9% 94%;
-    --muted-foreground: 220 9% 46%;
+    --muted: 222 47% 11%;
+    --muted-foreground: 215 20% 52%;
 
-    --accent: 20 80% 94%;               /* naranja muy claro */
-    --accent-foreground: 20 80% 35%;
+    --accent: 239 84% 20%;              /* índigo oscuro */
+    --accent-foreground: 239 84% 80%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 354 70% 60%;         /* rose */
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 9% 89%;
-    --input: 220 9% 89%;
-    --ring: 20 80% 49%;
-    --radius: 0.5rem;
+    --border: 222 47% 14%;              /* borde sutil */
+    --input: 222 47% 14%;
+    --ring: 239 84% 67%;
+    --radius: 0.625rem;
 
     /* ── Sidebar ────────────────────────────────────────────────────────────── */
-    --sidebar-bg: #1c2b4b;
-    --sidebar-width: 220px;
+    --sidebar-bg: #0d1426;
+    --sidebar-width: 230px;
   }
 }
 
@@ -46,7 +46,7 @@
   }
   body {
     @apply bg-background text-foreground m-0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
   #root {
@@ -54,73 +54,75 @@
   }
 }
 
-/* ── Sidebar utilities (no disponibles como Tailwind puro) ─────────────────── */
+/* ── Sidebar utilities ──────────────────────────────────────────────────────── */
 .sidebar-nav-item {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 10px;
-  border-radius: 6px;
+  padding: 7px 10px;
+  border-radius: 7px;
   cursor: pointer;
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 500;
-  color: rgba(255,255,255,0.68);
-  transition: background 0.12s, color 0.12s;
-  margin-bottom: 1px;
+  color: rgba(255,255,255,0.55);
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+  margin-bottom: 2px;
   text-decoration: none;
+  border: 1px solid transparent;
 }
 .sidebar-nav-item:hover {
-  background: rgba(255,255,255,0.08);
-  color: #fff;
+  background: rgba(255,255,255,0.05);
+  color: rgba(255,255,255,0.9);
 }
 .sidebar-nav-item.active {
-  background: #e05c19;
-  color: #fff;
+  background: rgba(99, 102, 241, 0.15);
+  color: #a5b4fc;
+  border-color: rgba(99, 102, 241, 0.25);
 }
 .sidebar-section-label {
   font-size: 10px;
   font-weight: 600;
-  letter-spacing: 1px;
+  letter-spacing: .1em;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.28);
-  padding: 14px 10px 4px;
+  color: rgba(255,255,255,0.22);
+  padding: 14px 10px 5px;
 }
 
 /* ── Table styles ───────────────────────────────────────────────────────────── */
 .zoho-table {
   width: 100%;
   border-collapse: collapse;
-  background: white;
+  background: #0d1426;
   border-radius: 10px;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 2px 10px rgba(0,0,0,0.04);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.06);
 }
 .zoho-table thead tr {
-  background: #f8f9fb;
+  background: #111829;
 }
 .zoho-table th {
   text-align: left;
   padding: 10px 16px;
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 600;
-  color: #6b7280;
+  color: rgba(255,255,255,0.28);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  border-bottom: 1px solid #e8eaed;
+  letter-spacing: .07em;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
   white-space: nowrap;
 }
 .zoho-table td {
   padding: 11px 16px;
   font-size: 13px;
-  color: #374151;
-  border-bottom: 1px solid #f3f4f6;
+  color: #cbd5e1;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
   vertical-align: middle;
 }
 .zoho-table tbody tr:last-child td {
   border-bottom: none;
 }
 .zoho-table tbody tr:hover {
-  background: #fafbfc;
+  background: rgba(255,255,255,0.025);
 }
 
 /* ── Page layout ────────────────────────────────────────────────────────────── */
@@ -129,18 +131,19 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 .page-title {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
-  color: #1a1f36;
+  color: #f1f5f9;
   line-height: 1.2;
+  letter-spacing: -.025em;
 }
 .page-subtitle {
   font-size: 13px;
-  color: #6b7280;
-  margin-top: 2px;
+  color: rgba(255,255,255,0.38);
+  margin-top: 3px;
 }
 
 /* ── Filter pills ───────────────────────────────────────────────────────────── */
@@ -150,43 +153,104 @@
   gap: 5px;
   padding: 5px 12px;
   border-radius: 99px;
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 500;
-  border: 1px solid #e8eaed;
-  background: white;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: transparent;
   cursor: pointer;
-  color: #4b5563;
+  color: rgba(255,255,255,0.45);
   transition: all 0.12s;
   white-space: nowrap;
 }
 .filter-pill:hover {
-  border-color: #e05c19;
-  color: #e05c19;
+  border-color: #6366f1;
+  color: #a5b4fc;
+  background: rgba(99,102,241,0.08);
 }
 .filter-pill.active {
-  background: #fff0ea;
-  border-color: #e05c19;
-  color: #e05c19;
+  background: rgba(99,102,241,0.18);
+  border-color: rgba(99,102,241,0.4);
+  color: #a5b4fc;
 }
 
 /* ── KPI card icon containers ───────────────────────────────────────────────── */
-.kpi-icon-green  { background: #ecfdf5; color: #16a34a; border-radius: 8px; padding: 8px; }
-.kpi-icon-red    { background: #fef2f2; color: #dc2626; border-radius: 8px; padding: 8px; }
-.kpi-icon-blue   { background: #eff6ff; color: #2563eb; border-radius: 8px; padding: 8px; }
-.kpi-icon-orange { background: #fff0ea; color: #e05c19; border-radius: 8px; padding: 8px; }
-.kpi-icon-purple { background: #f5f3ff; color: #7c3aed; border-radius: 8px; padding: 8px; }
+.kpi-icon-green  { background: rgba(16,185,129,0.12); color: #34d399; border-radius: 9px; padding: 9px; }
+.kpi-icon-red    { background: rgba(244,63,94,0.12);  color: #fb7185; border-radius: 9px; padding: 9px; }
+.kpi-icon-blue   { background: rgba(99,102,241,0.12); color: #a5b4fc; border-radius: 9px; padding: 9px; }
+.kpi-icon-orange { background: rgba(245,158,11,0.12); color: #fbbf24; border-radius: 9px; padding: 9px; }
+.kpi-icon-purple { background: rgba(139,92,246,0.12); color: #c4b5fd; border-radius: 9px; padding: 9px; }
 
 /* ── Card base ──────────────────────────────────────────────────────────────── */
 .zoho-card {
-  background: white;
-  border: 1px solid #e8eaed;
+  background: #0d1426;
+  border: 1px solid rgba(255,255,255,0.07);
   border-radius: 10px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 8px rgba(0,0,0,0.03);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.25);
 }
 
-/* ── Animations ─────────────────────────────────────────────────────────────── */
+/* ── Tooltip override (para los tooltips de recharts que usan bg-white) ─────── */
+.recharts-tooltip-wrapper > div,
+.recharts-default-tooltip {
+  background: #111829 !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+  border-radius: 10px !important;
+  color: #e2e8f0 !important;
+}
+
+/* ── Hardcoded Tailwind overrides ───────────────────────────────────────────── */
+/* Tooltips custom con bg-white/95 */
+.backdrop-blur-sm.bg-white\/95 {
+  background-color: rgba(13,20,38,0.97) !important;
+  border-color: rgba(255,255,255,0.09) !important;
+}
+
+/* AmountBadge */
+.bg-green-50 { background-color: rgba(16,185,129,0.12) !important; }
+.text-green-700 { color: #34d399 !important; }
+.bg-red-50 { background-color: rgba(244,63,94,0.12) !important; }
+.text-red-600 { color: #fb7185 !important; }
+
+/* Badges de confianza */
+.bg-emerald-50 { background-color: rgba(16,185,129,0.12) !important; }
+.text-emerald-700 { color: #34d399 !important; }
+.text-emerald-600 { color: #34d399 !important; }
+.bg-yellow-50 { background-color: rgba(234,179,8,0.12) !important; }
+.text-yellow-700 { color: #fbbf24 !important; }
+.bg-orange-50 { background-color: rgba(249,115,22,0.12) !important; }
+.text-orange-700 { color: #fb923c !important; }
+.bg-slate-50  { background-color: rgba(255,255,255,0.05) !important; }
+.text-slate-600 { color: rgba(255,255,255,0.45) !important; }
+
+/* Recomendaciones / notas internas */
+.bg-blue-50  { background-color: rgba(99,102,241,0.1) !important; }
+.text-blue-700 { color: #a5b4fc !important; }
+.bg-violet-50 { background-color: rgba(139,92,246,0.1) !important; }
+.text-violet-700 { color: #c4b5fd !important; }
+.text-violet-600 { color: #c4b5fd !important; }
+
+/* Bordes misc */
+.border-green-200 { border-color: rgba(16,185,129,0.25) !important; }
+.border-red-200   { border-color: rgba(244,63,94,0.25) !important; }
+.border-yellow-200 { border-color: rgba(234,179,8,0.25) !important; }
+.border-blue-200  { border-color: rgba(99,102,241,0.25) !important; }
+.border-violet-200 { border-color: rgba(139,92,246,0.25) !important; }
+
+/* Upload dropzone */
+.border-dashed { border-style: dashed; }
+
+/* Input backgrounds hardcoded en páginas */
+.bg-gray-50 { background-color: rgba(255,255,255,0.04) !important; }
+.bg-gray-100 { background-color: rgba(255,255,255,0.06) !important; }
+.text-gray-400 { color: rgba(255,255,255,0.35) !important; }
+.text-gray-500 { color: rgba(255,255,255,0.42) !important; }
+.text-gray-600 { color: rgba(255,255,255,0.5) !important; }
+.text-gray-700 { color: rgba(255,255,255,0.62) !important; }
+.text-gray-800 { color: rgba(255,255,255,0.75) !important; }
+.text-gray-900 { color: rgba(255,255,255,0.9) !important; }
+
+/* Animations ─────────────────────────────────────────────────────────────────── */
 @keyframes fadeSlideUp {
-  from { opacity: 0; transform: translateY(18px); }
+  from { opacity: 0; transform: translateY(16px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 @keyframes fadeIn {
@@ -194,118 +258,207 @@
   to   { opacity: 1; }
 }
 @keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.96); }
+  from { opacity: 0; transform: scale(0.97); }
   to   { opacity: 1; transform: scale(1); }
 }
 
-.animate-fade-up {
-  animation: fadeSlideUp 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-.animate-fade-in {
-  animation: fadeIn 0.3s ease-out both;
-}
-.animate-scale-in {
-  animation: scaleIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
+.animate-fade-up   { animation: fadeSlideUp 0.36s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-fade-in   { animation: fadeIn 0.3s ease-out both; }
+.animate-scale-in  { animation: scaleIn 0.32s cubic-bezier(0.16, 1, 0.3, 1) both; }
 
-/* Stagger delays para entrada de tarjetas */
-.anim-d0  { animation-delay: 0s;     }
-.anim-d1  { animation-delay: 0.06s;  }
-.anim-d2  { animation-delay: 0.12s;  }
-.anim-d3  { animation-delay: 0.18s;  }
-.anim-d4  { animation-delay: 0.24s;  }
-.anim-d5  { animation-delay: 0.30s;  }
-.anim-d6  { animation-delay: 0.36s;  }
+.anim-d0  { animation-delay: 0s;    }
+.anim-d1  { animation-delay: 0.06s; }
+.anim-d2  { animation-delay: 0.12s; }
+.anim-d3  { animation-delay: 0.18s; }
+.anim-d4  { animation-delay: 0.24s; }
+.anim-d5  { animation-delay: 0.30s; }
+.anim-d6  { animation-delay: 0.36s; }
 
-/* ── Auth pages — centrado vertical correcto en iOS Safari ──────────────────── */
-/* No se puede hacer el fallback dvh con dos clases Tailwind porque el orden    */
-/* en el stylesheet no está garantizado. Aquí ambas declaraciones van juntas.   */
+/* ── Auth pages ─────────────────────────────────────────────────────────────── */
 .auth-page {
-  width: 100%;         /* ocupa todo el ancho del viewport */
-  min-height: 100vh;   /* fallback browsers sin soporte dvh */
-  min-height: 100dvh;  /* browsers modernos: excluye la barra del navegador  */
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
-/* Fondo degradado del login (navy → azul medio) */
+/* Nueva estructura split: fondo oscuro puro */
 .auth-gradient {
-  background: linear-gradient(135deg, #1c2b4b 0%, #2d4878 55%, #3a5a96 100%);
+  background: #070c18;
 }
 
-/* Card blanca centrada con sombra */
-.auth-card {
-  background: #ffffff;
-  border-radius: 20px;
-  padding: 40px 36px 32px;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.25);
-  position: relative;
-  padding-top: 56px; /* espacio para el avatar que sobresale */
-}
-
-/* Contenedor del avatar */
-.auth-avatar-wrap {
-  position: absolute;
-  top: -38px;
-  left: 50%;
-  transform: translateX(-50%);
+/* Panel izquierdo (branding) */
+.auth-panel-left {
+  background: #0d1426;
+  border-right: 1px solid rgba(255,255,255,0.07);
   display: flex;
+  flex-direction: column;
   justify-content: center;
+  padding: 48px 52px;
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
-/* Círculo del avatar */
-.auth-avatar {
-  width: 76px;
-  height: 76px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #1c2b4b 0%, #2d4878 100%);
+/* Panel derecho (formulario) */
+.auth-panel-right {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 6px 20px rgba(28, 43, 75, 0.45);
-  border: 4px solid #ffffff;
+  padding: 48px 40px;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: #070c18;
 }
 
-/* Input con ícono a la izquierda */
+/* Logo de marca en la izquierda */
+.auth-brand-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 52px;
+}
+.auth-brand-icon {
+  width: 42px; height: 42px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 6px 20px rgba(99,102,241,0.4);
+}
+.auth-brand-name {
+  font-size: 20px;
+  font-weight: 800;
+  color: #f1f5f9;
+  letter-spacing: -.03em;
+}
+.auth-brand-sub {
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.3);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+/* Tagline */
+.auth-tagline {
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -.04em;
+  color: #f1f5f9;
+  margin-bottom: 12px;
+}
+.auth-tagline-gradient {
+  background: linear-gradient(135deg, #a5b4fc, #67e8f9);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.auth-tagline-desc {
+  font-size: 14px;
+  color: rgba(255,255,255,0.45);
+  line-height: 1.6;
+  max-width: 340px;
+  margin-bottom: 36px;
+}
+
+/* Feature rows */
+.auth-feature-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  margin-bottom: 8px;
+  max-width: 380px;
+}
+.auth-feature-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.auth-feature-text strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #f1f5f9;
+  margin-bottom: 1px;
+}
+.auth-feature-text span {
+  font-size: 12px;
+  color: rgba(255,255,255,0.4);
+}
+
+/* Formulario */
+.auth-card {
+  width: 100%;
+  max-width: 360px;
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;
+  position: static;
+}
+
+/* Títulos del formulario */
+.auth-form-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: #f1f5f9;
+  letter-spacing: -.03em;
+  margin-bottom: 4px;
+}
+.auth-form-sub {
+  font-size: 13px;
+  color: rgba(255,255,255,0.4);
+  margin-bottom: 28px;
+}
+
+/* Avatar (ya no se usa en nuevo diseño, pero se mantiene por compatibilidad) */
+.auth-avatar-wrap {
+  display: none;
+}
+.auth-avatar {
+  display: none;
+}
+
+/* Input con ícono */
 .auth-input-wrap {
   position: relative;
   display: flex;
   align-items: center;
 }
-
 .auth-input-icon {
   position: absolute;
-  left: 13px;
-  color: #9ca3af;
+  left: 12px;
+  color: rgba(255,255,255,0.25);
   pointer-events: none;
 }
-
 .auth-input {
   width: 100%;
   padding: 10px 14px 10px 38px;
-  border: 1.5px solid #e5e7eb;
-  border-radius: 10px;
-  font-size: 0.875rem;
-  color: #1f2937;
-  background: #fafafa;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 9px;
+  font-size: 14px;
+  color: #f1f5f9;
+  background: rgba(255,255,255,0.05);
   outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
 }
-
-.auth-input::placeholder { color: #c0c4cc; }
-
+.auth-input::placeholder {
+  color: rgba(255,255,255,0.2);
+}
 .auth-input:focus {
-  border-color: #e05c19;
-  box-shadow: 0 0 0 3px rgba(224, 92, 25, 0.12);
-  background: #ffffff;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.18);
+  background: rgba(99,102,241,0.06);
 }
-
-/* Input con ojo toggle (padding derecho extra) */
-.auth-input-password { padding-right: 40px; }
-
-/* Botón ojo ver/ocultar contraseña */
+.auth-input-password {
+  padding-right: 40px;
+}
 .auth-eye-btn {
   position: absolute;
-  right: 12px;
-  color: #9ca3af;
+  right: 11px;
+  color: rgba(255,255,255,0.3);
   background: none;
   border: none;
   cursor: pointer;
@@ -314,86 +467,145 @@
   align-items: center;
   transition: color 0.15s;
 }
-.auth-eye-btn:hover { color: #6b7280; }
-
-/* Checkbox personalizado */
+.auth-eye-btn:hover {
+  color: rgba(255,255,255,0.65);
+}
 .auth-checkbox {
   width: 15px;
   height: 15px;
   border-radius: 4px;
-  border: 1.5px solid #d1d5db;
-  accent-color: #e05c19;
+  border: 1.5px solid rgba(255,255,255,0.2);
+  accent-color: #6366f1;
   cursor: pointer;
 }
-
-/* Link naranja */
 .auth-link {
-  color: #e05c19;
+  color: #a5b4fc;
   text-decoration: none;
   transition: opacity 0.15s;
 }
-.auth-link:hover { opacity: 0.75; text-decoration: underline; }
-
-/* Botón principal */
+.auth-link:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
 .auth-btn-primary {
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 11px 16px;
-  background: linear-gradient(135deg, #1c2b4b 0%, #2d4878 100%);
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
   color: #ffffff;
-  font-weight: 600;
-  font-size: 0.9rem;
+  font-weight: 700;
+  font-size: 14px;
   border: none;
-  border-radius: 10px;
+  border-radius: 9px;
   cursor: pointer;
-  transition: opacity 0.15s, transform 0.1s;
-  box-shadow: 0 4px 14px rgba(28, 43, 75, 0.35);
+  transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s;
+  box-shadow: 0 4px 16px rgba(99,102,241,0.4);
+  letter-spacing: -.01em;
 }
-.auth-btn-primary:hover:not(:disabled) { opacity: 0.88; transform: translateY(-1px); }
-.auth-btn-primary:active:not(:disabled) { transform: translateY(0); }
-.auth-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
-
-/* Divider "O continuar con" */
+.auth-btn-primary:hover:not(:disabled) {
+  box-shadow: 0 6px 22px rgba(99,102,241,0.55);
+  transform: translateY(-1px);
+}
+.auth-btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+.auth-btn-primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
 .auth-divider {
   display: flex;
   align-items: center;
   gap: 10px;
   margin: 20px 0 14px;
-  color: #9ca3af;
-  font-size: 0.8rem;
+  color: rgba(255,255,255,0.2);
+  font-size: 12px;
 }
 .auth-divider::before,
 .auth-divider::after {
   content: "";
   flex: 1;
   height: 1px;
-  background: #e5e7eb;
+  background: rgba(255,255,255,0.08);
 }
-
-/* Botones sociales (decorativos) */
 .auth-social-btn {
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 9px 12px;
-  border: 1.5px solid #e5e7eb;
-  border-radius: 10px;
-  font-size: 0.82rem;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 9px;
+  font-size: 13px;
   font-weight: 500;
-  color: #374151;
-  background: #ffffff;
+  color: rgba(255,255,255,0.6);
+  background: rgba(255,255,255,0.04);
   cursor: default;
   user-select: none;
   transition: background 0.15s, border-color 0.15s;
+  text-decoration: none;
 }
 .auth-social-btn:hover {
-  background: #f9fafb;
-  border-color: #d1d5db;
+  background: rgba(255,255,255,0.07);
+  border-color: rgba(255,255,255,0.18);
+  color: rgba(255,255,255,0.8);
 }
 
+/* ── bg-white hardcoded en pages — override global ──────────────────────────── */
+/* bg-white → superficie oscura (card). bg-white/10 se deja sin tocar (usado
+   como highlight semi-transparente sobre fondos oscuros — ya está bien) */
+.bg-white  { background-color: #111829 !important; }
+.bg-white\/95 { background-color: rgba(17,24,41,0.97) !important; }
+.bg-white\/80 { background-color: rgba(17,24,41,0.85) !important; }
+/* select nativo con bg-white */
+select.bg-white,
+input.bg-white { background-color: #111829 !important; color: #e2e8f0 !important; }
+
+/* Textos que van encima de superficies claras y se vuelven ilegibles en oscuro */
+.text-foreground\/80 { color: rgba(241,245,249,0.75) !important; }
+.text-foreground\/60 { color: rgba(241,245,249,0.55) !important; }
+.border-border\/60   { border-color: rgba(255,255,255,0.08) !important; }
+.border-border\/40   { border-color: rgba(255,255,255,0.06) !important; }
+.border-border\/50   { border-color: rgba(255,255,255,0.07) !important; }
+
+/* Recommendation cards en DashboardPage */
+.bg-red-50.text-red-500   { background-color: rgba(244,63,94,0.12) !important; }
+.bg-amber-50  { background-color: rgba(245,158,11,0.12) !important; }
+.text-amber-500 { color: #fbbf24 !important; }
+
+/* KBPage budget role badges */
+.bg-emerald-100 { background-color: rgba(16,185,129,0.12) !important; }
+.text-emerald-700 { color: #34d399 !important; }
+.bg-sky-100 { background-color: rgba(14,165,233,0.12) !important; }
+.text-sky-700 { color: #38bdf8 !important; }
+.bg-rose-100 { background-color: rgba(244,63,94,0.12) !important; }
+.text-rose-700 { color: #fb7185 !important; }
+.bg-indigo-100 { background-color: rgba(99,102,241,0.12) !important; }
+.text-indigo-700 { color: #a5b4fc !important; }
+.bg-purple-100 { background-color: rgba(139,92,246,0.12) !important; }
+.text-purple-700 { color: #c4b5fd !important; }
+.bg-teal-100 { background-color: rgba(20,184,166,0.12) !important; }
+.text-teal-700 { color: #2dd4bf !important; }
+.bg-cyan-100 { background-color: rgba(6,182,212,0.12) !important; }
+.text-cyan-700 { color: #22d3ee !important; }
+
+/* Misc texto verde hardcodeado */
+.text-green-600 { color: #34d399 !important; }
+.text-green-800 { color: #6ee7b7 !important; }
+.text-red-500   { color: #fb7185 !important; }
+.text-red-700   { color: #fb7185 !important; }
+
+/* border-green-500 en modo selección activa */
+.border-green-500 { border-color: rgba(16,185,129,0.5) !important; }
+
+/* shadcn Card cuando se fuerza bg-card explícito */
+.bg-card { background-color: #0d1426 !important; }
+
+/* Onboarding header blur */
+.backdrop-blur.bg-white\/80 { background-color: rgba(13,20,38,0.85) !important; }
+
 /* ── Scrollbar ──────────────────────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
