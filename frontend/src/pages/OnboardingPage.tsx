@@ -107,8 +107,8 @@ export default function OnboardingPage() {
       </div>
 
       {/* Contenido */}
-      <div className="flex flex-1 items-center justify-center p-6">
-        <div className="w-full max-w-lg">
+      <div className="flex-1 flex items-center justify-center p-6">
+        <div className="w-full max-w-lg mx-auto">
           {/* Progress dots */}
           <div className="flex items-center justify-center gap-2 mb-8">
             {[1, 2, 3, 4].map((s) => (
