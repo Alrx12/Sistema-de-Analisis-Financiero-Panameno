@@ -82,25 +82,6 @@ else
     fi
 fi
 
-scp -q /tmp/safpro_nginx_update.conf "$SERVER:/tmp/safpro_nginx.conf"
-if ssh "$SERVER" "sudo cp /tmp/safpro_nginx.conf /etc/nginx/sites-available/safpro \
-    && sudo ln -sf /etc/nginx/sites-available/safpro /etc/nginx/sites-enabled/safpro \
-    && sudo rm -f /etc/nginx/sites-enabled/default \
-    && sudo nginx -t \
-    && sudo systemctl reload nginx \
-    && rm /tmp/safpro_nginx.conf \
-    && echo '    ✅ nginx recargado con security headers.'"; then
-    echo "    nginx OK."
-else
-    echo "    ⚠️  No se pudo actualizar nginx automáticamente (sudo requiere contraseña)."
-    echo "    Aplica manualmente con:"
-    echo "      ssh $SERVER"
-    echo "      sudo cp /tmp/safpro_nginx.conf /etc/nginx/sites-available/safpro"
-    echo "      sudo nginx -t && sudo systemctl reload nginx"
-    echo "    (Solo necesario si cambiaron los security headers)"
-fi
-rm -f /tmp/safpro_nginx_update.conf
-
 echo ""
 echo "✅  Actualización completada."
 echo ""
