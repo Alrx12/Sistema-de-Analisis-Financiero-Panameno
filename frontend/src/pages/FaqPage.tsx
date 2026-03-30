@@ -213,6 +213,24 @@ export default function FaqPage() {
         </div>
       </div>
 
+      {/* Explicación simple */}
+      <div className="rounded-xl border border-blue-200 bg-blue-50 p-5">
+        <p className="text-sm font-semibold text-blue-800 mb-2">¿Qué hace SAFPRO? En palabras simples</p>
+        <p className="text-sm text-blue-700 leading-relaxed">
+          Imagina que tu banco tiene un cuaderno donde apunta cada vez que gastas o recibes dinero.
+          Tú descargas ese cuaderno (como un archivo Excel) y lo subes a SAFPRO.
+          El sistema lo lee, cuenta todo, y te dice algo así:
+        </p>
+        <div className="mt-3 rounded-lg bg-white border border-blue-100 px-4 py-3 text-sm text-blue-900 leading-relaxed italic">
+          "Este mes ganaste $1,200. Gastaste $900 — $350 en comida, $80 en Netflix y Spotify, $120 en gasolina.
+          Te sobraron $300."
+        </div>
+        <p className="text-sm text-blue-700 leading-relaxed mt-3">
+          Todo eso <strong>sin que tú hagas una sola suma</strong>. Y si el sistema se equivoca con algún gasto,
+          lo corriges una vez y nunca más vuelve a equivocarse con ese negocio.
+        </p>
+      </div>
+
       {/* Highlight: Ley 81 */}
       <div className="rounded-xl border border-green-200 bg-green-50 p-4 flex items-start gap-3">
         <ShieldCheck className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />

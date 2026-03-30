@@ -35,6 +35,7 @@ class DummyBankAccount:
         self.bank_name = bank_name
         self.nickname = nickname
         self.account_number_last4 = last4
+        self.available_balance = None  # añadido en migración i9d6e4f3g2h1
 
 
 class DummySnapshot:

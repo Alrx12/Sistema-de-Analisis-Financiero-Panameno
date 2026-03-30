@@ -178,32 +178,43 @@ class AnalysisService:
         current_user: User,
         bank_account_id: UUID | None = None,
     ) -> AnalysisSnapshot:
-        # --- UPSERT: si ya existe un snapshot para esta cuenta + mes, reemplazarlo ---
-        # Solo aplica cuando tenemos bank_account_id y period_start conocidos.
-        # Razón: el usuario puede corregir o re-exportar el mismo mes; el segundo upload
-        # debe ganarle al primero, no acumularse encima.
+        # --- UPSERT por solapamiento de rango: elimina cualquier snapshot que se superponga
+        # con el rango del nuevo archivo, no solo el que tenga el mismo mes de inicio.
+        #
+        # Problema del enfoque anterior (year+month exact match en period_start):
+        #   Si el archivo nuevo cubre Ene–Mar y el existente cubre Sep–Mar, los period_start
+        #   son distintos (Ene vs Sep) → el upsert no se activaba → las transacciones del
+        #   overlap (Sep–Mar) quedaban duplicadas en dos snapshots.
+        #
+        # Condición de solapamiento estándar:
+        #   existing.period_start <= new.period_end  AND  existing.period_end >= new.period_start
         period_start_str = analysis.get("period_start")
+        period_end_str = analysis.get("period_end")
         period_start_date: date | None = (
             date.fromisoformat(period_start_str) if period_start_str else None
         )
+        period_end_date: date | None = (
+            date.fromisoformat(period_end_str) if period_end_str else None
+        )
 
-        if bank_account_id and period_start_date:
-            existing = (
+        if bank_account_id and period_start_date and period_end_date:
+            overlapping = (
                 self.db.query(AnalysisSnapshot)
                 .filter(
                     AnalysisSnapshot.user_id == current_user.user_id,
                     AnalysisSnapshot.bank_account_id == bank_account_id,
-                    extract("year", AnalysisSnapshot.period_start) == period_start_date.year,
-                    extract("month", AnalysisSnapshot.period_start) == period_start_date.month,
+                    AnalysisSnapshot.period_start <= period_end_date,
+                    AnalysisSnapshot.period_end >= period_start_date,
                 )
-                .first()
+                .all()
             )
-            if existing:
+            for existing in overlapping:
                 # Borrar primero las transacciones (FK constraint)
                 self.db.query(AnalysisTransaction).filter(
                     AnalysisTransaction.snapshot_id == existing.snapshot_id
                 ).delete(synchronize_session=False)
                 self.db.delete(existing)
+            if overlapping:
                 self.db.flush()
 
         # Excluir "transactions" del summary JSON:

@@ -9,12 +9,32 @@ import pytest
 from app.services.analysis_service import AnalysisService
 
 
+class FakeQuery:
+    """Stub de query para simular el bloque upsert en save_snapshot.
+    Devuelve lista vacía (sin snapshots existentes) para que el upsert
+    no borre nada y el nuevo snapshot se cree normalmente."""
+
+    def filter(self, *_args, **_kwargs) -> "FakeQuery":
+        return self
+
+    def first(self) -> None:
+        return None
+
+    def all(self) -> list:
+        return []
+
+    def delete(self, *_args, **_kwargs) -> None:
+        pass
+
+
 class FakeSession:
     def __init__(self) -> None:
         self.added = []
         self.added_all = []
         self.commits = 0
         self.refreshed = []
+        self.deleted = []
+        self.flushed = 0
 
     def add(self, obj) -> None:
         self.added.append(obj)
@@ -27,6 +47,15 @@ class FakeSession:
 
     def refresh(self, obj) -> None:
         self.refreshed.append(obj)
+
+    def query(self, *_args, **_kwargs) -> FakeQuery:
+        return FakeQuery()
+
+    def delete(self, obj) -> None:
+        self.deleted.append(obj)
+
+    def flush(self) -> None:
+        self.flushed += 1
 
 
 @pytest.fixture
