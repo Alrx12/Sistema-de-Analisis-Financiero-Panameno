@@ -3,7 +3,7 @@ import { Link } from "react-router-dom"
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="min-h-screen" style={{ background: "#f4f5f7", colorScheme: "light" }}>
+    <div style={{ minHeight: "100vh", width: "100%", background: "#f4f5f7", colorScheme: "light" }}>
       {/* Header simple */}
       <header
         className="flex items-center gap-3 px-6 py-4"
@@ -12,7 +12,7 @@ export default function PrivacyPolicyPage() {
         <Link to="/" className="flex items-center gap-2.5 no-underline">
           <div
             className="flex h-8 w-8 items-center justify-center rounded-lg text-white"
-            style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}
+            style={{ background: "linear-gradient(135deg, #e05c19, #c0440e)" }}
           >
             <TrendingUp className="h-4 w-4" />
           </div>
@@ -24,7 +24,7 @@ export default function PrivacyPolicyPage() {
       </header>
 
       {/* Contenido */}
-      <main className="mx-auto max-w-3xl px-6 py-10 space-y-8">
+      <main style={{ maxWidth: "48rem", margin: "0 auto", padding: "2.5rem 1.5rem", display: "flex", flexDirection: "column", gap: "2rem" }}>
 
         {/* Título */}
         <div className="space-y-2">
@@ -56,7 +56,7 @@ export default function PrivacyPolicyPage() {
         </div>
 
         {/* Sección 1 — Quiénes somos */}
-        <section className="bg-white rounded-xl p-6 space-y-3 shadow-sm">
+        <section style={{ background: "#ffffff", borderRadius: "0.75rem", padding: "1.5rem", display: "flex", flexDirection: "column", gap: "0.75rem", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
           <h2 className="text-base font-bold flex items-center gap-2" style={{ color: "#1c2b4b" }}>
             <TrendingUp className="h-4 w-4 text-indigo-500" />
             1. ¿Quiénes somos?
@@ -69,14 +69,14 @@ export default function PrivacyPolicyPage() {
           <p className="text-sm leading-relaxed" style={{ color: "#374151" }}>
             SAFPRO opera bajo la responsabilidad de su administrador. Para contacto relacionado con
             privacidad y protección de datos, escribe a:{" "}
-            <a href="mailto:lex12pineda@hotmail.com" className="font-medium text-indigo-600 hover:underline">
-              lex12pineda@hotmail.com
+            <a href="mailto:admin@safpro.us" className="font-medium text-indigo-600 hover:underline">
+              admin@safpro.us
             </a>
           </p>
         </section>
 
         {/* Sección 2 — Qué datos recopilamos */}
-        <section className="bg-white rounded-xl p-6 space-y-3 shadow-sm">
+        <section style={{ background: "#ffffff", borderRadius: "0.75rem", padding: "1.5rem", display: "flex", flexDirection: "column", gap: "0.75rem", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
           <h2 className="text-base font-bold flex items-center gap-2" style={{ color: "#1c2b4b" }}>
             <Database className="h-4 w-4 text-blue-500" />
             2. ¿Qué datos recopilamos?
@@ -128,7 +128,7 @@ export default function PrivacyPolicyPage() {
         </section>
 
         {/* Sección 3 — Para qué usamos tus datos */}
-        <section className="bg-white rounded-xl p-6 space-y-3 shadow-sm">
+        <section style={{ background: "#ffffff", borderRadius: "0.75rem", padding: "1.5rem", display: "flex", flexDirection: "column", gap: "0.75rem", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
           <h2 className="text-base font-bold flex items-center gap-2" style={{ color: "#1c2b4b" }}>
             <Eye className="h-4 w-4 text-purple-500" />
             3. ¿Para qué usamos tus datos?
@@ -169,7 +169,7 @@ export default function PrivacyPolicyPage() {
         </section>
 
         {/* Sección 4 — Compartición de datos */}
-        <section className="bg-white rounded-xl p-6 space-y-3 shadow-sm">
+        <section style={{ background: "#ffffff", borderRadius: "0.75rem", padding: "1.5rem", display: "flex", flexDirection: "column", gap: "0.75rem", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
           <h2 className="text-base font-bold flex items-center gap-2" style={{ color: "#1c2b4b" }}>
             <Lock className="h-4 w-4 text-green-500" />
             4. ¿Compartimos tus datos?
@@ -193,7 +193,7 @@ export default function PrivacyPolicyPage() {
         </section>
 
         {/* Sección 5 — Seguridad */}
-        <section className="bg-white rounded-xl p-6 space-y-3 shadow-sm">
+        <section style={{ background: "#ffffff", borderRadius: "0.75rem", padding: "1.5rem", display: "flex", flexDirection: "column", gap: "0.75rem", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
           <h2 className="text-base font-bold flex items-center gap-2" style={{ color: "#1c2b4b" }}>
             <ShieldCheck className="h-4 w-4 text-blue-600" />
             5. ¿Cómo protegemos tus datos?
@@ -223,7 +223,7 @@ export default function PrivacyPolicyPage() {
         </section>
 
         {/* Sección 6 — Derechos ARCO */}
-        <section className="bg-white rounded-xl p-6 space-y-3 shadow-sm">
+        <section style={{ background: "#ffffff", borderRadius: "0.75rem", padding: "1.5rem", display: "flex", flexDirection: "column", gap: "0.75rem", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
           <h2 className="text-base font-bold flex items-center gap-2" style={{ color: "#1c2b4b" }}>
             <Trash2 className="h-4 w-4 text-red-500" />
             6. Tus derechos — ARCO (Ley 81 de Panamá)
@@ -276,7 +276,7 @@ export default function PrivacyPolicyPage() {
         </section>
 
         {/* Sección 7 — Retención de datos */}
-        <section className="bg-white rounded-xl p-6 space-y-3 shadow-sm">
+        <section style={{ background: "#ffffff", borderRadius: "0.75rem", padding: "1.5rem", display: "flex", flexDirection: "column", gap: "0.75rem", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
           <h2 className="text-base font-bold" style={{ color: "#1c2b4b" }}>7. Retención de datos</h2>
           <p className="text-sm leading-relaxed" style={{ color: "#374151" }}>
             Tus datos se conservan mientras mantengas una cuenta activa en SAFPRO. Si solicitas la
@@ -291,7 +291,7 @@ export default function PrivacyPolicyPage() {
         </section>
 
         {/* Sección 8 — Cookies */}
-        <section className="bg-white rounded-xl p-6 space-y-3 shadow-sm">
+        <section style={{ background: "#ffffff", borderRadius: "0.75rem", padding: "1.5rem", display: "flex", flexDirection: "column", gap: "0.75rem", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
           <h2 className="text-base font-bold" style={{ color: "#1c2b4b" }}>8. Cookies y seguimiento</h2>
           <p className="text-sm leading-relaxed" style={{ color: "#374151" }}>
             SAFPRO <strong>no utiliza cookies de seguimiento</strong> ni píxeles de publicidad. La
@@ -306,7 +306,7 @@ export default function PrivacyPolicyPage() {
         </section>
 
         {/* Sección 9 — Menores */}
-        <section className="bg-white rounded-xl p-6 space-y-3 shadow-sm">
+        <section style={{ background: "#ffffff", borderRadius: "0.75rem", padding: "1.5rem", display: "flex", flexDirection: "column", gap: "0.75rem", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
           <h2 className="text-base font-bold" style={{ color: "#1c2b4b" }}>9. Menores de edad</h2>
           <p className="text-sm leading-relaxed" style={{ color: "#374151" }}>
             SAFPRO está dirigido exclusivamente a personas mayores de 18 años. No recopilamos
@@ -316,7 +316,7 @@ export default function PrivacyPolicyPage() {
         </section>
 
         {/* Sección 10 — Cambios */}
-        <section className="bg-white rounded-xl p-6 space-y-3 shadow-sm">
+        <section style={{ background: "#ffffff", borderRadius: "0.75rem", padding: "1.5rem", display: "flex", flexDirection: "column", gap: "0.75rem", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
           <h2 className="text-base font-bold" style={{ color: "#1c2b4b" }}>10. Cambios a esta política</h2>
           <p className="text-sm leading-relaxed" style={{ color: "#374151" }}>
             Esta política puede actualizarse ocasionalmente para reflejar cambios en el servicio o en
@@ -340,11 +340,11 @@ export default function PrivacyPolicyPage() {
             consulta sobre el tratamiento de tus datos personales:
           </p>
           <a
-            href="mailto:lex12pineda@hotmail.com"
+            href="mailto:admin@safpro.us"
             className="inline-flex items-center gap-2 text-sm font-semibold text-white hover:underline"
           >
             <Mail className="h-4 w-4" />
-            lex12pineda@hotmail.com
+            admin@safpro.us
           </a>
         </section>
 

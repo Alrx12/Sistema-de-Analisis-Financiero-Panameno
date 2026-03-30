@@ -3,7 +3,7 @@ import { Link } from "react-router-dom"
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen" style={{ background: "#f4f5f7", colorScheme: "light" }}>
+    <div style={{ minHeight: "100vh", width: "100%", background: "#f4f5f7", colorScheme: "light" }}>
       {/* Header */}
       <header
         className="flex items-center gap-3 px-6 py-4"
@@ -24,7 +24,7 @@ export default function TermsPage() {
       </header>
 
       {/* Contenido */}
-      <main className="mx-auto max-w-3xl px-6 py-10 space-y-8">
+      <main style={{ maxWidth: "48rem", margin: "0 auto", padding: "2.5rem 1.5rem", display: "flex", flexDirection: "column", gap: "2rem" }}>
 
         {/* Título */}
         <div className="space-y-2">
@@ -55,7 +55,7 @@ export default function TermsPage() {
         </div>
 
         {/* 1. Aceptación */}
-        <section className="bg-white rounded-xl p-6 space-y-3 shadow-sm">
+        <section style={{ background: "#ffffff", borderRadius: "0.75rem", padding: "1.5rem", display: "flex", flexDirection: "column", gap: "0.75rem", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
           <h2 className="text-base font-bold flex items-center gap-2" style={{ color: "#1c2b4b" }}>
             <UserCheck className="h-4 w-4" style={{ color: "#e05c19" }} />
             1. Aceptación de los Términos
@@ -76,7 +76,7 @@ export default function TermsPage() {
         </section>
 
         {/* 2. Descripción */}
-        <section className="bg-white rounded-xl p-6 space-y-3 shadow-sm">
+        <section style={{ background: "#ffffff", borderRadius: "0.75rem", padding: "1.5rem", display: "flex", flexDirection: "column", gap: "0.75rem", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
           <h2 className="text-base font-bold flex items-center gap-2" style={{ color: "#1c2b4b" }}>
             <TrendingUp className="h-4 w-4" style={{ color: "#e05c19" }} />
             2. Descripción del Servicio
@@ -118,7 +118,7 @@ export default function TermsPage() {
         </section>
 
         {/* 3. Cuenta */}
-        <section className="bg-white rounded-xl p-6 space-y-4 shadow-sm">
+        <section style={{ background: "#ffffff", borderRadius: "0.75rem", padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1rem", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
           <h2 className="text-base font-bold flex items-center gap-2" style={{ color: "#1c2b4b" }}>
             <UserCheck className="h-4 w-4" style={{ color: "#e05c19" }} />
             3. Registro y Cuenta de Usuario
@@ -145,7 +145,7 @@ export default function TermsPage() {
         </section>
 
         {/* 4. Planes y Pagos */}
-        <section className="bg-white rounded-xl p-6 space-y-4 shadow-sm">
+        <section style={{ background: "#ffffff", borderRadius: "0.75rem", padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1rem", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
           <h2 className="text-base font-bold flex items-center gap-2" style={{ color: "#1c2b4b" }}>
             <CreditCard className="h-4 w-4" style={{ color: "#e05c19" }} />
             4. Planes y Pagos
@@ -183,7 +183,7 @@ export default function TermsPage() {
         </section>
 
         {/* 5. Uso Aceptable */}
-        <section className="bg-white rounded-xl p-6 space-y-3 shadow-sm">
+        <section style={{ background: "#ffffff", borderRadius: "0.75rem", padding: "1.5rem", display: "flex", flexDirection: "column", gap: "0.75rem", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
           <h2 className="text-base font-bold flex items-center gap-2" style={{ color: "#1c2b4b" }}>
             <AlertTriangle className="h-4 w-4" style={{ color: "#e05c19" }} />
             5. Uso Aceptable
@@ -213,7 +213,7 @@ export default function TermsPage() {
         </section>
 
         {/* 6. Datos y Privacidad */}
-        <section className="bg-white rounded-xl p-6 space-y-3 shadow-sm">
+        <section style={{ background: "#ffffff", borderRadius: "0.75rem", padding: "1.5rem", display: "flex", flexDirection: "column", gap: "0.75rem", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
           <h2 className="text-base font-bold flex items-center gap-2" style={{ color: "#1c2b4b" }}>
             <Shield className="h-4 w-4" style={{ color: "#e05c19" }} />
             6. Datos y Privacidad
@@ -234,7 +234,7 @@ export default function TermsPage() {
         </section>
 
         {/* 7. Disponibilidad */}
-        <section className="bg-white rounded-xl p-6 space-y-3 shadow-sm">
+        <section style={{ background: "#ffffff", borderRadius: "0.75rem", padding: "1.5rem", display: "flex", flexDirection: "column", gap: "0.75rem", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
           <h2 className="text-base font-bold flex items-center gap-2" style={{ color: "#1c2b4b" }}>
             <AlertTriangle className="h-4 w-4" style={{ color: "#e05c19" }} />
             7. Disponibilidad y Limitaciones
@@ -263,7 +263,7 @@ export default function TermsPage() {
         </section>
 
         {/* 8. Propiedad Intelectual */}
-        <section className="bg-white rounded-xl p-6 space-y-3 shadow-sm">
+        <section style={{ background: "#ffffff", borderRadius: "0.75rem", padding: "1.5rem", display: "flex", flexDirection: "column", gap: "0.75rem", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
           <h2 className="text-base font-bold flex items-center gap-2" style={{ color: "#1c2b4b" }}>
             <FileText className="h-4 w-4" style={{ color: "#e05c19" }} />
             8. Propiedad Intelectual
@@ -280,7 +280,7 @@ export default function TermsPage() {
         </section>
 
         {/* 9. Limitación de Responsabilidad */}
-        <section className="bg-white rounded-xl p-6 space-y-3 shadow-sm">
+        <section style={{ background: "#ffffff", borderRadius: "0.75rem", padding: "1.5rem", display: "flex", flexDirection: "column", gap: "0.75rem", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
           <h2 className="text-base font-bold flex items-center gap-2" style={{ color: "#1c2b4b" }}>
             <Scale className="h-4 w-4" style={{ color: "#e05c19" }} />
             9. Limitación de Responsabilidad
@@ -308,8 +308,8 @@ export default function TermsPage() {
         </section>
 
         {/* 10. Modificaciones */}
-        <section className="bg-white rounded-xl p-6 space-y-3 shadow-sm">
-          <h2 className="text-base font-bold" style={{ color: "#1c2b4b" }}>10. Modificaciones al Servicio</h2>
+        <section style={{ background: "#ffffff", borderRadius: "0.75rem", padding: "1.5rem", display: "flex", flexDirection: "column", gap: "0.75rem", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
+          <h2 className="text-base font-bold" style={{ color: "#1c2b4b", marginBottom: 0 }}>10. Modificaciones al Servicio</h2>
           <p className="text-sm leading-relaxed" style={{ color: "#374151" }}>
             SAFPRO se reserva el derecho de modificar, suspender o discontinuar cualquier parte
             del Servicio. Le notificaremos cambios materiales con al menos{" "}
@@ -319,7 +319,7 @@ export default function TermsPage() {
         </section>
 
         {/* 11. Terminación */}
-        <section className="bg-white rounded-xl p-6 space-y-3 shadow-sm">
+        <section style={{ background: "#ffffff", borderRadius: "0.75rem", padding: "1.5rem", display: "flex", flexDirection: "column", gap: "0.75rem", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
           <h2 className="text-base font-bold" style={{ color: "#1c2b4b" }}>11. Terminación</h2>
           <p className="text-sm leading-relaxed" style={{ color: "#374151" }}>
             Cualquiera de las partes puede terminar la relación en cualquier momento.
@@ -335,7 +335,7 @@ export default function TermsPage() {
         </section>
 
         {/* 12. Ley Aplicable */}
-        <section className="bg-white rounded-xl p-6 space-y-3 shadow-sm">
+        <section style={{ background: "#ffffff", borderRadius: "0.75rem", padding: "1.5rem", display: "flex", flexDirection: "column", gap: "0.75rem", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
           <h2 className="text-base font-bold flex items-center gap-2" style={{ color: "#1c2b4b" }}>
             <Scale className="h-4 w-4" style={{ color: "#e05c19" }} />
             12. Ley Aplicable y Resolución de Disputas

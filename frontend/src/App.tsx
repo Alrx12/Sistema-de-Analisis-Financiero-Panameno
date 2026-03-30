@@ -48,6 +48,7 @@ export default function App() {
         <Route path="/oauth-callback" element={<OAuthCallbackPage />} />
         <Route path="/privacy" element={<PrivacyPolicyPage />} />
         <Route path="/terms" element={<TermsPage />} />
+        <Route path="/faq" element={<FaqPage />} />
 
         {/* Onboarding — protegida pero fuera del AppShell (pantalla completa) */}
         <Route path="/onboarding" element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />
@@ -65,7 +66,6 @@ export default function App() {
           <Route path="budget" element={<BudgetPage />} />
           <Route path="retrain" element={<RetrainPage />} />
           <Route path="ayuda" element={<AyudaPage />} />
-          <Route path="faq" element={<FaqPage />} />
           <Route path="2fa-setup" element={<TwoFactorSetupPage />} />
         </Route>
 
