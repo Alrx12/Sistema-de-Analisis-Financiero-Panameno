@@ -23,6 +23,7 @@ import CuentasPage from "@/pages/CuentasPage"
 import AyudaPage from "@/pages/AyudaPage"
 import FaqPage from "@/pages/FaqPage"
 import PrivacyPolicyPage from "@/pages/PrivacyPolicyPage"
+import TermsPage from "@/pages/TermsPage"
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
@@ -46,6 +47,7 @@ export default function App() {
         <Route path="/verify-email" element={<VerifyEmailPage />} />
         <Route path="/oauth-callback" element={<OAuthCallbackPage />} />
         <Route path="/privacy" element={<PrivacyPolicyPage />} />
+        <Route path="/terms" element={<TermsPage />} />
 
         {/* Onboarding — protegida pero fuera del AppShell (pantalla completa) */}
         <Route path="/onboarding" element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />

@@ -259,6 +259,10 @@ export default function LoginPage() {
               Política de Privacidad
             </Link>
             {" · "}
+            <Link to="/terms" className="auth-link" style={{ fontSize: "inherit" }}>
+              Términos de Uso
+            </Link>
+            {" · "}
             <Link to="/faq" className="auth-link" style={{ fontSize: "inherit" }}>
               Preguntas frecuentes
             </Link>

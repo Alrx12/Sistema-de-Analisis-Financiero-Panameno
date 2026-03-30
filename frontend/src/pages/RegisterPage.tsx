@@ -221,7 +221,11 @@ export default function RegisterPage() {
 
         {/* Privacy link */}
         <p className="text-center text-xs mt-3" style={{ color: "rgba(255,255,255,0.25)" }}>
-          Al registrarte aceptas nuestra{" "}
+          Al registrarte aceptas nuestros{" "}
+          <Link to="/terms" className="auth-link" style={{ fontSize: "inherit" }}>
+            Términos de Uso
+          </Link>
+          {" "}y nuestra{" "}
           <Link to="/privacy" className="auth-link" style={{ fontSize: "inherit" }}>
             Política de Privacidad
           </Link>

@@ -60,59 +60,45 @@ ssh "$SERVER" "
 "
 
 # Actualizar configuración nginx con security headers
+# Usa deploy/nginx.conf como fuente — sin heredocs ni escaping complejo.
 echo ">>> Actualizando configuración nginx (security headers)..."
-cat > /tmp/safpro_nginx_update.conf << 'NGINXEOF'
-server {
-    listen 80;
-    server_name _;
-
-    root /home/lex/safpro/frontend/dist;
-    index index.html;
-
-    # ── Security Headers ─────────────────────────────────────────────────────
-    add_header X-Frame-Options "SAMEORIGIN" always;
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
-    add_header Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()" always;
-    add_header X-XSS-Protection "1; mode=block" always;
-    add_header Content-Security-Policy "default-src 'self'; script-src 'self' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cloudflareinsights.com; font-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';" always;
-
-    # ── API proxy ────────────────────────────────────────────────────────────
-    location /api/ {
-        proxy_pass         http://127.0.0.1:8001/api/;
-        proxy_http_version 1.1;
-        proxy_set_header   Host              $host;
-        proxy_set_header   X-Real-IP         $remote_addr;
-        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
-        proxy_set_header   X-Forwarded-Proto $scheme;
-        proxy_set_header   Connection        "";
-
-        client_max_body_size 20M;
-        proxy_read_timeout   30s;
-        proxy_connect_timeout 5s;
-    }
-
-    # ── Frontend SPA ─────────────────────────────────────────────────────────
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-
-    # Cache assets con hash en el nombre
-    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-        add_header X-Content-Type-Options "nosniff" always;
-    }
-
-    # No cachear index.html
-    location = /index.html {
-        add_header Cache-Control "no-cache, no-store, must-revalidate";
-    }
-}
-NGINXEOF
+NGINX_CONF="$SCRIPT_DIR/nginx.conf"
+if [ ! -f "$NGINX_CONF" ]; then
+    echo "    ⚠️  No se encontró deploy/nginx.conf — omitiendo actualización nginx."
+else
+    scp -q "$NGINX_CONF" "$SERVER:/tmp/safpro_nginx.conf"
+    if ssh "$SERVER" "sudo cp /tmp/safpro_nginx.conf /etc/nginx/sites-available/safpro \
+        && sudo ln -sf /etc/nginx/sites-available/safpro /etc/nginx/sites-enabled/safpro \
+        && sudo rm -f /etc/nginx/sites-enabled/default \
+        && sudo nginx -t \
+        && sudo systemctl reload nginx \
+        && rm /tmp/safpro_nginx.conf \
+        && echo '    ✅ nginx recargado con security headers.'"; then
+        echo "    nginx OK."
+    else
+        echo "    ⚠️  Falló la actualización de nginx. Aplica manualmente:"
+        echo "      scp deploy/nginx.conf $SERVER:/tmp/safpro_nginx.conf"
+        echo "      ssh $SERVER 'sudo cp /tmp/safpro_nginx.conf /etc/nginx/sites-available/safpro && sudo nginx -t && sudo systemctl reload nginx'"
+    fi
+fi
 
 scp -q /tmp/safpro_nginx_update.conf "$SERVER:/tmp/safpro_nginx.conf"
-ssh "$SERVER" "sudo cp /tmp/safpro_nginx.conf /etc/nginx/sites-available/safpro && sudo ln -sf /etc/nginx/sites-available/safpro /etc/nginx/sites-enabled/safpro && sudo rm -f /etc/nginx/sites-enabled/default && sudo nginx -t && sudo systemctl reload nginx && rm /tmp/safpro_nginx.conf && echo '    nginx recargado con security headers.'"
+if ssh "$SERVER" "sudo cp /tmp/safpro_nginx.conf /etc/nginx/sites-available/safpro \
+    && sudo ln -sf /etc/nginx/sites-available/safpro /etc/nginx/sites-enabled/safpro \
+    && sudo rm -f /etc/nginx/sites-enabled/default \
+    && sudo nginx -t \
+    && sudo systemctl reload nginx \
+    && rm /tmp/safpro_nginx.conf \
+    && echo '    ✅ nginx recargado con security headers.'"; then
+    echo "    nginx OK."
+else
+    echo "    ⚠️  No se pudo actualizar nginx automáticamente (sudo requiere contraseña)."
+    echo "    Aplica manualmente con:"
+    echo "      ssh $SERVER"
+    echo "      sudo cp /tmp/safpro_nginx.conf /etc/nginx/sites-available/safpro"
+    echo "      sudo nginx -t && sudo systemctl reload nginx"
+    echo "    (Solo necesario si cambiaron los security headers)"
+fi
 rm -f /tmp/safpro_nginx_update.conf
 
 echo ""
