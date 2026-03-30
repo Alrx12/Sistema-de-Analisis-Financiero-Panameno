@@ -3,7 +3,7 @@ import { Link } from "react-router-dom"
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="min-h-screen" style={{ background: "#f4f5f7" }}>
+    <div className="min-h-screen" style={{ background: "#f4f5f7", colorScheme: "light" }}>
       {/* Header simple */}
       <header
         className="flex items-center gap-3 px-6 py-4"

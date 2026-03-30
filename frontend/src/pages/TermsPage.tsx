@@ -3,7 +3,7 @@ import { Link } from "react-router-dom"
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen" style={{ background: "#f4f5f7" }}>
+    <div className="min-h-screen" style={{ background: "#f4f5f7", colorScheme: "light" }}>
       {/* Header */}
       <header
         className="flex items-center gap-3 px-6 py-4"
@@ -156,13 +156,11 @@ export default function TermsPage() {
           >
             <p className="text-sm font-semibold mb-1" style={{ color: "#c2410c" }}>Modelo de precios</p>
             <p className="text-sm leading-relaxed" style={{ color: "#7c2d12" }}>
-              Los detalles y precios vigentes se publican en{" "}
-              <a href="https://safpro.us" className="font-medium hover:underline" style={{ color: "#c2410c" }}>
-                https://safpro.us
-              </a>
-              . Los usuarios actuales de la fase Friends &amp; Family no están sujetos a cargo
-              alguno hasta que se establezca formalmente el modelo de precios y se les notifique
-              con al menos <strong>15 días de anticipación</strong>.
+              <strong>Plan Gratis:</strong> $0 — hasta 3 análisis históricos con funcionalidad completa, sin límite de tiempo.{" "}
+              <strong>Plan Pro:</strong> $5/mes o $45/año ($3.75/mes) — análisis ilimitados, historial completo y KB personal avanzado.{" "}
+              Los usuarios actuales de la fase Friends &amp; Family no están sujetos a cargo
+              alguno hasta que activen formalmente su plan, con notificación previa de al menos{" "}
+              <strong>15 días de anticipación</strong>.
             </p>
           </div>
           <div>
@@ -367,11 +365,11 @@ export default function TermsPage() {
             Para preguntas, reclamos o solicitudes relacionadas con estos Términos:
           </p>
           <a
-            href="mailto:lex12pineda@hotmail.com"
+            href="mailto:admin@safpro.us"
             className="inline-flex items-center gap-2 text-sm font-semibold text-white hover:underline"
           >
             <Mail className="h-4 w-4" />
-            lex12pineda@hotmail.com
+            admin@safpro.us
           </a>
           <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.5)" }}>
             Haremos nuestro mejor esfuerzo para responder en un plazo razonable de tiempo hábil.
