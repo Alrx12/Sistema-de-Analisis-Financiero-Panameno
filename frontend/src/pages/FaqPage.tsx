@@ -256,6 +256,16 @@ export default function FaqPage() {
         </p>
       </div>
 
+      {/* Footer links */}
+      <div className="flex items-center justify-between py-4 text-sm" style={{ color: "#9ca3af" }}>
+        <span>© 2026 SAFPRO. Todos los derechos reservados.</span>
+        <div className="flex gap-4">
+          <Link to="/privacy" className="hover:text-indigo-600 transition-colors">Privacidad</Link>
+          <Link to="/terms" className="hover:text-indigo-600 transition-colors">Términos</Link>
+          <Link to="/login" className="hover:text-indigo-600 transition-colors">Iniciar sesión</Link>
+        </div>
+      </div>
+
     </div>
   )
 }
