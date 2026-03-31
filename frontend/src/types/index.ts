@@ -6,6 +6,8 @@ export interface User {
   email: string
   full_name: string | null
   is_active: boolean
+  is_admin: boolean
+  is_suspended: boolean
   plan: string   // 'friends_and_family' | 'free' | 'pro'
   created_at: string
 }

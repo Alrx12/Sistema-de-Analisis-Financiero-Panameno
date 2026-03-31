@@ -14,6 +14,7 @@ import {
   Wallet,
   HelpCircle,
   MessageCircleQuestion,
+  ShieldCheck,
 } from "lucide-react"
 import { useState } from "react"
 import { useAuthStore } from "@/stores/authStore"
@@ -55,8 +56,9 @@ const navSections = [
 
 export default function AppShell() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const logout = useAuthStore((s) => s.logout)
-  const user   = useAuthStore((s) => s.user)
+  const logout   = useAuthStore((s) => s.logout)
+  const user     = useAuthStore((s) => s.user)
+  const isAdmin  = user?.is_admin === true
   const navigate = useNavigate()
 
   function handleLogout() {
@@ -130,6 +132,23 @@ export default function AppShell() {
               ))}
             </div>
           ))}
+
+          {/* Sección Admin — solo visible para is_admin=true */}
+          {isAdmin && (
+            <div>
+              <div className="sidebar-section-label" style={{ color: "rgba(251,191,36,0.6)" }}>Admin</div>
+              <NavLink
+                to="/admin"
+                end={false}
+                className={({ isActive }) => cn("sidebar-nav-item", isActive && "active")}
+                onClick={() => setSidebarOpen(false)}
+                style={{ color: "rgba(251,191,36,0.85)" }}
+              >
+                <ShieldCheck className="h-4 w-4 shrink-0" />
+                <span className="truncate">Dashboard Admin</span>
+              </NavLink>
+            </div>
+          )}
         </nav>
 
         {/* Footer: usuario + logout */}

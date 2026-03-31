@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 
+from app.api.v1.admin_analytics import router as admin_analytics_router
 from app.api.v1.accounts import router as accounts_router
 from app.api.v1.analysis import router as analysis_router
 from app.api.v1.auth import router as auth_router
@@ -17,6 +18,7 @@ from app.api.v1.wallets import router as wallets_router
 
 api_router = APIRouter()
 api_router.include_router(health_router, tags=["health"])
+api_router.include_router(admin_analytics_router, prefix="/admin", tags=["admin"])
 api_router.include_router(auth_router, prefix="/auth", tags=["auth"])
 api_router.include_router(accounts_router, prefix="/accounts", tags=["accounts"])
 api_router.include_router(analysis_router, prefix="/analysis", tags=["analysis"])

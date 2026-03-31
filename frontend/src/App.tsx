@@ -25,6 +25,7 @@ import FaqPage from "@/pages/FaqPage"
 import PrivacyPolicyPage from "@/pages/PrivacyPolicyPage"
 import TermsPage from "@/pages/TermsPage"
 import AccountPage from "@/pages/AccountPage"
+import AdminDashboardPage from "@/pages/AdminDashboardPage"
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
@@ -68,6 +69,7 @@ export default function App() {
           <Route path="retrain" element={<RetrainPage />} />
           <Route path="ayuda" element={<AyudaPage />} />
           <Route path="cuenta" element={<AccountPage />} />
+          <Route path="admin" element={<AdminDashboardPage />} />
           <Route path="2fa-setup" element={<TwoFactorSetupPage />} />
         </Route>
 

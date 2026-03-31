@@ -33,6 +33,10 @@ class User(Base):
     # Plan de suscripción: 'friends_and_family' | 'free' | 'pro'
     plan: Mapped[str] = mapped_column(String(30), nullable=False, default="friends_and_family")
 
+    # Administración
+    is_admin: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    is_suspended: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
