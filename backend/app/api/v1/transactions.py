@@ -18,6 +18,7 @@ from app.schemas.transaction import (
     ReclassifyRequest,
     ReclassifyResponse,
 )
+from app.services.analytics_service import track_event
 from app.services.detail_normalizer import canonicalize_detail
 from app.services.financial_classifier import FinancialClassifier
 from app.services.transaction_service import reclassify_transaction
@@ -272,6 +273,17 @@ def learn_transaction(
         body.detail[:80],
         kb_target,
         body.weight,
+    )
+
+    track_event(
+        user_id=current_user.user_id,
+        event_type="learn_transaction",
+        plan=getattr(current_user, "plan", None),
+        metadata={
+            "canonical_key": canonical_key,
+            "kb_target": kb_target,
+            "budget_category": body.budget_category,
+        },
     )
 
     return LearnResponse(

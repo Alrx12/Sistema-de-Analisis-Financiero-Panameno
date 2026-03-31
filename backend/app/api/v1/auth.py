@@ -45,6 +45,7 @@ from app.schemas.auth import (
 )
 from app.schemas.user import UserResponse
 from app.services.email_service import send_reset_email, send_verification_email
+from app.services.analytics_service import track_event
 
 logger = logging.getLogger(__name__)
 
@@ -122,6 +123,12 @@ def login(
         return LoginResponse(requires_2fa=True, two_factor_token=two_factor_token)
 
     token = create_access_token(subject=str(user.user_id))
+    track_event(
+        user_id=user.user_id,
+        event_type="login",
+        plan=getattr(user, "plan", None),
+        metadata={"method": "password"},
+    )
     return LoginResponse(access_token=token)
 
 
@@ -400,6 +407,12 @@ def verify_2fa(
         )
 
     token = create_access_token(subject=str(user.user_id))
+    track_event(
+        user_id=user.user_id,
+        event_type="login",
+        plan=getattr(user, "plan", None),
+        metadata={"method": "2fa"},
+    )
     return TokenResponse(access_token=token)
 
 
@@ -503,6 +516,12 @@ def google_callback(code: str | None = None, state: str | None = None, error: st
         db.refresh(user)
 
     token = create_access_token(subject=str(user.user_id))
+    track_event(
+        user_id=user.user_id,
+        event_type="login",
+        plan=getattr(user, "plan", None),
+        metadata={"method": "oauth_google"},
+    )
     return RedirectResponse(url=f"{frontend_callback}?token={token}")
 
 
@@ -620,4 +639,10 @@ def github_callback(code: str | None = None, state: str | None = None, error: st
         db.refresh(user)
 
     token = create_access_token(subject=str(user.user_id))
+    track_event(
+        user_id=user.user_id,
+        event_type="login",
+        plan=getattr(user, "plan", None),
+        metadata={"method": "oauth_github"},
+    )
     return RedirectResponse(url=f"{frontend_callback}?token={token}")

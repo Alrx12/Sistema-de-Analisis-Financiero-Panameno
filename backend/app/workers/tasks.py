@@ -71,6 +71,8 @@ def process_file_task(
             logger.error("Job no encontrado — job_id=%s", job_id)
             return {"job_id": job_id, "status": "error", "detail": "job_no_encontrado"}
 
+        from app.services.analytics_service import track_event
+
         svc = ProcessingService(db)
         analysis = svc.run_pipeline(
             job=job,
@@ -80,9 +82,17 @@ def process_file_task(
             file_size=file_size,
         )
 
-        status = "success" if analysis is not None else "error"
-        logger.info("process_file_task finalizado — job_id=%s status=%s", job_id, status)
-        return {"job_id": job_id, "status": status}
+        pipeline_status = "success" if analysis is not None else "error"
+        logger.info("process_file_task finalizado — job_id=%s status=%s", job_id, pipeline_status)
+
+        track_event(
+            user_id=UUID(user_id),
+            event_type=f"job_{pipeline_status}",
+            plan=getattr(user, "plan", None),
+            metadata={"job_id": job_id, "filename": original_filename},
+        )
+
+        return {"job_id": job_id, "status": pipeline_status}
 
     except OperationalError as exc:
         # Error transitorio de DB — reintentamos

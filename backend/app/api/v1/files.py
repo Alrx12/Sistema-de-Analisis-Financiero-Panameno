@@ -8,6 +8,7 @@ from app.api.deps import get_current_user, get_db
 from app.models.uploaded_file import UploadedFile
 from app.models.user import User
 from app.schemas.job import JobQueuedResponse
+from app.services.analytics_service import track_event
 from app.services.file_fingerprint_service import compute_checksum
 from app.services.file_service import FileService
 from app.services.processing_service import ProcessingService
@@ -138,6 +139,17 @@ async def upload_file(
         job.job_id,
         current_user.user_id,
         original_filename,
+    )
+
+    track_event(
+        user_id=current_user.user_id,
+        event_type="upload_queued",
+        plan=getattr(current_user, "plan", None),
+        metadata={
+            "job_id": str(job.job_id),
+            "filename": original_filename,
+            "file_size": len(content),
+        },
     )
 
     return JobQueuedResponse(job_id=job.job_id)
