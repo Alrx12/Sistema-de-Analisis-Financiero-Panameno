@@ -28,6 +28,8 @@ UTC = _tz.utc
 from pathlib import Path
 from typing import Any
 
+from filelock import FileLock, Timeout as FileLockTimeout
+
 from app.core.config import settings
 from app.services.detail_normalizer import (
     canonicalize_detail,
@@ -49,6 +51,12 @@ def _user_kb_path(user_id: str) -> str:
     p = Path(settings.knowledge_bases_dir)
     p.mkdir(parents=True, exist_ok=True)
     return str(p / f"knowledge_base_user_{user_id}.json")
+
+
+class _NullContext:
+    """Context manager vacío — usado cuando no hay lock (KB personal)."""
+    def __enter__(self): return self
+    def __exit__(self, *_): pass
 
 
 class FinancialClassifier:
@@ -396,13 +404,28 @@ class FinancialClassifier:
             "corrections_count": 0,
         }
 
+    @staticmethod
+    def _lock_for(path: str) -> FileLock | None:
+        """Devuelve un FileLock solo para el KB global; el KB personal no necesita lock."""
+        if "knowledge_base_global" in path:
+            lock_path = str(Path(path).with_suffix(".lock"))
+            return FileLock(lock_path, timeout=10)
+        return None
+
     def _load_kb(self, path: str, rules: dict[str, Any], label: str) -> None:
         if not Path(path).exists():
             logger.debug("KB %s no encontrado, arrancando vacío: %s", label, path)
             return
 
-        with open(path, "r", encoding="utf-8") as f:
-            data = json.load(f)
+        lock = self._lock_for(path)
+        try:
+            ctx = lock if lock is not None else _NullContext()
+            with ctx:
+                with open(path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+        except FileLockTimeout:
+            logger.error("Timeout adquiriendo lock para leer KB %s — %s", label, path)
+            return
 
         rules["exact_matches"] = data.get("exact_matches", {})
         rules["patterns"] = data.get("patterns", {})
@@ -431,8 +454,15 @@ class FinancialClassifier:
             "corrections_count": rules["corrections_count"],
         }
 
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
+        lock = self._lock_for(path)
+        try:
+            ctx = lock if lock is not None else _NullContext()
+            with ctx:
+                with open(path, "w", encoding="utf-8") as f:
+                    json.dump(data, f, indent=2, ensure_ascii=False)
+        except FileLockTimeout:
+            logger.error("Timeout adquiriendo lock para escribir KB %s — %s", label, path)
+            return
 
         logger.info(
             "KB %s guardado — %d correcciones (%s)",
