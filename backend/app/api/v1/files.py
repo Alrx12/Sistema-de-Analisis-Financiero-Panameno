@@ -18,6 +18,53 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+@router.delete(
+    "/uploads",
+    status_code=200,
+    summary="Borrar todos los estados de cuenta subidos",
+    description=(
+        "Elimina todos los registros de archivos subidos del usuario y sus archivos físicos. "
+        "Los análisis, snapshots y transacciones se conservan intactos. "
+        "Después de esta operación, el usuario puede volver a subir los mismos archivos sin recibir un 409."
+    ),
+)
+def clear_uploaded_files(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> dict:
+    uploaded = (
+        db.query(UploadedFile)
+        .filter(UploadedFile.user_id == current_user.user_id)
+        .all()
+    )
+
+    deleted_physical = 0
+    for uf in uploaded:
+        path = Path(uf.storage_path)
+        if path.exists():
+            try:
+                path.unlink()
+                deleted_physical += 1
+            except Exception:
+                pass
+        db.delete(uf)
+
+    db.commit()
+
+    logger.info(
+        "Uploads borrados — user_id=%s records=%d files=%d",
+        current_user.user_id,
+        len(uploaded),
+        deleted_physical,
+    )
+
+    return {
+        "message": f"{len(uploaded)} estado(s) de cuenta eliminado(s). Puedes volver a subirlos.",
+        "records_deleted": len(uploaded),
+        "files_deleted": deleted_physical,
+    }
+
+
 @router.post(
     "/upload",
     response_model=JobQueuedResponse,

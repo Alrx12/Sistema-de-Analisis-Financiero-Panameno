@@ -10,6 +10,7 @@ class UserResponse(BaseModel):
     email: EmailStr
     full_name: str | None
     is_active: bool
+    plan: str
     created_at: datetime
 
     model_config = {"from_attributes": True}

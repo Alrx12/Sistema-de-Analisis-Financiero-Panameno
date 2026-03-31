@@ -30,6 +30,9 @@ class User(Base):
     social_provider: Mapped[str | None] = mapped_column(String(20), nullable=True)   # 'google' | 'github'
     social_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
+    # Plan de suscripción: 'friends_and_family' | 'free' | 'pro'
+    plan: Mapped[str] = mapped_column(String(30), nullable=False, default="friends_and_family")
+
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
