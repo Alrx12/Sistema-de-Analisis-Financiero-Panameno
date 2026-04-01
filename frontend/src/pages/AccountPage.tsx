@@ -21,6 +21,7 @@ import { getProfile, updateProfile } from "@/api/profile"
 import { deleteMyAccount, deleteMyUploads } from "@/api/users"
 import { useAuthStore } from "@/stores/authStore"
 import { cn } from "@/lib/utils"
+import { toast } from "@/components/ui/toast"
 import type { IndustryType, GoalType, UserProfileUpdate } from "@/types"
 
 // ─── Opciones ─────────────────────────────────────────────────────────────────
@@ -139,10 +140,20 @@ export default function AccountPage() {
 
   const deleteUploadsMutation = useMutation({
     mutationFn: deleteMyUploads,
-    onSuccess: () => {
+    onSuccess: (data) => {
       setConfirmUploads(false)
       queryClient.invalidateQueries({ queryKey: ["jobs"] })
       queryClient.invalidateQueries({ queryKey: ["analysis"] })
+      const count = data?.records_deleted ?? 0
+      toast(
+        count > 0
+          ? `${count} registro${count !== 1 ? "s" : ""} de archivo eliminado${count !== 1 ? "s" : ""} correctamente.`
+          : "No había archivos registrados para eliminar.",
+        count > 0 ? "success" : "info"
+      )
+    },
+    onError: () => {
+      toast("Error al borrar los archivos. Intenta de nuevo.", "error")
     },
   })
 

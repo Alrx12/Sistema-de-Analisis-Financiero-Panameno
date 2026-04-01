@@ -3,6 +3,7 @@ from app.parsers.banco_general import BancoGeneralParser
 from app.parsers.banesco import BanescoParser
 from app.parsers.banistmo import BanistmoParser
 from app.parsers.banistmo_movimientos import BanistmoMovimientosParser
+from app.parsers.credicorp import CredicorpParser
 from app.parsers.base import BaseStatementParser
 
 
@@ -13,6 +14,7 @@ class ParserFactory:
         BanistmoMovimientosParser(),
         BacParser(),
         BanescoParser(),
+        CredicorpParser(),
     ]
 
     @classmethod
