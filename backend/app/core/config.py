@@ -25,8 +25,18 @@ class Settings(BaseSettings):
     # Email (Resend) — requerido en producción (DEBUG=false)
     resend_api_key: str = ""
     email_from: str = "SAFPRO <noreply@tudominio.com>"
-    frontend_url: str = "http://localhost:3000"   # base URL del frontend
-    backend_url: str = "http://localhost:8001"    # base URL del backend (para callbacks OAuth)
+    frontend_url: str = "http://localhost:3000"   # base URL del frontend (sin barra al final)
+    backend_url: str = "http://localhost:8001"    # base URL del backend (para callbacks OAuth, sin barra al final)
+
+    @property
+    def frontend_base(self) -> str:
+        """frontend_url siempre sin barra al final."""
+        return self.frontend_url.rstrip("/")
+
+    @property
+    def backend_base(self) -> str:
+        """backend_url siempre sin barra al final."""
+        return self.backend_url.rstrip("/")
 
     # OAuth — Google
     google_client_id: str = ""

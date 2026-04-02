@@ -237,6 +237,15 @@ export interface ManualExpense {
   origins: ExpenseOrigin[]
 }
 
+export type HousingType = "rent" | "mortgage" | "own" | "family" | "other"
+export type EmploymentType =
+  | "employed_fixed"
+  | "employed_variable"
+  | "self_employed"
+  | "business_owner"
+  | "unemployed"
+  | "retired"
+
 export interface UserProfile {
   profile_id: string
   user_id: string
@@ -245,16 +254,28 @@ export interface UserProfile {
   financial_goals: GoalType[]
   onboarding_completed: boolean
   manual_expenses: ManualExpense[] | null  // null = nunca configurado
+  // Perfil extendido para presupuesto personalizado
+  dependents_count: number
+  housing_type: HousingType | null
+  employment_type: EmploymentType | null
+  monthly_debt_payments: number | null
+  has_pets: boolean
   created_at: string
   updated_at: string
 }
 
 export interface UserProfileUpdate {
-  industry: IndustryType | null
-  expected_monthly_income: number | null
-  financial_goals: GoalType[]
-  onboarding_completed: boolean
+  industry?: IndustryType | null
+  expected_monthly_income?: number | null
+  financial_goals?: GoalType[]
+  onboarding_completed?: boolean
   manual_expenses?: ManualExpense[] | null
+  // Perfil extendido
+  dependents_count?: number | null
+  housing_type?: HousingType | null
+  employment_type?: EmploymentType | null
+  monthly_debt_payments?: number | null
+  has_pets?: boolean | null
 }
 
 // ─── Review Groups ────────────────────────────────────────────────────────────

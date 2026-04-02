@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, Literal
+from typing import Any, Literal, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -16,6 +16,19 @@ IndustryType = Literal[
     "transporte",
     "servicios",
     "otro",
+]
+
+# Tipo de vivienda
+HousingType = Literal["rent", "mortgage", "own", "family", "other"]
+
+# Tipo de empleo
+EmploymentType = Literal[
+    "employed_fixed",
+    "employed_variable",
+    "self_employed",
+    "business_owner",
+    "unemployed",
+    "retired",
 ]
 
 # Metas financieras válidas
@@ -47,6 +60,12 @@ class UserProfileResponse(BaseModel):
     financial_goals: list[str]
     onboarding_completed: bool
     manual_expenses: list[Any] | None   # None = nunca configurado; [] = sin gastos adicionales
+    # Perfil extendido para presupuesto personalizado
+    dependents_count: int = 0
+    housing_type: Optional[str] = None
+    employment_type: Optional[str] = None
+    monthly_debt_payments: Optional[float] = None
+    has_pets: bool = False
     created_at: datetime
     updated_at: datetime
 
@@ -59,3 +78,9 @@ class UserProfileUpdate(BaseModel):
     financial_goals: list[str] = Field(default_factory=list)
     onboarding_completed: bool = Field(default=False)
     manual_expenses: list[Any] | None = Field(default=None)
+    # Perfil extendido — todos opcionales, se omiten si no se envían
+    dependents_count: Optional[int] = Field(default=None, ge=0)
+    housing_type: Optional[str] = Field(default=None)
+    employment_type: Optional[str] = Field(default=None)
+    monthly_debt_payments: Optional[float] = Field(default=None, ge=0)
+    has_pets: Optional[bool] = Field(default=None)

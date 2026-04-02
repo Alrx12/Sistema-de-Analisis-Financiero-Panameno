@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Numeric, String, func
+from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, Numeric, String, func
 from sqlalchemy.dialects.postgresql import JSON, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -32,6 +32,18 @@ class UserProfile(Base):
     # Gastos adicionales no reflejados en estados de cuenta (efectivo, otro banco, etc.)
     # null = nunca configurado (muestra modal); [] = configurado pero sin gastos
     manual_expenses: Mapped[list | None] = mapped_column(JSON, nullable=True, default=None)
+    # ── Perfil extendido para presupuesto personalizado ──────────────────────────
+    # Número de dependientes (hijos, padres a cargo, etc.)
+    dependents_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    # Tipo de vivienda: rent | mortgage | own | family | other
+    housing_type: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    # Tipo de empleo: employed_fixed | employed_variable | self_employed | business_owner | unemployed | retired
+    employment_type: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    # Total de pagos mensuales de deuda (préstamos, tarjetas, auto, etc.)
+    monthly_debt_payments: Mapped[float | None] = mapped_column(Float, nullable=True)
+    # ¿Tiene mascotas? (afecta clasificación de gastos en veterinaria/comida)
+    has_pets: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
     # Si el usuario completó el flujo de onboarding post-primer-análisis
     onboarding_completed: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False

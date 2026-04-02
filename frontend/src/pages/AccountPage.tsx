@@ -16,13 +16,16 @@ import {
   Shield,
   Loader2,
   Save,
+  SlidersHorizontal,
+  Home,
+  Users,
 } from "lucide-react"
 import { getProfile, updateProfile } from "@/api/profile"
 import { deleteMyAccount, deleteMyUploads } from "@/api/users"
 import { useAuthStore } from "@/stores/authStore"
 import { cn } from "@/lib/utils"
 import { toast } from "@/components/ui/toast"
-import type { IndustryType, GoalType, UserProfileUpdate } from "@/types"
+import type { IndustryType, GoalType, UserProfileUpdate, HousingType, EmploymentType } from "@/types"
 
 // ─── Opciones ─────────────────────────────────────────────────────────────────
 
@@ -45,6 +48,23 @@ const GOALS: { value: GoalType; label: string; emoji: string }[] = [
   { value: "eliminar_deuda",   label: "Eliminar deudas",      emoji: "✂️" },
   { value: "invertir",         label: "Empezar a invertir",   emoji: "📈" },
   { value: "meta_especifica",  label: "Meta específica",      emoji: "🎯" },
+]
+
+const HOUSING_OPTIONS: { value: HousingType; label: string; emoji: string }[] = [
+  { value: "rent",     label: "Alquiler",             emoji: "🏢" },
+  { value: "mortgage", label: "Hipoteca",              emoji: "🏦" },
+  { value: "own",      label: "Casa propia (pagada)",  emoji: "🏠" },
+  { value: "family",   label: "Con familia",           emoji: "👨‍👩‍👧" },
+  { value: "other",    label: "Otro",                  emoji: "⚡" },
+]
+
+const EMPLOYMENT_OPTIONS: { value: EmploymentType; label: string; emoji: string }[] = [
+  { value: "employed_fixed",    label: "Empleado — salario fijo",     emoji: "💼" },
+  { value: "employed_variable", label: "Empleado — comisiones/bonos", emoji: "📊" },
+  { value: "self_employed",     label: "Freelance / independiente",   emoji: "🧑‍💻" },
+  { value: "business_owner",    label: "Dueño de negocio",            emoji: "🏪" },
+  { value: "unemployed",        label: "Sin empleo",                  emoji: "🔍" },
+  { value: "retired",           label: "Jubilado",                    emoji: "🌴" },
 ]
 
 // ─── Plan badge ───────────────────────────────────────────────────────────────
@@ -101,11 +121,25 @@ export default function AccountPage() {
   const [profileDirty, setProfileDirty] = useState(false)
   const [goalsOpen, setGoalsOpen]   = useState(false)
 
+  // ── Extended profile state ─────────────────────────────────────────────────
+  const [dependentsCount, setDependentsCount] = useState<string>("0")
+  const [housingType, setHousingType]         = useState<HousingType | null>(null)
+  const [employmentType, setEmploymentType]   = useState<EmploymentType | null>(null)
+  const [debtPayments, setDebtPayments]       = useState<string>("")
+  const [hasPets, setHasPets]                 = useState<boolean>(false)
+  const [extDirty, setExtDirty]               = useState(false)
+
   // Populate form when profile loads (only once)
   if (profile && !formReady) {
     setIndustry(profile.industry)
     setIncome(profile.expected_monthly_income?.toString() ?? "")
     setGoals(profile.financial_goals ?? [])
+    // Extended fields
+    setDependentsCount((profile.dependents_count ?? 0).toString())
+    setHousingType(profile.housing_type ?? null)
+    setEmploymentType(profile.employment_type ?? null)
+    setDebtPayments(profile.monthly_debt_payments?.toString() ?? "")
+    setHasPets(profile.has_pets ?? false)
     setFormReady(true)
   }
 
@@ -125,6 +159,29 @@ export default function AccountPage() {
       financial_goals: goals,
       onboarding_completed: profile?.onboarding_completed ?? true,
       manual_expenses: profile?.manual_expenses,
+    })
+  }
+
+  // ── Extended profile save mutation ────────────────────────────────────────────
+  const updateExtMutation = useMutation({
+    mutationFn: (data: UserProfileUpdate) => updateProfile(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["profile"] })
+      setExtDirty(false)
+      toast("Perfil extendido guardado — las metas de presupuesto se ajustarán.", "success")
+    },
+    onError: () => {
+      toast("Error al guardar. Intenta de nuevo.", "error")
+    },
+  })
+
+  function handleSaveExtended() {
+    updateExtMutation.mutate({
+      dependents_count: parseInt(dependentsCount) || 0,
+      housing_type:  housingType,
+      employment_type: employmentType,
+      monthly_debt_payments: debtPayments ? parseFloat(debtPayments) : null,
+      has_pets: hasPets,
     })
   }
 
@@ -385,6 +442,168 @@ export default function AccountPage() {
               )}
               {updateMutation.isError && (
                 <span className="text-xs text-red-500">Error al guardar. Intenta de nuevo.</span>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ─────────────── SECCIÓN 2b: Presupuesto personalizado ────────────────── */}
+      <div className="zoho-card p-5 space-y-4">
+        <div className="flex items-center gap-3 pb-1 border-b border-border">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50">
+            <SlidersHorizontal className="h-4 w-4 text-indigo-500" />
+          </div>
+          <div className="flex-1">
+            <h2 className="font-semibold text-sm">Presupuesto personalizado</h2>
+            <p className="text-xs text-muted-foreground">
+              Ajusta las metas 50/30/20 a tu situación real — cambia cómo se calculan los objetivos en Mi Presupuesto
+            </p>
+          </div>
+        </div>
+
+        {profileLoading ? (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground py-4">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Cargando…
+          </div>
+        ) : (
+          <div className="space-y-5">
+
+            {/* Vivienda */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium flex items-center gap-1.5">
+                <Home className="h-3.5 w-3.5 text-muted-foreground" />
+                Tipo de vivienda
+              </label>
+              <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+                {HOUSING_OPTIONS.map(({ value, label, emoji }) => (
+                  <button
+                    key={value}
+                    onClick={() => { setHousingType(value); setExtDirty(true) }}
+                    className={cn(
+                      "flex items-center gap-2 rounded-lg border p-2.5 text-left text-xs transition-colors",
+                      housingType === value
+                        ? "border-indigo-400 bg-indigo-50 text-indigo-700 font-medium"
+                        : "border-border hover:border-indigo-200 hover:bg-accent"
+                    )}
+                  >
+                    <span>{emoji}</span>
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Tipo de empleo */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium flex items-center gap-1.5">
+                <Briefcase className="h-3.5 w-3.5 text-muted-foreground" />
+                Tipo de empleo
+              </label>
+              <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                {EMPLOYMENT_OPTIONS.map(({ value, label, emoji }) => (
+                  <button
+                    key={value}
+                    onClick={() => { setEmploymentType(value); setExtDirty(true) }}
+                    className={cn(
+                      "flex items-center gap-2 rounded-lg border p-2.5 text-left text-xs transition-colors",
+                      employmentType === value
+                        ? "border-indigo-400 bg-indigo-50 text-indigo-700 font-medium"
+                        : "border-border hover:border-indigo-200 hover:bg-accent"
+                    )}
+                  >
+                    <span>{emoji}</span>
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Dependientes y mascotas */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium flex items-center gap-1.5">
+                  <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                  Dependientes
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="20"
+                  value={dependentsCount}
+                  onChange={(e) => { setDependentsCount(e.target.value); setExtDirty(true) }}
+                  placeholder="0"
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                />
+                <p className="text-xs text-muted-foreground">Hijos, padres u otras personas a tu cargo</p>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium flex items-center gap-1.5">
+                  <span className="text-xs">🐾</span>
+                  Mascotas
+                </label>
+                <button
+                  onClick={() => { setHasPets((p) => !p); setExtDirty(true) }}
+                  className={cn(
+                    "w-full rounded-md border px-3 py-2 text-xs font-medium transition-colors text-left",
+                    hasPets
+                      ? "border-indigo-400 bg-indigo-50 text-indigo-700"
+                      : "border-border hover:bg-accent text-muted-foreground"
+                  )}
+                >
+                  {hasPets ? "✓ Sí tengo mascota(s)" : "No tengo mascotas"}
+                </button>
+                <p className="text-xs text-muted-foreground">Afecta clasificación de gastos en veterinaria</p>
+              </div>
+            </div>
+
+            {/* Pagos de deuda mensuales */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium flex items-center gap-1.5">
+                <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
+                Pagos mensuales de deuda
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="10"
+                  value={debtPayments}
+                  onChange={(e) => { setDebtPayments(e.target.value); setExtDirty(true) }}
+                  placeholder="0.00"
+                  className="w-full rounded-md border border-input bg-background pl-7 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Total mensual en préstamos, tarjetas de crédito, auto, etc. (suma de todas tus deudas)
+              </p>
+            </div>
+
+            {/* Save button */}
+            <div className="flex items-center gap-3 pt-1">
+              <button
+                onClick={handleSaveExtended}
+                disabled={!extDirty || updateExtMutation.isPending}
+                className={cn(
+                  "flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors",
+                  extDirty
+                    ? "bg-indigo-600 text-white hover:bg-indigo-700"
+                    : "bg-muted text-muted-foreground cursor-default"
+                )}
+              >
+                {updateExtMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
+                {updateExtMutation.isPending ? "Guardando…" : "Guardar y personalizar presupuesto"}
+              </button>
+              {updateExtMutation.isSuccess && !extDirty && (
+                <span className="flex items-center gap-1 text-xs text-green-600">
+                  <CheckCircle2 className="h-3.5 w-3.5" /> Guardado
+                </span>
               )}
             </div>
           </div>

@@ -433,7 +433,7 @@ def google_login() -> RedirectResponse:
         )
 
     state = create_oauth_state("google")
-    callback_url = f"{settings.backend_url}/api/v1/auth/google/callback"
+    callback_url = f"{settings.backend_base}/api/v1/auth/google/callback"
 
     params = (
         f"client_id={settings.google_client_id}"
@@ -450,7 +450,7 @@ def google_login() -> RedirectResponse:
 @router.get("/google/callback")
 def google_callback(code: str | None = None, state: str | None = None, error: str | None = None, db: Session = Depends(get_db)) -> RedirectResponse:
     """Callback de Google OAuth. Crea o encuentra al usuario y redirige al frontend con el JWT."""
-    frontend_callback = f"{settings.frontend_url}/oauth-callback"
+    frontend_callback = f"{settings.frontend_base}/oauth-callback"
 
     if error or not code or not state:
         return RedirectResponse(url=f"{frontend_callback}?error=oauth_cancelled")
@@ -458,7 +458,7 @@ def google_callback(code: str | None = None, state: str | None = None, error: st
     if not verify_oauth_state(state, "google"):
         return RedirectResponse(url=f"{frontend_callback}?error=invalid_state")
 
-    callback_url = f"{settings.backend_url}/api/v1/auth/google/callback"
+    callback_url = f"{settings.backend_base}/api/v1/auth/google/callback"
 
     try:
         with httpx.Client() as client:
@@ -543,7 +543,7 @@ def github_login() -> RedirectResponse:
         )
 
     state = create_oauth_state("github")
-    callback_url = f"{settings.backend_url}/api/v1/auth/github/callback"
+    callback_url = f"{settings.backend_base}/api/v1/auth/github/callback"
 
     params = (
         f"client_id={settings.github_client_id}"
@@ -557,7 +557,7 @@ def github_login() -> RedirectResponse:
 @router.get("/github/callback")
 def github_callback(code: str | None = None, state: str | None = None, error: str | None = None, db: Session = Depends(get_db)) -> RedirectResponse:
     """Callback de GitHub OAuth. Crea o encuentra al usuario y redirige al frontend con el JWT."""
-    frontend_callback = f"{settings.frontend_url}/oauth-callback"
+    frontend_callback = f"{settings.frontend_base}/oauth-callback"
 
     if error or not code or not state:
         return RedirectResponse(url=f"{frontend_callback}?error=oauth_cancelled")
@@ -565,7 +565,7 @@ def github_callback(code: str | None = None, state: str | None = None, error: st
     if not verify_oauth_state(state, "github"):
         return RedirectResponse(url=f"{frontend_callback}?error=invalid_state")
 
-    callback_url = f"{settings.backend_url}/api/v1/auth/github/callback"
+    callback_url = f"{settings.backend_base}/api/v1/auth/github/callback"
 
     try:
         with httpx.Client() as client:

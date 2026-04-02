@@ -11,7 +11,7 @@ import {
 } from "lucide-react"
 import { getAggregatedSummary } from "@/api/analysis"
 import { getProfile, updateProfile } from "@/api/profile"
-import type { AggregatedSummary, UserProfile, GoalType, ManualExpense, ExpenseFrequency, ExpenseOrigin } from "@/types"
+import type { AggregatedSummary, UserProfile, GoalType, ManualExpense, ExpenseFrequency, ExpenseOrigin, EmploymentType } from "@/types"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -89,6 +89,68 @@ const BUCKET_META: Record<BucketKey, { label: string; target_pct: number; color:
   wants:   { label: "Deseos",             target_pct: 30, color: "#f59e0b", emoji: "🎉" },
   savings: { label: "Ahorro / Deuda",     target_pct: 20, color: "#10b981", emoji: "🐖" },
   other:   { label: "Sin clasificar",     target_pct: 0,  color: "#94a3b8", emoji: "❓" },
+}
+
+// ─── Targets personalizados ───────────────────────────────────────────────────
+
+interface AdjustedTargets {
+  needs: number
+  wants: number
+  savings: number
+  adjustments: string[]
+}
+
+function getAdjustedTargets(profile: UserProfile | null): AdjustedTargets {
+  let needs = 50
+  let wants = 30
+  let savings = 20
+  const adjustments: string[] = []
+
+  if (!profile) return { needs, wants, savings, adjustments }
+
+  // Dependientes: cada dependiente sube necesidades (máx +9%)
+  const deps = profile.dependents_count ?? 0
+  if (deps >= 1) {
+    const bump = Math.min(deps * 3, 9)
+    needs += bump
+    wants -= bump
+    adjustments.push(`+${bump}% en necesidades por ${deps} dependiente${deps > 1 ? "s" : ""}`)
+  }
+
+  // Vivienda propia o familiar: menor carga fija de vivienda
+  if (profile.housing_type === "own" || profile.housing_type === "family") {
+    needs -= 5
+    wants += 5
+    adjustments.push("-5% en necesidades (vivienda propia sin pago mensual)")
+  }
+
+  // Ingresos variables o independientes: más colchón de ahorro
+  const variableTypes: EmploymentType[] = ["employed_variable", "self_employed", "business_owner", "unemployed"]
+  if (profile.employment_type && variableTypes.includes(profile.employment_type)) {
+    savings += 5
+    wants -= 5
+    adjustments.push("+5% en ahorro/reserva por ingresos variables o propios")
+  }
+
+  // Deudas activas: incrementar meta de ahorro/deuda
+  if ((profile.monthly_debt_payments ?? 0) > 0) {
+    savings += 3
+    wants -= 3
+    adjustments.push("+3% en ahorro/deuda por pagos de deuda activos")
+  }
+
+  // Garantizar mínimos razonables
+  wants   = Math.max(wants,   10)
+  needs   = Math.max(needs,   30)
+  savings = Math.max(savings, 10)
+
+  // Normalizar a 100%
+  const total = needs + wants + savings
+  needs   = Math.round((needs   / total) * 100)
+  savings = Math.round((savings / total) * 100)
+  wants   = 100 - needs - savings
+
+  return { needs, wants, savings, adjustments }
 }
 
 // ─── Gastos adicionales ───────────────────────────────────────────────────────
@@ -238,6 +300,9 @@ export default function BudgetPage() {
     return (profile?.manual_expenses ?? []).reduce((sum, e) => sum + (e.monthly_amount ?? 0), 0)
   }, [profile])
 
+  // Targets personalizados según perfil extendido
+  const adjustedTargets = useMemo(() => getAdjustedTargets(profile), [profile])
+
   const buckets = useMemo<Bucket[]>(() => {
     if (!aggregated) return []
     // Merge categorías de estados de cuenta + gastos adicionales
@@ -250,8 +315,14 @@ export default function BudgetPage() {
     return classified.map((b) => ({
       ...b,
       ...BUCKET_META[b.key],
+      // Sobreescribir con targets personalizados
+      target_pct:
+        b.key === "needs"   ? adjustedTargets.needs
+        : b.key === "wants"   ? adjustedTargets.wants
+        : b.key === "savings" ? adjustedTargets.savings
+        : 0,
     }))
-  }, [aggregated, profile])
+  }, [aggregated, profile, adjustedTargets])
 
   const totalExpenses = (aggregated?.total_expenses ?? 0) + manualMonthly
   const totalIncome = aggregated?.total_income ?? 0
@@ -497,28 +568,74 @@ export default function BudgetPage() {
       </div>
 
       {/* ── Banner de personalización ── */}
-      {(!profile?.industry || !profile?.expected_monthly_income || !profile?.financial_goals?.length) && (
-        <div className="flex items-start gap-3 rounded-xl border border-indigo-200 bg-indigo-50/60 px-4 py-3.5">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-100">
-            <SlidersHorizontal className="h-4 w-4 text-indigo-600" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-indigo-800">
-              Tu presupuesto es estándar (50/30/20 genérico)
-            </p>
-            <p className="text-xs text-indigo-700/80 mt-0.5 leading-relaxed">
-              Cada situación es diferente — si tienes hijos, pagas alquiler, eres médico con ingresos variables
-              o tienes una meta específica, el modelo puede ajustarse a ti.{" "}
-              <button
-                className="font-semibold underline underline-offset-2 hover:no-underline"
-                onClick={() => navigate("/onboarding")}
-              >
-                Completar perfil financiero →
-              </button>
-            </p>
-          </div>
-        </div>
-      )}
+      {(() => {
+        const hasExtended = !!(
+          profile?.housing_type ||
+          profile?.employment_type ||
+          (profile?.dependents_count ?? 0) > 0 ||
+          (profile?.monthly_debt_payments ?? 0) > 0
+        )
+        const hasBasic = !!(
+          profile?.industry &&
+          profile?.expected_monthly_income &&
+          profile?.financial_goals?.length
+        )
+
+        if (adjustedTargets.adjustments.length > 0) {
+          // Perfil extendido activo → mostrar qué ajustes se aplicaron
+          return (
+            <div className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50/60 px-4 py-3.5">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-100">
+                <SlidersHorizontal className="h-4 w-4 text-emerald-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-emerald-800">
+                  Presupuesto personalizado activo — metas ajustadas a tu situación
+                </p>
+                <ul className="mt-1 space-y-0.5">
+                  {adjustedTargets.adjustments.map((adj, i) => (
+                    <li key={i} className="text-xs text-emerald-700/80">• {adj}</li>
+                  ))}
+                </ul>
+                <button
+                  className="mt-1.5 text-xs text-emerald-700 font-medium underline underline-offset-2 hover:no-underline"
+                  onClick={() => navigate("/cuenta")}
+                >
+                  Actualizar datos del perfil →
+                </button>
+              </div>
+            </div>
+          )
+        }
+
+        if (!hasBasic || !hasExtended) {
+          // Sin perfil extendido → invitar a configurarlo
+          return (
+            <div className="flex items-start gap-3 rounded-xl border border-indigo-200 bg-indigo-50/60 px-4 py-3.5">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-100">
+                <SlidersHorizontal className="h-4 w-4 text-indigo-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-indigo-800">
+                  Usando la regla estándar 50/30/20
+                </p>
+                <p className="text-xs text-indigo-700/80 mt-0.5 leading-relaxed">
+                  ¿Tienes hijos, pagas alquiler/hipoteca, trabajas por cuenta propia o tienes deudas activas?
+                  El modelo puede ajustar las metas automáticamente a tu realidad.{" "}
+                  <button
+                    className="font-semibold underline underline-offset-2 hover:no-underline"
+                    onClick={() => navigate("/cuenta")}
+                  >
+                    Personalizar presupuesto →
+                  </button>
+                </p>
+              </div>
+            </div>
+          )
+        }
+
+        return null
+      })()}
 
       {/* Metas del usuario */}
       {profile?.financial_goals && profile.financial_goals.length > 0 && (
