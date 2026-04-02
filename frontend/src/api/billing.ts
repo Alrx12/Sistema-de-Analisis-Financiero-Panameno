@@ -1,7 +1,7 @@
 /**
  * billing.ts — Cliente API para los endpoints de Stripe / billing.
  */
-import { apiClient } from "./client"
+import apiClient from "./client"
 
 export type BillingInterval = "monthly" | "annual"
 

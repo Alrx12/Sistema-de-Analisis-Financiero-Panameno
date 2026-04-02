@@ -20,7 +20,8 @@ import {
   AlertCircle,
   Settings,
 } from "lucide-react"
-import { getBillingStatus, createCheckoutSession, getPortalUrl, BillingInterval } from "@/api/billing"
+import { getBillingStatus, createCheckoutSession, getPortalUrl } from "@/api/billing"
+import type { BillingInterval } from "@/api/billing"
 import { useAuthStore } from "@/stores/authStore"
 
 // ── Feature list ──────────────────────────────────────────────────────────────
