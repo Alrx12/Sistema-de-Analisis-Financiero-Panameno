@@ -111,8 +111,8 @@ export default function LoginPage() {
         <div className="auth-feature-row">
           <span className="auth-feature-icon">🏦</span>
           <div className="auth-feature-text">
-            <strong>4 bancos soportados</strong>
-            <span>Banco General, BAC, Banistmo, Banesco</span>
+            <strong>5 bancos soportados</strong>
+            <span>Banco General, BAC, Banistmo, Banesco, Credicorp Bank</span>
           </div>
         </div>
       </div>

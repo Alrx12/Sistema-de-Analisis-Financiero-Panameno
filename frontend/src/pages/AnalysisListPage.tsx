@@ -71,8 +71,8 @@ export default function AnalysisListPage() {
       </div>
 
       {/* Tabla */}
-      <div className="overflow-hidden rounded-xl border border-border bg-white shadow-sm">
-        <table className="zoho-table">
+      <div className="overflow-x-auto rounded-xl border border-border bg-white shadow-sm">
+        <table className="zoho-table" style={{ minWidth: "640px" }}>
           <thead>
             <tr>
               <th>Período</th>

@@ -87,7 +87,7 @@ export default function TermsPage() {
           </p>
           <div className="space-y-2 mt-2">
             {[
-              "Extracción automática de transacciones desde archivos Excel de Banco General, BAC Credomatic, Banistmo y Banesco.",
+              "Extracción automática de transacciones desde archivos Excel de Banco General, BAC Credomatic, Banistmo, Banesco y Credicorp Bank.",
               "Categorización automática con aprendizaje personalizado por usuario.",
               "Cálculo de KPIs financieros: ingresos, gastos, balance y distribución por categoría.",
               "Recomendaciones financieras personalizadas basadas en sus datos.",

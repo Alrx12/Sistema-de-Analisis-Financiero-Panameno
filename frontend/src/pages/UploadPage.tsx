@@ -182,9 +182,18 @@ export default function UploadPage() {
           )}
 
           {state.phase === "error" && (
-            <div className="flex items-start gap-2 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-              <XCircle className="mt-0.5 h-4 w-4 shrink-0" />
-              {state.message}
+            <div className="space-y-2">
+              <div className="flex items-start gap-2 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+                <XCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                {state.message}
+              </div>
+              <p className="text-xs text-muted-foreground px-1">
+                ¿Problemas al subir el archivo?{" "}
+                <Link to="/ayuda" className="text-primary underline underline-offset-2 hover:no-underline">
+                  Consulta cómo exportar tu estado de cuenta
+                </Link>{" "}
+                desde tu banco.
+              </p>
             </div>
           )}
 
