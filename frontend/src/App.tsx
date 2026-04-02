@@ -27,6 +27,8 @@ import PrivacyPolicyPage from "@/pages/PrivacyPolicyPage"
 import TermsPage from "@/pages/TermsPage"
 import AccountPage from "@/pages/AccountPage"
 import AdminDashboardPage from "@/pages/AdminDashboardPage"
+import UpgradePage from "@/pages/UpgradePage"
+import PaymentSuccessPage from "@/pages/PaymentSuccessPage"
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
@@ -55,6 +57,10 @@ export default function App() {
 
         {/* Onboarding — protegida pero fuera del AppShell (pantalla completa) */}
         <Route path="/onboarding" element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />
+
+        {/* Upgrade / Billing — protegidas pero fuera del AppShell (pantalla completa) */}
+        <Route path="/upgrade" element={<ProtectedRoute><UpgradePage /></ProtectedRoute>} />
+        <Route path="/upgrade/success" element={<ProtectedRoute><PaymentSuccessPage /></ProtectedRoute>} />
 
         {/* Rutas protegidas — dentro del AppShell con sidebar */}
         <Route path="/" element={<ProtectedRoute><AppShell /></ProtectedRoute>}>

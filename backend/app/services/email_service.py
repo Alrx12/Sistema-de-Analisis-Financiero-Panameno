@@ -141,3 +141,107 @@ def send_reset_email(to_email: str, reset_token: str) -> None:
         response.get("id") if isinstance(response, dict) else response,
     )
 
+
+def send_upgrade_confirmation_email(
+    to_email: str,
+    full_name: str,
+    plan: str,
+    expires_at: "datetime | None" = None,  # type: ignore[name-defined]
+) -> None:
+    """
+    Envía la confirmación de upgrade a Plan Pro al usuario.
+
+    Args:
+        to_email   : Email del destinatario.
+        full_name  : Nombre del usuario.
+        plan       : Plan nuevo (normalmente 'pro').
+        expires_at : Fecha de expiración de la suscripción (opcional).
+    """
+    from app.core.config import settings
+
+    resend = _get_resend()
+    name_display = full_name or "Usuario"
+    dashboard_link = f"{settings.frontend_base}/"
+    manage_link = f"{settings.frontend_base}/cuenta"
+
+    # Formateo de fecha de renovación
+    renewal_line = ""
+    if expires_at:
+        try:
+            fecha_str = expires_at.strftime("%d de %B de %Y")
+            renewal_line = f"<p>Tu suscripción se renovará automáticamente el <strong>{fecha_str}</strong>.</p>"
+        except Exception:
+            pass
+
+    html_body = f"""
+    <div style="font-family: sans-serif; max-width: 520px; margin: auto; color: #1a1a2e;">
+      <!-- Header -->
+      <div style="background: linear-gradient(135deg, #1c2b4b, #2d4878); padding: 32px 24px; border-radius: 12px 12px 0 0; text-align: center;">
+        <div style="display: inline-block; background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 10px; padding: 10px 14px; margin-bottom: 16px;">
+          <span style="color: #fff; font-size: 22px; font-weight: 800; letter-spacing: -0.5px;">SAFPRO</span>
+        </div>
+        <h1 style="color: #ffffff; font-size: 22px; margin: 0;">¡Bienvenido al Plan Pro, {name_display}! 🎉</h1>
+      </div>
+
+      <!-- Body -->
+      <div style="background: #ffffff; padding: 28px 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
+        <p style="font-size: 16px;">Tu pago fue procesado exitosamente. A partir de ahora tienes acceso completo a todas las funciones de <strong>SAFPRO Pro</strong>.</p>
+
+        <!-- Feature list -->
+        <div style="background: #f9fafb; border-radius: 8px; padding: 16px 20px; margin: 20px 0;">
+          <p style="margin: 0 0 10px 0; font-weight: 700; color: #1c2b4b;">Lo que incluye tu plan Pro:</p>
+          <ul style="margin: 0; padding-left: 20px; line-height: 1.9; color: #374151;">
+            <li>Análisis ilimitados — sube todos los meses sin restricción</li>
+            <li>Historial financiero completo desde el primer día</li>
+            <li>Knowledge Base personal avanzado con aprendizaje acumulativo</li>
+            <li>Simulaciones y planificador de quincena</li>
+            <li>Presupuesto personalizado 50/30/20 con perfil financiero</li>
+            <li>Soporte prioritario</li>
+          </ul>
+        </div>
+
+        {renewal_line}
+
+        <p style="margin: 24px 0 8px 0;">Cuando quieras gestionar tu suscripción (cambiar método de pago, cancelar, ver facturas), puedes hacerlo desde tu cuenta.</p>
+
+        <!-- CTAs -->
+        <div style="text-align: center; margin: 28px 0 20px 0;">
+          <a href="{dashboard_link}"
+             style="display: inline-block; background: #e05c19; color: #fff; padding: 13px 28px;
+                    border-radius: 7px; text-decoration: none; font-weight: 700; font-size: 15px;
+                    margin-right: 10px;">
+            Ir al Dashboard →
+          </a>
+          <a href="{manage_link}"
+             style="display: inline-block; background: #f3f4f6; color: #374151; padding: 13px 28px;
+                    border-radius: 7px; text-decoration: none; font-weight: 600; font-size: 15px;">
+            Gestionar suscripción
+          </a>
+        </div>
+
+        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;">
+        <p style="font-size: 12px; color: #9ca3af; text-align: center; margin: 0;">
+          SAFPRO — Sistema de Análisis Financiero Pro<br>
+          <a href="{settings.frontend_base}/privacy" style="color: #9ca3af;">Política de Privacidad</a>
+          &nbsp;·&nbsp;
+          <a href="{settings.frontend_base}/terms" style="color: #9ca3af;">Términos de Servicio</a>
+        </p>
+      </div>
+    </div>
+    """
+
+    params: resend.Emails.SendParams = {
+        "from": settings.email_from,
+        "to": [to_email],
+        "subject": "¡Tu Plan Pro está activo! — SAFPRO",
+        "html": html_body,
+    }
+
+    response = resend.Emails.send(params)
+    logger.info(
+        "Email de upgrade enviado — to=%s plan=%s resend_id=%s",
+        to_email,
+        plan,
+        response.get("id") if isinstance(response, dict) else response,
+    )
+

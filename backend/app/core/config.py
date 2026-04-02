@@ -50,6 +50,12 @@ class Settings(BaseSettings):
     github_client_id: str = ""
     github_client_secret: str = ""
 
+    # Stripe — pagos y suscripciones
+    stripe_secret_key: str = ""               # sk_live_... o sk_test_...
+    stripe_webhook_secret: str = ""           # whsec_... (del Stripe Dashboard)
+    stripe_price_id_monthly: str = ""         # price_... Plan Pro mensual $5
+    stripe_price_id_annual: str = ""          # price_... Plan Pro anual $45
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

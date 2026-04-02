@@ -16,6 +16,8 @@ import {
   HelpCircle,
   MessageCircleQuestion,
   ShieldCheck,
+  Crown,
+  Zap,
 } from "lucide-react"
 import { useState } from "react"
 import { useAuthStore } from "@/stores/authStore"
@@ -61,6 +63,8 @@ export default function AppShell() {
   const logout   = useAuthStore((s) => s.logout)
   const user     = useAuthStore((s) => s.user)
   const isAdmin  = user?.is_admin === true
+  const isFree   = user?.plan === "free"
+  const isPro    = user?.plan === "pro"
   const navigate = useNavigate()
 
   function handleLogout() {
@@ -152,6 +156,48 @@ export default function AppShell() {
             </div>
           )}
         </nav>
+
+        {/* ── Banner Plan Pro (solo para plan free) ── */}
+        {isFree && (
+          <div className="mx-2 mb-2">
+            <Link
+              to="/upgrade"
+              onClick={() => setSidebarOpen(false)}
+              className="flex items-start gap-2.5 rounded-xl p-3 transition-all"
+              style={{
+                background: "linear-gradient(135deg, rgba(224,92,25,0.18), rgba(224,92,25,0.08))",
+                border: "1px solid rgba(224,92,25,0.3)",
+                textDecoration: "none",
+              }}
+            >
+              <Zap className="h-4 w-4 text-orange-400 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-white text-xs font-semibold leading-tight">
+                  Actualiza a Pro
+                </p>
+                <p className="text-white/45 text-xs mt-0.5 leading-tight">
+                  Desde $3.75/mes — sin límites
+                </p>
+              </div>
+            </Link>
+          </div>
+        )}
+
+        {/* Badge Pro activo (plan pro) */}
+        {isPro && (
+          <div className="mx-2 mb-2">
+            <div
+              className="flex items-center gap-2 rounded-xl px-3 py-2"
+              style={{
+                background: "linear-gradient(135deg, rgba(99,102,241,0.18), rgba(139,92,246,0.08))",
+                border: "1px solid rgba(99,102,241,0.25)",
+              }}
+            >
+              <Crown className="h-3.5 w-3.5 text-yellow-400 shrink-0" />
+              <span className="text-white/60 text-xs font-semibold">Plan Pro activo</span>
+            </div>
+          </div>
+        )}
 
         {/* Footer: usuario + logout */}
         <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }} className="p-2">

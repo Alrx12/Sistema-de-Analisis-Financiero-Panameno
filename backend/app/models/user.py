@@ -33,6 +33,10 @@ class User(Base):
     # Plan de suscripción: 'friends_and_family' | 'free' | 'pro'
     plan: Mapped[str] = mapped_column(String(30), nullable=False, default="friends_and_family")
 
+    # Stripe — pagos
+    stripe_customer_id: Mapped[str | None] = mapped_column(String(100), nullable=True, unique=True)
+    subscription_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
     # Administración
     is_admin: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     is_suspended: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
