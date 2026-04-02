@@ -115,6 +115,7 @@ function RunwayTab({ trend, totalExpenses, totalMonths }: {
               placeholder="ej: 800"
               value={saldo}
               onChange={e => setSaldo(e.target.value)}
+              style={{ color: "#111827", background: "#ffffff" }}
               className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
           </div>
@@ -382,6 +383,7 @@ function EscenariosTab({ categories, merchants, totalMonths }: {
             placeholder="¿Para qué? (ej: vacaciones)"
             value={goalName}
             onChange={e => setGoalName(e.target.value)}
+            style={{ color: "#111827", background: "#ffffff" }}
             className="border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
           />
           <input
@@ -390,15 +392,20 @@ function EscenariosTab({ categories, merchants, totalMonths }: {
             placeholder="Monto ($)"
             value={goalAmount}
             onChange={e => setGoalAmount(e.target.value)}
+            style={{ color: "#111827", background: "#ffffff" }}
             className="border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
           />
-          <input
-            type="date"
-            value={goalDate}
-            min={new Date().toISOString().split("T")[0]}
-            onChange={e => setGoalDate(e.target.value)}
-            className="border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 bg-background"
-          />
+          <div className="flex flex-col gap-1">
+            <input
+              type="date"
+              value={goalDate}
+              min={new Date().toISOString().split("T")[0]}
+              onChange={e => setGoalDate(e.target.value)}
+              style={{ color: "#111827", background: "#ffffff" }}
+              className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+            />
+            <span className="text-[10px] text-muted-foreground pl-1">Formato: mes/día/año</span>
+          </div>
         </div>
 
         {goalAmountNum > 0 && goalMonths > 0 && (
