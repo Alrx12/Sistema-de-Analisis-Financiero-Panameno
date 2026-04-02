@@ -7,8 +7,9 @@ import {
 import {
   FlaskConical, Info, TrendingDown, Sliders, CalendarDays,
   AlertTriangle, DollarSign, Clock, Target, ChevronDown, ChevronUp,
+  Plus, Trash2, Banknote, ArrowUpCircle, ArrowDownCircle, CreditCard,
 } from "lucide-react"
-import { getAggregatedSummary, listAnalysis } from "@/api/analysis"
+import { getAggregatedSummary } from "@/api/analysis"
 import { formatCurrency } from "@/lib/utils"
 import { cn } from "@/lib/utils"
 
@@ -653,9 +654,418 @@ function EstacionalidadTab({ trend }: {
   )
 }
 
+// ─── Tab 4: Planificador de Quincena ─────────────────────────────────────────
+
+const INPUT_STYLE = { color: "#111827", background: "#ffffff" }
+const INPUT_CLS = "border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+
+interface IncomeEntry  { id: string; date: string; amount: string; label: string }
+interface PaymentEntry { id: string; date: string; amount: string; label: string }
+
+function uid() { return Math.random().toString(36).slice(2, 9) }
+
+function QuincenaTab() {
+  const [saldoInicial, setSaldoInicial] = useState("")
+  const [ingresos,  setIngresos]  = useState<IncomeEntry[]>([])
+  const [pagos,     setPagos]     = useState<PaymentEntry[]>([])
+
+  // form: ingreso
+  const [iDate, setIDate] = useState("")
+  const [iAmt,  setIAmt]  = useState("")
+  const [iLbl,  setILbl]  = useState("")
+
+  // form: pago
+  const [pDate, setPDate] = useState("")
+  const [pAmt,  setPAmt]  = useState("")
+  const [pLbl,  setPLbl]  = useState("")
+
+  // liquidador
+  const [debtAmt,    setDebtAmt]    = useState("")
+  const [debtMode,   setDebtMode]   = useState<"months" | "payment">("months")
+  const [debtMonths, setDebtMonths] = useState("")
+  const [debtPay,    setDebtPay]    = useState("")
+  const [showDebt,   setShowDebt]   = useState(false)
+
+  // ── helpers ──────────────────────────────────────────────────────────────
+  const addIngreso = () => {
+    if (!iDate || !iAmt) return
+    setIngresos(p => [...p, { id: uid(), date: iDate, amount: iAmt, label: iLbl || "Quincena" }])
+    setIDate(""); setIAmt(""); setILbl("")
+  }
+  const addPago = () => {
+    if (!pDate || !pAmt) return
+    setPagos(p => [...p, { id: uid(), date: pDate, amount: pAmt, label: pLbl || "Pago" }])
+    setPDate(""); setPAmt(""); setPLbl("")
+  }
+
+  // Suggest next quincena dates (15th and last day of current/next month)
+  const suggestDates = useMemo(() => {
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = now.getMonth()
+    const d15 = new Date(year, month, 15)
+    const dEom = new Date(year, month + 1, 0)
+    const d15n = new Date(year, month + 1, 15)
+    const fmt = (d: Date) => d.toISOString().split("T")[0]
+    return [fmt(d15 < now ? dEom : d15), fmt(dEom < now ? d15n : dEom)]
+  }, [])
+
+  // ── timeline ─────────────────────────────────────────────────────────────
+  type Event = { id: string; date: string; label: string; amount: number; type: "income" | "payment"; running: number }
+
+  const timeline = useMemo<Event[]>(() => {
+    const events: Omit<Event, "running">[] = [
+      ...ingresos.map(e => ({ id: e.id, date: e.date, label: e.label, amount: parseFloat(e.amount) || 0, type: "income" as const })),
+      ...pagos.map(e => ({ id: e.id, date: e.date, label: e.label, amount: -(parseFloat(e.amount) || 0), type: "payment" as const })),
+    ].sort((a, b) => a.date.localeCompare(b.date))
+
+    let running = parseFloat(saldoInicial.replace(",", ".")) || 0
+    return events.map(e => {
+      running += e.amount
+      return { ...e, running }
+    })
+  }, [ingresos, pagos, saldoInicial])
+
+  const minBalance = Math.min(...(timeline.length ? timeline.map(e => e.running) : [0]))
+
+  // ── liquidador ────────────────────────────────────────────────────────────
+  const debtAmtNum   = parseFloat(debtAmt.replace(",", "."))   || 0
+  const debtMonthsN  = parseInt(debtMonths)   || 0
+  const debtPayN     = parseFloat(debtPay.replace(",", "."))   || 0
+
+  const quincenaPayment = debtMode === "months" && debtMonthsN > 0
+    ? debtAmtNum / (debtMonthsN * 2)
+    : 0
+  const quincenasNeeded = debtMode === "payment" && debtPayN > 0
+    ? Math.ceil(debtAmtNum / debtPayN)
+    : 0
+  const monthsNeeded = Math.ceil(quincenasNeeded / 2)
+
+  const fmtDate = (d: string) => {
+    if (!d) return ""
+    const [y, m, day] = d.split("-")
+    return `${day}/${m}/${y?.slice(2)}`
+  }
+
+  return (
+    <div className="space-y-5">
+
+      {/* Saldo inicial */}
+      <div className="zoho-card rounded-xl p-4 flex items-center gap-4">
+        <DollarSign className="h-4 w-4 text-muted-foreground shrink-0" />
+        <div className="flex-1">
+          <label className="text-xs font-medium text-muted-foreground">Saldo inicial (opcional)</label>
+          <p className="text-[10px] text-muted-foreground">Cuánto tienes ahora — la proyección parte desde aquí</p>
+        </div>
+        <input
+          type="number" min={0} placeholder="$0.00"
+          value={saldoInicial} onChange={e => setSaldoInicial(e.target.value)}
+          style={INPUT_STYLE}
+          className={`w-32 text-right ${INPUT_CLS}`}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+        {/* Ingresos */}
+        <div className="zoho-card rounded-xl p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <ArrowUpCircle className="h-4 w-4 text-green-500" />
+            <h3 className="text-sm font-semibold">Ingresos esperados</h3>
+          </div>
+
+          {/* Quick suggest */}
+          <div className="flex gap-2 flex-wrap">
+            {suggestDates.map(d => (
+              <button key={d} onClick={() => setIDate(d)}
+                className="text-[10px] border border-green-200 text-green-700 rounded-full px-2.5 py-0.5 hover:bg-green-50 transition-colors">
+                + {fmtDate(d)}
+              </button>
+            ))}
+          </div>
+
+          {/* Form */}
+          <div className="grid grid-cols-5 gap-1.5">
+            <input type="date" value={iDate} onChange={e => setIDate(e.target.value)}
+              style={INPUT_STYLE} className={`col-span-2 ${INPUT_CLS} text-xs px-2`} />
+            <input type="number" min={0} placeholder="$" value={iAmt} onChange={e => setIAmt(e.target.value)}
+              style={INPUT_STYLE} className={`col-span-1 ${INPUT_CLS} text-xs px-2`} />
+            <input type="text" placeholder="Etiqueta" value={iLbl} onChange={e => setILbl(e.target.value)}
+              style={INPUT_STYLE} className={`col-span-1 ${INPUT_CLS} text-xs px-2`} />
+            <button onClick={addIngreso}
+              className="col-span-1 rounded-lg bg-green-600 hover:bg-green-700 text-white flex items-center justify-center transition-colors">
+              <Plus className="h-4 w-4" />
+            </button>
+          </div>
+
+          {/* List */}
+          <div className="space-y-1 max-h-48 overflow-y-auto">
+            {ingresos.length === 0
+              ? <p className="text-xs text-muted-foreground text-center py-3">Sin ingresos agregados</p>
+              : ingresos.map(e => (
+                <div key={e.id} className="flex items-center justify-between py-1.5 border-b border-border last:border-0">
+                  <div>
+                    <span className="text-xs font-medium">{e.label}</span>
+                    <span className="text-[10px] text-muted-foreground ml-2">{fmtDate(e.date)}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold text-green-600">+{formatCurrency(parseFloat(e.amount) || 0)}</span>
+                    <button onClick={() => setIngresos(p => p.filter(x => x.id !== e.id))}
+                      className="text-muted-foreground hover:text-red-500 transition-colors">
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
+                </div>
+              ))
+            }
+          </div>
+        </div>
+
+        {/* Pagos */}
+        <div className="zoho-card rounded-xl p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <ArrowDownCircle className="h-4 w-4 text-red-500" />
+            <h3 className="text-sm font-semibold">Compromisos de pago</h3>
+          </div>
+
+          {/* Form */}
+          <div className="grid grid-cols-5 gap-1.5">
+            <input type="date" value={pDate} onChange={e => setPDate(e.target.value)}
+              style={INPUT_STYLE} className={`col-span-2 ${INPUT_CLS} text-xs px-2`} />
+            <input type="number" min={0} placeholder="$" value={pAmt} onChange={e => setPAmt(e.target.value)}
+              style={INPUT_STYLE} className={`col-span-1 ${INPUT_CLS} text-xs px-2`} />
+            <input type="text" placeholder="Etiqueta" value={pLbl} onChange={e => setPLbl(e.target.value)}
+              style={INPUT_STYLE} className={`col-span-1 ${INPUT_CLS} text-xs px-2`} />
+            <button onClick={addPago}
+              className="col-span-1 rounded-lg bg-red-500 hover:bg-red-600 text-white flex items-center justify-center transition-colors">
+              <Plus className="h-4 w-4" />
+            </button>
+          </div>
+
+          {/* List */}
+          <div className="space-y-1 max-h-48 overflow-y-auto">
+            {pagos.length === 0
+              ? <p className="text-xs text-muted-foreground text-center py-3">Sin pagos agregados</p>
+              : pagos.map(e => (
+                <div key={e.id} className="flex items-center justify-between py-1.5 border-b border-border last:border-0">
+                  <div>
+                    <span className="text-xs font-medium">{e.label}</span>
+                    <span className="text-[10px] text-muted-foreground ml-2">{fmtDate(e.date)}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold text-red-500">−{formatCurrency(parseFloat(e.amount) || 0)}</span>
+                    <button onClick={() => setPagos(p => p.filter(x => x.id !== e.id))}
+                      className="text-muted-foreground hover:text-red-500 transition-colors">
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
+                </div>
+              ))
+            }
+          </div>
+        </div>
+      </div>
+
+      {/* Timeline */}
+      {timeline.length > 0 && (
+        <div className="zoho-card rounded-xl p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold flex items-center gap-2">
+              <Banknote className="h-4 w-4 text-primary" />
+              Flujo proyectado
+            </h3>
+            {minBalance < 0 && (
+              <span className="text-xs font-medium text-red-600 flex items-center gap-1">
+                <AlertTriangle className="h-3.5 w-3.5" /> Saldo negativo en algún punto
+              </span>
+            )}
+          </div>
+
+          <div className="space-y-0 divide-y divide-border rounded-lg border border-border overflow-hidden">
+            {/* Header */}
+            <div className="grid grid-cols-12 gap-2 px-3 py-2 bg-muted/40 text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
+              <span className="col-span-2">Fecha</span>
+              <span className="col-span-4">Concepto</span>
+              <span className="col-span-3 text-right">Movimiento</span>
+              <span className="col-span-3 text-right">Saldo</span>
+            </div>
+
+            {/* Starting balance row */}
+            {parseFloat(saldoInicial) > 0 && (
+              <div className="grid grid-cols-12 gap-2 px-3 py-2 bg-muted/20 text-xs">
+                <span className="col-span-2 text-muted-foreground">Hoy</span>
+                <span className="col-span-4 text-muted-foreground italic">Saldo inicial</span>
+                <span className="col-span-3" />
+                <span className="col-span-3 text-right font-semibold">{formatCurrency(parseFloat(saldoInicial) || 0)}</span>
+              </div>
+            )}
+
+            {timeline.map(ev => {
+              const isNeg = ev.running < 0
+              const bgCls = isNeg
+                ? "bg-red-50"
+                : ev.type === "income" ? "bg-green-50/60" : ""
+              return (
+                <div key={ev.id}
+                  className={cn("grid grid-cols-12 gap-2 px-3 py-2.5 text-xs items-center", bgCls)}>
+                  <span className="col-span-2 text-muted-foreground font-mono">{fmtDate(ev.date)}</span>
+                  <span className="col-span-4 font-medium truncate flex items-center gap-1">
+                    {ev.type === "income"
+                      ? <ArrowUpCircle className="h-3 w-3 text-green-500 shrink-0" />
+                      : <ArrowDownCircle className="h-3 w-3 text-red-400 shrink-0" />
+                    }
+                    {ev.label}
+                  </span>
+                  <span className={cn("col-span-3 text-right font-semibold",
+                    ev.type === "income" ? "text-green-600" : "text-red-500")}>
+                    {ev.type === "income" ? "+" : "−"}{formatCurrency(Math.abs(ev.amount))}
+                  </span>
+                  <span className={cn("col-span-3 text-right font-bold",
+                    isNeg ? "text-red-600" : ev.running > 0 ? "text-foreground" : "text-muted-foreground")}>
+                    {isNeg && <AlertTriangle className="h-3 w-3 inline mr-0.5 mb-0.5" />}
+                    {formatCurrency(ev.running)}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Summary */}
+          <div className="grid grid-cols-3 gap-3 pt-1">
+            <div className="rounded-lg bg-green-50 border border-green-100 p-3 text-center">
+              <p className="text-[10px] text-green-700">Total ingresos</p>
+              <p className="text-sm font-bold text-green-700">
+                {formatCurrency(ingresos.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0))}
+              </p>
+            </div>
+            <div className="rounded-lg bg-red-50 border border-red-100 p-3 text-center">
+              <p className="text-[10px] text-red-600">Total compromisos</p>
+              <p className="text-sm font-bold text-red-600">
+                {formatCurrency(pagos.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0))}
+              </p>
+            </div>
+            <div className={cn("rounded-lg border p-3 text-center",
+              timeline[timeline.length - 1]?.running >= 0
+                ? "bg-blue-50 border-blue-100"
+                : "bg-red-50 border-red-200")}>
+              <p className="text-[10px] text-muted-foreground">Saldo final</p>
+              <p className={cn("text-sm font-bold",
+                timeline[timeline.length - 1]?.running >= 0 ? "text-blue-700" : "text-red-600")}>
+                {formatCurrency(timeline[timeline.length - 1]?.running ?? 0)}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {timeline.length === 0 && (
+        <div className="zoho-card rounded-xl p-6 text-center text-sm text-muted-foreground">
+          Agrega al menos un ingreso o pago para ver el flujo proyectado
+        </div>
+      )}
+
+      {/* Liquidador de deuda */}
+      <div className="zoho-card rounded-xl overflow-hidden">
+        <button onClick={() => setShowDebt(v => !v)}
+          className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors">
+          <div className="flex items-center gap-2">
+            <CreditCard className="h-4 w-4 text-primary" />
+            <span className="text-sm font-semibold">Liquidador de deuda a tu ritmo</span>
+          </div>
+          {showDebt ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+        </button>
+
+        {showDebt && (
+          <div className="px-4 pb-4 space-y-4 border-t border-border">
+            <p className="text-xs text-muted-foreground pt-3">
+              Calcula cuánto debes pagar por quincena para liquidar una deuda, o en cuánto tiempo la liquidas si pagas una cantidad fija.
+            </p>
+
+            {/* Mode toggle */}
+            <div className="flex rounded-lg border border-border overflow-hidden text-sm">
+              <button
+                onClick={() => setDebtMode("months")}
+                className={cn("flex-1 py-2 text-xs font-medium transition-colors",
+                  debtMode === "months" ? "bg-primary text-white" : "hover:bg-muted/40")}>
+                Quiero pagarlo en X meses
+              </button>
+              <button
+                onClick={() => setDebtMode("payment")}
+                className={cn("flex-1 py-2 text-xs font-medium transition-colors",
+                  debtMode === "payment" ? "bg-primary text-white" : "hover:bg-muted/40")}>
+                Puedo pagar $X por quincena
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-muted-foreground block mb-1">Monto total de la deuda ($)</label>
+                <input type="number" min={0} placeholder="ej: 2000" value={debtAmt}
+                  onChange={e => setDebtAmt(e.target.value)}
+                  style={INPUT_STYLE} className={`w-full ${INPUT_CLS}`} />
+              </div>
+              {debtMode === "months" ? (
+                <div>
+                  <label className="text-xs text-muted-foreground block mb-1">Plazo (meses)</label>
+                  <input type="number" min={1} placeholder="ej: 12" value={debtMonths}
+                    onChange={e => setDebtMonths(e.target.value)}
+                    style={INPUT_STYLE} className={`w-full ${INPUT_CLS}`} />
+                </div>
+              ) : (
+                <div>
+                  <label className="text-xs text-muted-foreground block mb-1">Pago por quincena ($)</label>
+                  <input type="number" min={1} placeholder="ej: 100" value={debtPay}
+                    onChange={e => setDebtPay(e.target.value)}
+                    style={INPUT_STYLE} className={`w-full ${INPUT_CLS}`} />
+                </div>
+              )}
+            </div>
+
+            {/* Result */}
+            {debtAmtNum > 0 && (
+              debtMode === "months" && debtMonthsN > 0 ? (
+                <div className="rounded-xl bg-indigo-50 border border-indigo-200 p-4 grid grid-cols-3 gap-4 text-center">
+                  <div>
+                    <p className="text-[10px] text-indigo-600">Pago por quincena</p>
+                    <p className="text-xl font-bold text-indigo-700">{formatCurrency(quincenaPayment)}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-indigo-600">Pago mensual</p>
+                    <p className="text-xl font-bold text-indigo-700">{formatCurrency(quincenaPayment * 2)}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-indigo-600">Quincenas totales</p>
+                    <p className="text-xl font-bold text-indigo-700">{debtMonthsN * 2}</p>
+                  </div>
+                </div>
+              ) : debtMode === "payment" && debtPayN > 0 ? (
+                <div className="rounded-xl bg-indigo-50 border border-indigo-200 p-4 grid grid-cols-3 gap-4 text-center">
+                  <div>
+                    <p className="text-[10px] text-indigo-600">Quincenas necesarias</p>
+                    <p className="text-xl font-bold text-indigo-700">{quincenasNeeded}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-indigo-600">Meses aproximados</p>
+                    <p className="text-xl font-bold text-indigo-700">{monthsNeeded}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-indigo-600">Total a pagar</p>
+                    <p className="text-xl font-bold text-indigo-700">{formatCurrency(quincenasNeeded * debtPayN)}</p>
+                  </div>
+                </div>
+              ) : null
+            )}
+          </div>
+        )}
+      </div>
+
+    </div>
+  )
+}
+
 // ─── Página principal ─────────────────────────────────────────────────────────
 
-type TabId = "runway" | "escenarios" | "estacionalidad"
+type TabId = "runway" | "escenarios" | "estacionalidad" | "quincena"
 
 const TABS: { id: TabId; label: string; icon: React.ElementType; desc: string }[] = [
   {
@@ -675,6 +1085,12 @@ const TABS: { id: TabId; label: string; icon: React.ElementType; desc: string }[
     label: "Ciclos anuales",
     icon: CalendarDays,
     desc: "Detecta patrones y proyecta",
+  },
+  {
+    id: "quincena",
+    label: "Planificador de quincena",
+    icon: Banknote,
+    desc: "Proyecta tus quincenas y pagos",
   },
 ]
 
@@ -724,7 +1140,7 @@ export default function SimulacionesPage() {
       {!isLoading && !noData && aggregated && (
         <>
           {/* Tabs */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {TABS.map(tab => {
               const Icon = tab.icon
               const isActive = activeTab === tab.id
@@ -770,6 +1186,7 @@ export default function SimulacionesPage() {
             {activeTab === "estacionalidad" && (
               <EstacionalidadTab trend={aggregated.monthly_trend} />
             )}
+            {activeTab === "quincena" && <QuincenaTab />}
           </div>
 
           {/* Bottom note */}
