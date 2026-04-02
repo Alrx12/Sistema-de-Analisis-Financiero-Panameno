@@ -75,6 +75,7 @@ const FAQ_SECTIONS = [
         • BAC Credomatic (.xls)
         • Banistmo (.xlsx desde la app)
         • Banesco (.xls — formato especial OOXML)
+        • Credicorp Bank (.xls)
 
         También soporta el reporte de transferencias ACH/Xpress de Banistmo.
         Si tienes otro banco y quieres que lo agreguemos, puedes solicitarlo al administrador.`,
@@ -117,7 +118,21 @@ const FAQ_SECTIONS = [
         En el Dashboard puedes ver el consolidado de todos los períodos que hayas subido, con filtros
         por año, mes y banco.
 
-        Recomendamos subir los archivos mes a mes (un archivo por mes) para obtener análisis más precisos.`,
+        Recomendamos subir los archivos mes a mes (un archivo por mes) para obtener análisis más precisos.
+
+        Con el plan gratuito puedes subir hasta 5 estados de cuenta. Puedes usarlos como quieras:
+        los 5 del mismo banco en meses distintos, o mezclar bancos y períodos — lo que más te convenga.
+        Por ejemplo: enero a mayo de tu cuenta de Banco General, o enero de BAC + febrero de Banistmo + marzo de Banco General, etc.`,
+      },
+      {
+        q: "¿Cuántos archivos puedo subir con el plan gratuito?",
+        a: `El plan gratuito incluye hasta 5 estados de cuenta en total. Puedes distribuirlos como quieras:
+        5 meses consecutivos del mismo banco, o archivos de diferentes bancos y períodos.
+
+        Una vez que alcanzas el límite, necesitarás un plan Pro ($5/mes o $45/año) para continuar subiendo archivos.
+        El plan Pro incluye hasta 200 archivos — suficiente para más de 16 años de estados de cuenta mensuales.
+
+        Todos los análisis y el historial que hayas generado en el plan gratuito se conservan si pasas a Pro.`,
       },
       {
         q: "¿Qué es el presupuesto 50/30/20?",
