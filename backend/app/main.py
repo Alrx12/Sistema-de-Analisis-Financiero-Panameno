@@ -1,3 +1,4 @@
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -9,14 +10,21 @@ from app.api.router import api_router
 from app.core.config import settings
 from app.core.database import engine
 from app.core.limiter import limiter
+from app.core.logging_config import setup_logging
+
+# Inicializar logging antes de que cualquier módulo use logging.getLogger()
+setup_logging()
+
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):  # noqa: ARG001
     with engine.connect() as conn:
         conn.execute(text("SELECT 1"))
-        print("DB conectada correctamente")
+        logger.info("DB conectada correctamente — SAFPRO v%s arrancando", settings.app_version)
     yield
+    logger.info("SAFPRO apagándose.")
 
 
 app = FastAPI(

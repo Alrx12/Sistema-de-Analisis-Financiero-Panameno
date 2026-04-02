@@ -5,6 +5,8 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
+from app.core.config import settings
+from app.core.logging_config import audit_logger
 from app.models.uploaded_file import UploadedFile
 from app.models.user import User
 from app.schemas.job import JobQueuedResponse
@@ -58,6 +60,10 @@ def clear_uploaded_files(
         len(uploaded),
         deleted_physical,
     )
+    audit_logger.info(
+        "uploads_cleared | user_id=%s records_deleted=%d files_deleted=%d",
+        current_user.user_id, len(uploaded), deleted_physical,
+    )
 
     return {
         "message": f"{len(uploaded)} estado(s) de cuenta eliminado(s). Puedes volver a subirlos.",
@@ -92,7 +98,39 @@ async def upload_file(
     extension = file_service.validate_upload(file, len(content))
     file_type = Path(original_filename).suffix.lower().lstrip(".")
 
-    # 2. Deduplicación: calcular hash y verificar si ya fue procesado
+    # 2. Límite de uploads por plan (anti-abuso)
+    user_plan = getattr(current_user, "plan", "free") or "free"
+    upload_limit = (
+        settings.max_uploads_free
+        if user_plan == "free"
+        else settings.max_uploads_default
+    )
+    upload_count = (
+        db.query(UploadedFile)
+        .filter(UploadedFile.user_id == current_user.user_id)
+        .count()
+    )
+    if upload_count >= upload_limit:
+        plan_label = "gratuito" if user_plan == "free" else user_plan
+        audit_logger.info(
+            "upload_limit_reached | user_id=%s plan=%s count=%d limit=%d",
+            current_user.user_id, user_plan, upload_count, upload_limit,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail={
+                "error": "upload_limit_reached",
+                "message": (
+                    f"Alcanzaste el límite de {upload_limit} archivos para el plan {plan_label}. "
+                    "Actualiza tu plan o elimina archivos anteriores desde Mi Cuenta."
+                ),
+                "current_count": upload_count,
+                "limit": upload_limit,
+                "plan": user_plan,
+            },
+        )
+
+    # 3. Deduplicación: calcular hash y verificar si ya fue procesado
     content_hash = compute_checksum(content)
     existing = (
         db.query(UploadedFile)
@@ -114,17 +152,17 @@ async def upload_file(
             },
         )
 
-    # 3. Guardar en storage/temp/
+    # 4. Guardar en storage/temp/
     temp_file_path = file_service.save_temp_file(content, extension)
 
-    # 4. Crear job en estado "queued" (fuente de verdad en PostgreSQL)
+    # 5. Crear job en estado "queued" (fuente de verdad en PostgreSQL)
     job = processing_service.create_job(
         current_user=current_user,
         original_filename=original_filename,
         file_type=file_type,
     )
 
-    # 5. Encolar tarea Celery (con hash para que registre en uploaded_files al terminar)
+    # 6. Encolar tarea Celery (con hash para que registre en uploaded_files al terminar)
     process_file_task.delay(
         file_path=temp_file_path,
         original_filename=original_filename,
@@ -139,6 +177,10 @@ async def upload_file(
         job.job_id,
         current_user.user_id,
         original_filename,
+    )
+    audit_logger.info(
+        "upload_queued | user_id=%s plan=%s job_id=%s filename=%s size_bytes=%d",
+        current_user.user_id, user_plan, job.job_id, original_filename, len(content),
     )
 
     track_event(

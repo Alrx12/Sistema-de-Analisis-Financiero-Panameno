@@ -19,6 +19,10 @@ class Settings(BaseSettings):
     temp_dir: str = "storage/temp"
     knowledge_bases_dir: str = "storage/knowledge_bases"
 
+    # Límites de upload por usuario (anti-abuso)
+    max_uploads_free: int = 5        # plan "free" — alineado con el límite de 3 análisis
+    max_uploads_default: int = 200   # plan "pro" / "friends_and_family" — tope de seguridad
+
     # Celery / Redis
     redis_url: str = "redis://localhost:6379/0"
 

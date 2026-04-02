@@ -46,6 +46,7 @@ from app.schemas.auth import (
 from app.schemas.user import UserResponse
 from app.services.email_service import send_reset_email, send_verification_email
 from app.services.analytics_service import track_event
+from app.core.logging_config import audit_logger
 
 logger = logging.getLogger(__name__)
 
@@ -111,6 +112,11 @@ def login(
 ) -> LoginResponse:
     user = db.scalar(select(User).where(User.email == form_data.username))
     if not user or not user.password_hash or not verify_password(form_data.password, user.password_hash):
+        audit_logger.info(
+            "login_failed | email=%s ip=%s",
+            form_data.username,
+            getattr(request.client, "host", "unknown"),
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Credenciales inválidas",
@@ -120,9 +126,17 @@ def login(
     # Si tiene 2FA activado, devolver token temporal en vez del token de acceso
     if user.totp_enabled:
         two_factor_token = create_two_factor_token(str(user.user_id))
+        audit_logger.info(
+            "login_2fa_pending | user_id=%s email=%s",
+            user.user_id, user.email,
+        )
         return LoginResponse(requires_2fa=True, two_factor_token=two_factor_token)
 
     token = create_access_token(subject=str(user.user_id))
+    audit_logger.info(
+        "login_success | user_id=%s email=%s plan=%s method=password",
+        user.user_id, user.email, getattr(user, "plan", "unknown"),
+    )
     track_event(
         user_id=user.user_id,
         event_type="login",

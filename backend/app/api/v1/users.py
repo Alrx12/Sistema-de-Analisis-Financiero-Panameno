@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 
 from fastapi import APIRouter, Depends
@@ -5,9 +6,12 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
 from app.core.config import settings
+from app.core.logging_config import audit_logger
 from app.models.uploaded_file import UploadedFile
 from app.models.user import User
 from app.schemas.user import UserResponse
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -32,6 +36,13 @@ def delete_my_account(
         knowledge_base_user_{uuid}.json y todos los archivos físicos de uploads.
     """
     user_id = current_user.user_id
+    email = current_user.email
+    plan = getattr(current_user, "plan", "unknown")
+
+    audit_logger.info(
+        "account_delete_initiated | user_id=%s email=%s plan=%s",
+        user_id, email, plan,
+    )
 
     # Recopilar rutas físicas ANTES de borrar en DB
     file_paths = [
@@ -59,4 +70,9 @@ def delete_my_account(
             except Exception:
                 pass
 
+    audit_logger.info(
+        "account_deleted | user_id=%s email=%s plan=%s",
+        user_id, email, plan,
+    )
+    logger.info("Cuenta eliminada — user_id=%s", user_id)
     return {"message": "Cuenta eliminada correctamente."}
