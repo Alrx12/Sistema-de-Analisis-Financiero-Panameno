@@ -453,20 +453,34 @@ function EstacionalidadTab({ trend }: {
     })
   }, [trend, mesesProyectar, avgExpenses, avgIncome])
 
+  // Merge historical + projected into one dataset for the chart
+  // Projected months get null for historical fields and their own value for projected fields
+  const lastHistorical = trend.length > 0 ? trend[trend.length - 1] : null
+
   const fullData = [
-    ...trend.map(t => ({ ...t, projected: false })),
-    ...projected,
+    ...trend.map(t => ({
+      month: t.month,
+      expenses_real: t.expenses,
+      expenses_proj: null as number | null,
+      income_real: t.income,
+    })),
+    // Repeat last historical point as first projected point so the lines connect
+    ...(lastHistorical ? [{
+      month: lastHistorical.month,
+      expenses_real: null as number | null,
+      expenses_proj: avgExpenses,
+      income_real: null as number | null,
+    }] : []),
+    ...projected.map(p => ({
+      month: p.month,
+      expenses_real: null as number | null,
+      expenses_proj: avgExpenses,
+      income_real: null as number | null,
+    })),
   ]
 
   // Detect peak months (> 1.2x average)
   const peaks = trend.filter(t => t.expenses > avgExpenses * 1.2)
-
-  const CustomDot = (props: { cx?: number; cy?: number; payload?: { projected: boolean } }) => {
-    if (props.payload?.projected) {
-      return <circle cx={props.cx} cy={props.cy} r={4} fill="#e05c19" stroke="white" strokeWidth={2} />
-    }
-    return null
-  }
 
   return (
     <div className="space-y-6">
@@ -512,20 +526,30 @@ function EstacionalidadTab({ trend }: {
                 <ReferenceLine y={avgExpenses} stroke="#e05c19" strokeDasharray="4 4"
                   label={{ value: "Prom", position: "insideTopRight", fontSize: 10, fill: "#e05c19" }} />
                 <Line
-                  dataKey="expenses"
-                  name="Gastos"
+                  dataKey="expenses_real"
+                  name="Gastos reales"
                   stroke="#1c2b4b"
                   strokeWidth={2}
-                  dot={<CustomDot />}
-                  strokeDasharray={(d: { projected?: boolean }) => d?.projected ? "5 4" : undefined}
+                  dot={false}
+                  connectNulls={false}
                 />
                 <Line
-                  dataKey="income"
+                  dataKey="expenses_proj"
+                  name="Proyección"
+                  stroke="#e05c19"
+                  strokeWidth={2}
+                  strokeDasharray="5 4"
+                  dot={false}
+                  connectNulls={false}
+                />
+                <Line
+                  dataKey="income_real"
                   name="Ingresos"
                   stroke="#22c55e"
                   strokeWidth={1.5}
                   dot={false}
                   strokeDasharray="4 3"
+                  connectNulls={false}
                 />
               </LineChart>
             </ResponsiveContainer>
