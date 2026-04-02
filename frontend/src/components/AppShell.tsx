@@ -10,6 +10,7 @@ import {
   X,
   PiggyBank,
   Sparkles,
+  FlaskConical,
   PenLine,
   Wallet,
   HelpCircle,
@@ -42,7 +43,8 @@ const navSections = [
     label: "Inteligencia",
     items: [
       { to: "/kb",      label: "Knowledge Base",  icon: Brain,    end: false },
-      { to: "/retrain", label: "Entrenamiento",   icon: Sparkles, end: false },
+      { to: "/retrain",      label: "Entrenamiento",  icon: Sparkles,      end: false },
+      { to: "/simulaciones", label: "Simulaciones",   icon: FlaskConical,  end: false },
     ],
   },
   {

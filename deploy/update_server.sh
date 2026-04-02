@@ -29,6 +29,7 @@ tar -czf "$BACKEND_TAR" \
     --exclude='*.pyc' \
     --exclude='.pytest_cache' \
     --exclude='storage' \
+    --exclude='.env' \
     -C "$PROJECT_DIR/backend" .
 scp -q "$BACKEND_TAR" "$SERVER:/tmp/safpro_backend_update.tar.gz"
 ssh "$SERVER" "cd $REMOTE_DIR/backend && tar xzf /tmp/safpro_backend_update.tar.gz && rm /tmp/safpro_backend_update.tar.gz"

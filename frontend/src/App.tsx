@@ -16,6 +16,7 @@ import AnalysisDetailPage from "@/pages/AnalysisDetailPage"
 import TransactionsPage from "@/pages/TransactionsPage"
 import KBPage from "@/pages/KBPage"
 import BudgetPage from "@/pages/BudgetPage"
+import SimulacionesPage from "@/pages/SimulacionesPage"
 import OnboardingPage from "@/pages/OnboardingPage"
 import RetrainPage from "@/pages/RetrainPage"
 import ManualEntryPage from "@/pages/ManualEntryPage"
@@ -67,6 +68,7 @@ export default function App() {
           <Route path="kb" element={<KBPage />} />
           <Route path="budget" element={<BudgetPage />} />
           <Route path="retrain" element={<RetrainPage />} />
+          <Route path="simulaciones" element={<SimulacionesPage />} />
           <Route path="ayuda" element={<AyudaPage />} />
           <Route path="cuenta" element={<AccountPage />} />
           <Route path="admin" element={<AdminDashboardPage />} />
