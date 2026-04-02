@@ -7,7 +7,7 @@ import {
 import {
   Shield, TrendingDown, Sparkles, Target, BookOpen,
   ChevronDown, ChevronUp, AlertCircle, CheckCircle2, Info,
-  Pencil, Plus, Trash2, X,
+  Pencil, Plus, Trash2, X, SlidersHorizontal,
 } from "lucide-react"
 import { getAggregatedSummary } from "@/api/analysis"
 import { getProfile, updateProfile } from "@/api/profile"
@@ -495,6 +495,30 @@ export default function BudgetPage() {
           </Button>
         </div>
       </div>
+
+      {/* ── Banner de personalización ── */}
+      {(!profile?.industry || !profile?.expected_monthly_income || !profile?.financial_goals?.length) && (
+        <div className="flex items-start gap-3 rounded-xl border border-indigo-200 bg-indigo-50/60 px-4 py-3.5">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-100">
+            <SlidersHorizontal className="h-4 w-4 text-indigo-600" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-indigo-800">
+              Tu presupuesto es estándar (50/30/20 genérico)
+            </p>
+            <p className="text-xs text-indigo-700/80 mt-0.5 leading-relaxed">
+              Cada situación es diferente — si tienes hijos, pagas alquiler, eres médico con ingresos variables
+              o tienes una meta específica, el modelo puede ajustarse a ti.{" "}
+              <button
+                className="font-semibold underline underline-offset-2 hover:no-underline"
+                onClick={() => navigate("/onboarding")}
+              >
+                Completar perfil financiero →
+              </button>
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Metas del usuario */}
       {profile?.financial_goals && profile.financial_goals.length > 0 && (
