@@ -56,7 +56,7 @@ export default function UpgradePage() {
   const wasCancelled = searchParams.get("cancelled") === "1"
   const user = useAuthStore((s) => s.user)
 
-  const [interval, setInterval] = useState<BillingInterval>("annual")
+  const [interval, setInterval] = useState<BillingInterval>("monthly")
   const [portalLoading, setPortalLoading] = useState(false)
 
   // Estado de la suscripción
@@ -96,29 +96,31 @@ export default function UpgradePage() {
   const annualMonthly = (annualPrice / 12).toFixed(2)   // $3.75
 
   return (
-    <div className="min-h-screen" style={{ background: "#f4f5f7" }}>
+    <div style={{ minHeight: "100vh", background: "#f4f5f7", color: "#111827" }}>
       {/* ── Header ── */}
-      <div style={{ background: "var(--sidebar-bg)" }} className="px-6 py-4 flex items-center gap-4">
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-sm font-medium text-white/70 hover:text-white transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Volver
-        </button>
-        <div className="flex items-center gap-2">
-          <Crown className="h-5 w-5 text-yellow-400" />
-          <span className="text-white font-bold text-lg">Planes SAFPRO</span>
+      <div style={{ background: "var(--sidebar-bg)" }} className="px-6 py-4">
+        <div style={{ maxWidth: "1024px", margin: "0 auto" }} className="flex items-center gap-4">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 text-sm font-medium text-white/70 hover:text-white transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Volver
+          </button>
+          <div className="flex items-center gap-2">
+            <Crown className="h-5 w-5 text-yellow-400" />
+            <span className="text-white font-bold text-lg">Planes SAFPRO</span>
+          </div>
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 py-10">
+      <div style={{ maxWidth: "1024px", margin: "0 auto", padding: "2.5rem 1rem" }}>
         {/* ── Título ── */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl font-bold mb-2" style={{ color: "#111827" }}>
             Elige tu plan
           </h1>
-          <p className="text-gray-500 text-base">
+          <p className="text-base" style={{ color: "#6b7280" }}>
             Empieza gratis y actualiza cuando estés listo.
             No pedimos credenciales bancarias, nunca.
           </p>
@@ -223,21 +225,21 @@ export default function UpgradePage() {
         {/* ── Tarjetas de plan ── */}
         <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
           {/* Plan Gratis */}
-          <div className="zoho-card rounded-2xl p-6 flex flex-col">
+          <div className="rounded-2xl p-6 flex flex-col" style={{ background: "#ffffff", boxShadow: "0 1px 6px rgba(0,0,0,0.08)" }}>
             <div className="mb-4">
-              <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Plan Gratis</span>
+              <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "#9ca3af" }}>Plan Gratis</span>
               <div className="flex items-baseline gap-1 mt-1">
-                <span className="text-4xl font-extrabold text-gray-900">$0</span>
-                <span className="text-gray-400 text-sm">/mes</span>
+                <span className="text-4xl font-extrabold" style={{ color: "#111827" }}>$0</span>
+                <span className="text-sm" style={{ color: "#9ca3af" }}>/mes</span>
               </div>
-              <p className="text-gray-500 text-sm mt-1">Para empezar y probar el sistema.</p>
+              <p className="text-sm mt-1" style={{ color: "#6b7280" }}>Para empezar y probar el sistema.</p>
             </div>
 
             <ul className="space-y-2.5 flex-1 mb-6">
               {FREE_FEATURES.map((f) => (
                 <li key={f} className="flex items-start gap-2.5">
-                  <Check className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
-                  <span className="text-gray-600 text-sm">{f}</span>
+                  <Check className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "#22c55e" }} />
+                  <span className="text-sm" style={{ color: "#4b5563" }}>{f}</span>
                 </li>
               ))}
             </ul>
@@ -343,10 +345,10 @@ export default function UpgradePage() {
             { emoji: "🚫", title: "Cancela cuando quieras", desc: "Sin permanencia ni penalizaciones." },
             { emoji: "📱", title: "Pagos seguros con Stripe", desc: "TLS, 3D Secure, PCI DSS." },
           ].map(({ emoji, title, desc }) => (
-            <div key={title} className="zoho-card rounded-xl p-4">
+            <div key={title} className="rounded-xl p-4" style={{ background: "#ffffff", boxShadow: "0 1px 6px rgba(0,0,0,0.08)" }}>
               <div className="text-2xl mb-2">{emoji}</div>
-              <p className="font-semibold text-gray-800 text-sm">{title}</p>
-              <p className="text-gray-400 text-xs mt-1">{desc}</p>
+              <p className="font-semibold text-sm" style={{ color: "#1f2937" }}>{title}</p>
+              <p className="text-xs mt-1" style={{ color: "#9ca3af" }}>{desc}</p>
             </div>
           ))}
         </div>
@@ -369,13 +371,14 @@ export default function UpgradePage() {
           ].map(({ q, a }) => (
             <details
               key={q}
-              className="zoho-card rounded-xl px-4 py-3 cursor-pointer select-none group"
+              className="rounded-xl px-4 py-3 cursor-pointer select-none group"
+              style={{ background: "#ffffff", boxShadow: "0 1px 6px rgba(0,0,0,0.08)" }}
             >
-              <summary className="font-semibold text-gray-800 text-sm list-none flex justify-between items-center">
+              <summary className="font-semibold text-sm list-none flex justify-between items-center" style={{ color: "#1f2937" }}>
                 {q}
-                <span className="text-gray-400 text-lg group-open:rotate-45 transition-transform">+</span>
+                <span className="text-lg group-open:rotate-45 transition-transform" style={{ color: "#9ca3af" }}>+</span>
               </summary>
-              <p className="text-gray-500 text-sm mt-2">{a}</p>
+              <p className="text-sm mt-2" style={{ color: "#6b7280" }}>{a}</p>
             </details>
           ))}
         </div>
