@@ -65,6 +65,7 @@ export default function AppShell() {
   const isAdmin  = user?.is_admin === true
   const isFree   = user?.plan === "free"
   const isPro    = user?.plan === "pro"
+  const isFF     = user?.plan === "friends_and_family"
   const navigate = useNavigate()
 
   function handleLogout() {
@@ -183,19 +184,47 @@ export default function AppShell() {
           </div>
         )}
 
-        {/* Badge Pro activo (plan pro) */}
+        {/* Badge Pro activo (plan pro) — clickeable para gestionar suscripción */}
         {isPro && (
           <div className="mx-2 mb-2">
-            <div
-              className="flex items-center gap-2 rounded-xl px-3 py-2"
+            <Link
+              to="/upgrade"
+              onClick={() => setSidebarOpen(false)}
+              className="flex items-center gap-2 rounded-xl px-3 py-2 transition-opacity hover:opacity-80"
               style={{
                 background: "linear-gradient(135deg, rgba(99,102,241,0.18), rgba(139,92,246,0.08))",
                 border: "1px solid rgba(99,102,241,0.25)",
+                textDecoration: "none",
               }}
             >
               <Crown className="h-3.5 w-3.5 text-yellow-400 shrink-0" />
-              <span className="text-white/60 text-xs font-semibold">Plan Pro activo</span>
-            </div>
+              <div className="min-w-0">
+                <p className="text-white/70 text-xs font-semibold leading-tight">Plan Pro activo</p>
+                <p className="text-white/35 text-[10px] leading-tight">Gestionar suscripción →</p>
+              </div>
+            </Link>
+          </div>
+        )}
+
+        {/* Badge Friends & Family — acceso completo, link a planes */}
+        {isFF && (
+          <div className="mx-2 mb-2">
+            <Link
+              to="/upgrade"
+              onClick={() => setSidebarOpen(false)}
+              className="flex items-center gap-2 rounded-xl px-3 py-2 transition-opacity hover:opacity-80"
+              style={{
+                background: "linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.08))",
+                border: "1px solid rgba(139,92,246,0.2)",
+                textDecoration: "none",
+              }}
+            >
+              <Zap className="h-3.5 w-3.5 text-purple-400 shrink-0" />
+              <div className="min-w-0">
+                <p className="text-white/70 text-xs font-semibold leading-tight">Friends & Family</p>
+                <p className="text-white/35 text-[10px] leading-tight">Acceso completo ✓</p>
+              </div>
+            </Link>
           </div>
         )}
 
