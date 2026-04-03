@@ -165,13 +165,16 @@ export default function UpgradePage() {
         {/* ── Banner: Friends & Family ── */}
         {!billingLoading && isFF && (
           <div
-            className="mb-8 rounded-xl p-4 flex items-center gap-3"
+            className="mb-8 rounded-xl p-4 flex items-start gap-3"
             style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}
           >
-            <Zap className="h-6 w-6 text-white shrink-0" />
-            <p className="text-white font-medium">
-              Eres parte del grupo Friends & Family — tienes acceso completo sin costo.
-            </p>
+            <Zap className="h-5 w-5 text-white shrink-0 mt-0.5" />
+            <div>
+              <p className="text-white font-semibold text-sm">Acceso Friends & Family activo</p>
+              <p className="text-white/70 text-sm mt-0.5">
+                Tienes acceso completo durante el beta. Suscríbete al Plan Pro para mantener el acceso cuando el período termine.
+              </p>
+            </div>
           </div>
         )}
 
@@ -189,7 +192,7 @@ export default function UpgradePage() {
         )}
 
         {/* ── Toggle intervalo ── */}
-        {!isPro && !isFF && (
+        {!isPro && (
           <div className="flex items-center justify-center gap-2 mb-8">
             <button
               onClick={() => setInterval("monthly")}
@@ -244,7 +247,7 @@ export default function UpgradePage() {
               ))}
             </ul>
 
-            {!isPro && !isFF && (
+            {!isPro && (
               <div
                 className="text-center text-sm font-semibold py-3 rounded-xl"
                 style={{ background: "#f3f4f6", color: "#6b7280" }}
@@ -302,12 +305,12 @@ export default function UpgradePage() {
               ))}
             </ul>
 
-            {isPro || isFF ? (
+            {isPro ? (
               <div
                 className="text-center text-sm font-semibold py-3 rounded-xl"
                 style={{ background: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.7)" }}
               >
-                {isPro ? "Plan activo ✓" : "Acceso incluido ✓"}
+                Plan activo ✓
               </div>
             ) : (
               <button
