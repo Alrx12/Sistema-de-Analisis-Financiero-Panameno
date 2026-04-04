@@ -99,17 +99,17 @@ export default function OnboardingPage() {
   const canFinish = goals.length > 0
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 to-background flex flex-col">
+    <div className="flex flex-col" style={{ minHeight: "100dvh", background: "linear-gradient(135deg, #eef2ff 0%, #f4f5f7 100%)" }}>
       {/* Header */}
-      <div className="flex h-16 items-center gap-2 px-6 border-b bg-white/80 backdrop-blur">
+      <div className="flex h-16 shrink-0 items-center gap-2 px-6 border-b" style={{ background: "rgba(255,255,255,0.95)", backdropFilter: "blur(8px)" }}>
         <TrendingUp className="h-6 w-6 text-primary" />
         <span className="text-lg font-bold text-primary">SAFPRO</span>
       </div>
 
-      {/* Contenido — overflow-y-auto para que Step 4 (largo) no se corte */}
-      <div className="flex-1 overflow-y-auto">
-      <div className="min-h-full flex items-center justify-center p-6">
-        <div className="w-full max-w-lg mx-auto">
+      {/* Contenido — flex-1 flex-col permite centrado vertical + scroll cuando el contenido es largo */}
+      <div className="flex-1 overflow-y-auto flex flex-col">
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-6">
+        <div className="w-full max-w-lg">
           {/* Progress dots */}
           <div className="flex items-center justify-center gap-2 mb-8">
             {[1, 2, 3, 4].map((s) => (
@@ -285,7 +285,7 @@ export default function OnboardingPage() {
 
               <div className="space-y-3">
                 {/* Banco General */}
-                <div className="rounded-lg border border-border bg-white p-4 space-y-2">
+                <div className="rounded-lg border border-border p-4 space-y-2" style={{ background: "#ffffff" }}>
                   <div className="flex items-center gap-2">
                     <span style={{ background: "#1a3a8f", width: 10, height: 10, borderRadius: "50%", display: "inline-block", flexShrink: 0 }} />
                     <p className="text-sm font-semibold">Banco General</p>
@@ -300,7 +300,7 @@ export default function OnboardingPage() {
                 </div>
 
                 {/* BAC Credomatic */}
-                <div className="rounded-lg border border-border bg-white p-4 space-y-2">
+                <div className="rounded-lg border border-border p-4 space-y-2" style={{ background: "#ffffff" }}>
                   <div className="flex items-center gap-2">
                     <span style={{ background: "#e31837", width: 10, height: 10, borderRadius: "50%", display: "inline-block", flexShrink: 0 }} />
                     <p className="text-sm font-semibold">BAC Credomatic</p>
@@ -315,7 +315,7 @@ export default function OnboardingPage() {
                 </div>
 
                 {/* Banistmo */}
-                <div className="rounded-lg border border-border bg-white p-4 space-y-2">
+                <div className="rounded-lg border border-border p-4 space-y-2" style={{ background: "#ffffff" }}>
                   <div className="flex items-center gap-2">
                     <span style={{ background: "#00843d", width: 10, height: 10, borderRadius: "50%", display: "inline-block", flexShrink: 0 }} />
                     <p className="text-sm font-semibold">Banistmo</p>
@@ -353,3 +353,4 @@ export default function OnboardingPage() {
     </div>
   )
 }
+

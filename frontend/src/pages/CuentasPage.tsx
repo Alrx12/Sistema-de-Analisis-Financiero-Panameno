@@ -533,7 +533,7 @@ export default function CuentasPage() {
   // ─── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="mx-auto max-w-2xl space-y-5">
+    <div className="mx-auto max-w-3xl space-y-5">
 
       {/* Header */}
       <div className="page-header">
@@ -544,34 +544,34 @@ export default function CuentasPage() {
       </div>
 
       {/* KPI general */}
-      <div className="grid grid-cols-3 gap-3">
-        <div className="zoho-card border-0 p-4 text-center">
-          <p className="text-xs text-muted-foreground">Billeteras</p>
-          <p className="text-lg font-bold text-foreground">{formatCurrency(totalWallets)}</p>
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
+        <div className="zoho-card border-0 p-2 sm:p-4 text-center overflow-hidden">
+          <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Billeteras</p>
+          <p className="text-sm sm:text-lg font-bold text-foreground tabular-nums">{formatCurrency(totalWallets)}</p>
         </div>
-        <div className="zoho-card border-0 p-4 text-center">
+        <div className="zoho-card border-0 p-2 sm:p-4 text-center overflow-hidden">
           {accountsWithAvailBalance.length > 0 ? (
             <>
-              <p className="text-xs text-muted-foreground">Disponible en bancos</p>
-              <p className={cn("text-lg font-bold", totalAvailableBank >= 0 ? "text-green-600" : "text-destructive")}>
+              <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Disp. bancos</p>
+              <p className={cn("text-sm sm:text-lg font-bold tabular-nums", totalAvailableBank >= 0 ? "text-green-600" : "text-destructive")}>
                 {formatCurrency(totalAvailableBank)}
               </p>
-              <p className="text-[10px] text-muted-foreground/70 mt-0.5">
-                Balance: {formatCurrency(totalBankBal)}
+              <p className="text-[9px] sm:text-[10px] text-muted-foreground/70 mt-0.5 truncate">
+                Bal: {formatCurrency(totalBankBal)}
               </p>
             </>
           ) : (
             <>
-              <p className="text-xs text-muted-foreground">Bancos (balance)</p>
-              <p className={cn("text-lg font-bold", totalBankBal >= 0 ? "text-green-600" : "text-destructive")}>
+              <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Bancos</p>
+              <p className={cn("text-sm sm:text-lg font-bold tabular-nums", totalBankBal >= 0 ? "text-green-600" : "text-destructive")}>
                 {formatCurrency(totalBankBal)}
               </p>
             </>
           )}
         </div>
-        <div className="zoho-card border-0 p-4 text-center">
-          <p className="text-xs text-muted-foreground">En metas</p>
-          <p className="text-lg font-bold text-primary">{formatCurrency(totalGoalsCur)}</p>
+        <div className="zoho-card border-0 p-2 sm:p-4 text-center overflow-hidden">
+          <p className="text-[10px] sm:text-xs text-muted-foreground truncate">En metas</p>
+          <p className="text-sm sm:text-lg font-bold text-primary tabular-nums">{formatCurrency(totalGoalsCur)}</p>
         </div>
       </div>
 
@@ -621,22 +621,22 @@ export default function CuentasPage() {
               <div className="space-y-2">
                 {wallets.map((w) => (
                   <div key={w.wallet_id}
-                    className="flex items-center gap-4 bg-white rounded-xl px-4 py-3.5 shadow-sm border border-border/50">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full"
+                    className="flex items-center gap-2 sm:gap-4 bg-white rounded-xl px-3 sm:px-4 py-3 sm:py-3.5 shadow-sm border border-border/50">
+                    <div className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-full"
                       style={{ background: w.color + "20" }}>
-                      <WalletIcon name={w.icon} color={w.color} size={22} />
+                      <WalletIcon name={w.icon} color={w.color} size={20} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-semibold">{w.name}</p>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <p className="text-sm font-semibold truncate">{w.name}</p>
                         {w.is_default && (
-                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">Principal</span>
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary shrink-0">Principal</span>
                         )}
                       </div>
                       <p className="text-xs text-muted-foreground capitalize">{w.wallet_type}</p>
                     </div>
-                    <div className="text-right">
-                      <p className="text-base font-bold">{formatCurrency(w.current_balance)}</p>
+                    <div className="text-right shrink-0">
+                      <p className="text-sm sm:text-base font-bold tabular-nums">{formatCurrency(w.current_balance)}</p>
                     </div>
                     <div className="flex gap-1">
                       <button type="button"

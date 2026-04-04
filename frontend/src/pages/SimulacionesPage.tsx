@@ -882,9 +882,11 @@ function QuincenaTab() {
             )}
           </div>
 
-          <div className="space-y-0 divide-y divide-border rounded-lg border border-border overflow-hidden">
+          {/* overflow-x-auto para que en móvil la tabla haga scroll horizontal en lugar de romper el layout */}
+          <div className="overflow-x-auto rounded-lg border border-border">
+          <div className="min-w-[420px] divide-y divide-border">
             {/* Header */}
-            <div className="grid grid-cols-12 gap-2 px-3 py-2 bg-muted/40 text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
+            <div className="grid grid-cols-12 gap-1 px-3 py-2 bg-muted/40 text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
               <span className="col-span-2">Fecha</span>
               <span className="col-span-4">Concepto</span>
               <span className="col-span-3 text-right">Movimiento</span>
@@ -893,7 +895,7 @@ function QuincenaTab() {
 
             {/* Starting balance row */}
             {parseFloat(saldoInicial) > 0 && (
-              <div className="grid grid-cols-12 gap-2 px-3 py-2 bg-muted/20 text-xs">
+              <div className="grid grid-cols-12 gap-1 px-3 py-2 bg-muted/20 text-xs">
                 <span className="col-span-2 text-muted-foreground">Hoy</span>
                 <span className="col-span-4 text-muted-foreground italic">Saldo inicial</span>
                 <span className="col-span-3" />
@@ -908,8 +910,8 @@ function QuincenaTab() {
                 : ev.type === "income" ? "bg-green-50/60" : ""
               return (
                 <div key={ev.id}
-                  className={cn("grid grid-cols-12 gap-2 px-3 py-2.5 text-xs items-center", bgCls)}>
-                  <span className="col-span-2 text-muted-foreground font-mono">{fmtDate(ev.date)}</span>
+                  className={cn("grid grid-cols-12 gap-1 px-3 py-2.5 text-xs items-center", bgCls)}>
+                  <span className="col-span-2 text-muted-foreground font-mono whitespace-nowrap">{fmtDate(ev.date)}</span>
                   <span className="col-span-4 font-medium truncate flex items-center gap-1">
                     {ev.type === "income"
                       ? <ArrowUpCircle className="h-3 w-3 text-green-500 shrink-0" />
@@ -917,11 +919,11 @@ function QuincenaTab() {
                     }
                     {ev.label}
                   </span>
-                  <span className={cn("col-span-3 text-right font-semibold",
+                  <span className={cn("col-span-3 text-right font-semibold whitespace-nowrap",
                     ev.type === "income" ? "text-green-600" : "text-red-500")}>
                     {ev.type === "income" ? "+" : "−"}{formatCurrency(Math.abs(ev.amount))}
                   </span>
-                  <span className={cn("col-span-3 text-right font-bold",
+                  <span className={cn("col-span-3 text-right font-bold whitespace-nowrap",
                     isNeg ? "text-red-600" : ev.running > 0 ? "text-foreground" : "text-muted-foreground")}>
                     {isNeg && <AlertTriangle className="h-3 w-3 inline mr-0.5 mb-0.5" />}
                     {formatCurrency(ev.running)}
@@ -930,27 +932,28 @@ function QuincenaTab() {
               )
             })}
           </div>
+          </div>
 
           {/* Summary */}
-          <div className="grid grid-cols-3 gap-3 pt-1">
-            <div className="rounded-lg bg-green-50 border border-green-100 p-3 text-center">
-              <p className="text-[10px] text-green-700">Total ingresos</p>
-              <p className="text-sm font-bold text-green-700">
+          <div className="grid grid-cols-3 gap-2 pt-1">
+            <div className="rounded-lg bg-green-50 border border-green-100 p-2 sm:p-3 text-center overflow-hidden">
+              <p className="text-[9px] sm:text-[10px] text-green-700 truncate">Total ingresos</p>
+              <p className="text-xs sm:text-sm font-bold text-green-700 tabular-nums">
                 {formatCurrency(ingresos.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0))}
               </p>
             </div>
-            <div className="rounded-lg bg-red-50 border border-red-100 p-3 text-center">
-              <p className="text-[10px] text-red-600">Total compromisos</p>
-              <p className="text-sm font-bold text-red-600">
+            <div className="rounded-lg bg-red-50 border border-red-100 p-2 sm:p-3 text-center overflow-hidden">
+              <p className="text-[9px] sm:text-[10px] text-red-600 truncate">Total compromisos</p>
+              <p className="text-xs sm:text-sm font-bold text-red-600 tabular-nums">
                 {formatCurrency(pagos.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0))}
               </p>
             </div>
-            <div className={cn("rounded-lg border p-3 text-center",
+            <div className={cn("rounded-lg border p-2 sm:p-3 text-center overflow-hidden",
               timeline[timeline.length - 1]?.running >= 0
                 ? "bg-blue-50 border-blue-100"
                 : "bg-red-50 border-red-200")}>
-              <p className="text-[10px] text-muted-foreground">Saldo final</p>
-              <p className={cn("text-sm font-bold",
+              <p className="text-[9px] sm:text-[10px] text-muted-foreground truncate">Saldo final</p>
+              <p className={cn("text-xs sm:text-sm font-bold tabular-nums",
                 timeline[timeline.length - 1]?.running >= 0 ? "text-blue-700" : "text-red-600")}>
                 {formatCurrency(timeline[timeline.length - 1]?.running ?? 0)}
               </p>
@@ -1025,33 +1028,33 @@ function QuincenaTab() {
             {/* Result */}
             {debtAmtNum > 0 && (
               debtMode === "months" && debtMonthsN > 0 ? (
-                <div className="rounded-xl bg-indigo-50 border border-indigo-200 p-4 grid grid-cols-3 gap-4 text-center">
-                  <div>
-                    <p className="text-[10px] text-indigo-600">Pago por quincena</p>
-                    <p className="text-xl font-bold text-indigo-700">{formatCurrency(quincenaPayment)}</p>
+                <div className="rounded-xl bg-indigo-50 border border-indigo-200 p-3 sm:p-4 grid grid-cols-3 gap-2 sm:gap-4 text-center">
+                  <div className="overflow-hidden">
+                    <p className="text-[9px] sm:text-[10px] text-indigo-600 truncate">Pago por quincena</p>
+                    <p className="text-sm sm:text-xl font-bold text-indigo-700 tabular-nums">{formatCurrency(quincenaPayment)}</p>
                   </div>
-                  <div>
-                    <p className="text-[10px] text-indigo-600">Pago mensual</p>
-                    <p className="text-xl font-bold text-indigo-700">{formatCurrency(quincenaPayment * 2)}</p>
+                  <div className="overflow-hidden">
+                    <p className="text-[9px] sm:text-[10px] text-indigo-600 truncate">Pago mensual</p>
+                    <p className="text-sm sm:text-xl font-bold text-indigo-700 tabular-nums">{formatCurrency(quincenaPayment * 2)}</p>
                   </div>
-                  <div>
-                    <p className="text-[10px] text-indigo-600">Quincenas totales</p>
-                    <p className="text-xl font-bold text-indigo-700">{debtMonthsN * 2}</p>
+                  <div className="overflow-hidden">
+                    <p className="text-[9px] sm:text-[10px] text-indigo-600 truncate">Quincenas totales</p>
+                    <p className="text-sm sm:text-xl font-bold text-indigo-700">{debtMonthsN * 2}</p>
                   </div>
                 </div>
               ) : debtMode === "payment" && debtPayN > 0 ? (
-                <div className="rounded-xl bg-indigo-50 border border-indigo-200 p-4 grid grid-cols-3 gap-4 text-center">
-                  <div>
-                    <p className="text-[10px] text-indigo-600">Quincenas necesarias</p>
-                    <p className="text-xl font-bold text-indigo-700">{quincenasNeeded}</p>
+                <div className="rounded-xl bg-indigo-50 border border-indigo-200 p-3 sm:p-4 grid grid-cols-3 gap-2 sm:gap-4 text-center">
+                  <div className="overflow-hidden">
+                    <p className="text-[9px] sm:text-[10px] text-indigo-600 truncate">Quincenas necesarias</p>
+                    <p className="text-sm sm:text-xl font-bold text-indigo-700">{quincenasNeeded}</p>
                   </div>
-                  <div>
-                    <p className="text-[10px] text-indigo-600">Meses aproximados</p>
-                    <p className="text-xl font-bold text-indigo-700">{monthsNeeded}</p>
+                  <div className="overflow-hidden">
+                    <p className="text-[9px] sm:text-[10px] text-indigo-600 truncate">Meses aproximados</p>
+                    <p className="text-sm sm:text-xl font-bold text-indigo-700">{monthsNeeded}</p>
                   </div>
-                  <div>
-                    <p className="text-[10px] text-indigo-600">Total a pagar</p>
-                    <p className="text-xl font-bold text-indigo-700">{formatCurrency(quincenasNeeded * debtPayN)}</p>
+                  <div className="overflow-hidden">
+                    <p className="text-[9px] sm:text-[10px] text-indigo-600 truncate">Total a pagar</p>
+                    <p className="text-sm sm:text-xl font-bold text-indigo-700 tabular-nums">{formatCurrency(quincenasNeeded * debtPayN)}</p>
                   </div>
                 </div>
               ) : null
