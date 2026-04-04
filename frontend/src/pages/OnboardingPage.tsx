@@ -1,80 +1,81 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { TrendingUp, ChevronRight, ChevronLeft, Target, Briefcase, DollarSign, CheckCircle2, BookOpen, Smartphone, Monitor, Download } from "lucide-react"
+import {
+  TrendingUp, ChevronRight, ChevronLeft, Target, Briefcase,
+  DollarSign, CheckCircle2, BookOpen, Smartphone, Monitor, Download,
+} from "lucide-react"
 import { updateProfile } from "@/api/profile"
 import type { IndustryType, GoalType } from "@/types"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { cn } from "@/lib/utils"
 
-// ─── Opciones de industria ─────────────────────────────────────────────────────
+// ─── Opciones ─────────────────────────────────────────────────────────────────
 
 const INDUSTRIES: { value: IndustryType; label: string; emoji: string }[] = [
-  { value: "tecnologia",   label: "Tecnología",          emoji: "💻" },
-  { value: "salud",        label: "Salud",                emoji: "🏥" },
-  { value: "educacion",    label: "Educación",            emoji: "📚" },
-  { value: "finanzas",     label: "Finanzas / Banca",     emoji: "🏦" },
-  { value: "comercio",     label: "Comercio / Retail",    emoji: "🛒" },
-  { value: "construccion", label: "Construcción",         emoji: "🏗️" },
-  { value: "gobierno",     label: "Gobierno / Sector público", emoji: "🏛️" },
-  { value: "transporte",   label: "Transporte / Logística", emoji: "🚛" },
-  { value: "servicios",    label: "Servicios profesionales", emoji: "💼" },
-  { value: "otro",         label: "Otro",                 emoji: "⚡" },
+  { value: "tecnologia",   label: "Tecnología",               emoji: "💻" },
+  { value: "salud",        label: "Salud",                    emoji: "🏥" },
+  { value: "educacion",    label: "Educación",                emoji: "📚" },
+  { value: "finanzas",     label: "Finanzas / Banca",         emoji: "🏦" },
+  { value: "comercio",     label: "Comercio / Retail",        emoji: "🛒" },
+  { value: "construccion", label: "Construcción",             emoji: "🏗️" },
+  { value: "gobierno",     label: "Gobierno / Público",       emoji: "🏛️" },
+  { value: "transporte",   label: "Transporte / Logística",   emoji: "🚛" },
+  { value: "servicios",    label: "Servicios profesionales",  emoji: "💼" },
+  { value: "otro",         label: "Otro",                     emoji: "⚡" },
 ]
-
-// ─── Opciones de metas ─────────────────────────────────────────────────────────
 
 const GOALS: { value: GoalType; label: string; description: string; emoji: string }[] = [
-  {
-    value: "fondo_emergencia",
-    label: "Fondo de emergencia",
-    description: "Tener 3–6 meses de gastos ahorrados para imprevistos",
-    emoji: "🛡️",
-  },
-  {
-    value: "ahorro_general",
-    label: "Ahorrar más",
-    description: "Incrementar mi tasa de ahorro mes a mes",
-    emoji: "🐖",
-  },
-  {
-    value: "eliminar_deuda",
-    label: "Eliminar deudas",
-    description: "Pagar tarjetas de crédito, préstamos u otras deudas",
-    emoji: "✂️",
-  },
-  {
-    value: "invertir",
-    label: "Empezar a invertir",
-    description: "Hacer que mi dinero trabaje para mí",
-    emoji: "📈",
-  },
-  {
-    value: "meta_especifica",
-    label: "Meta específica",
-    description: "Ahorrar para algo concreto: viaje, auto, casa",
-    emoji: "🎯",
-  },
+  { value: "fondo_emergencia", label: "Fondo de emergencia",  description: "Tener 3–6 meses de gastos ahorrados para imprevistos",      emoji: "🛡️" },
+  { value: "ahorro_general",   label: "Ahorrar más",          description: "Incrementar mi tasa de ahorro mes a mes",                    emoji: "🐖" },
+  { value: "eliminar_deuda",   label: "Eliminar deudas",      description: "Pagar tarjetas de crédito, préstamos u otras deudas",        emoji: "✂️" },
+  { value: "invertir",         label: "Empezar a invertir",   description: "Hacer que mi dinero trabaje para mí",                        emoji: "📈" },
+  { value: "meta_especifica",  label: "Meta específica",      description: "Ahorrar para algo concreto: viaje, auto, casa",              emoji: "🎯" },
 ]
+
+// ─── Colores base (sin variables CSS) ─────────────────────────────────────────
+const C = {
+  primary:      "#6366f1",
+  primaryLight: "rgba(99,102,241,0.08)",
+  primaryMid:   "rgba(99,102,241,0.18)",
+  text:         "#1e293b",
+  muted:        "#64748b",
+  border:       "#e2e8f0",
+  bg:           "#f8fafc",
+  white:        "#ffffff",
+  disabled:     "#c7d2fe",
+  success:      "#22c55e",
+}
+
+// ─── Estilos reutilizables ─────────────────────────────────────────────────────
+const btnPrimary = (enabled: boolean): React.CSSProperties => ({
+  display: "inline-flex", alignItems: "center", gap: 6,
+  padding: "10px 22px", borderRadius: 10, border: "none",
+  background: enabled ? C.primary : C.disabled,
+  color: C.white, fontSize: 14, fontWeight: 600,
+  cursor: enabled ? "pointer" : "default",
+  transition: "background 0.15s",
+})
+
+const btnGhost: React.CSSProperties = {
+  display: "inline-flex", alignItems: "center", gap: 4,
+  padding: "10px 14px", borderRadius: 10, border: "none",
+  background: "transparent", color: C.muted,
+  fontSize: 14, cursor: "pointer",
+}
 
 // ─── Componente principal ──────────────────────────────────────────────────────
 
 export default function OnboardingPage() {
   const navigate = useNavigate()
-  const [step, setStep] = useState<1 | 2 | 3 | 4>(1)
+  const [step,     setStep]     = useState<1 | 2 | 3 | 4>(1)
   const [industry, setIndustry] = useState<IndustryType | null>(null)
-  const [income, setIncome] = useState<string>("")
-  const [goals, setGoals] = useState<GoalType[]>([])
-  const [saving, setSaving] = useState(false)
+  const [income,   setIncome]   = useState("")
+  const [goals,    setGoals]    = useState<GoalType[]>([])
+  const [saving,   setSaving]   = useState(false)
 
-  function toggleGoal(goal: GoalType) {
-    setGoals((prev) =>
-      prev.includes(goal) ? prev.filter((g) => g !== goal) : [...prev, goal]
-    )
+  function toggleGoal(g: GoalType) {
+    setGoals(prev => prev.includes(g) ? prev.filter(x => x !== g) : [...prev, g])
   }
 
   async function handleGoToHowTo() {
-    // Guardar perfil y avanzar al paso 4
     setSaving(true)
     try {
       await updateProfile({
@@ -83,274 +84,333 @@ export default function OnboardingPage() {
         financial_goals: goals,
         onboarding_completed: true,
       })
-    } catch {
-      // Si falla el guardado, igual avanzar
-    } finally {
-      setSaving(false)
-      setStep(4)
-    }
+    } catch { /* avanzar igualmente si falla */ }
+    finally { setSaving(false); setStep(4) }
   }
 
-  function handleSkip() {
-    navigate("/upload")
-  }
+  const canStep1 = industry !== null
+  const canStep3 = goals.length > 0
 
-  const canContinueStep1 = industry !== null
-  const canFinish = goals.length > 0
-
+  // ── Wrapper raíz — position:fixed cubre el viewport sin importar el padre ──
   return (
-    <div className="flex flex-col" style={{ minHeight: "100dvh", background: "linear-gradient(135deg, #eef2ff 0%, #f4f5f7 100%)" }}>
-      {/* Header */}
-      <div className="flex h-16 shrink-0 items-center gap-2 px-6 border-b" style={{ background: "rgba(255,255,255,0.95)", backdropFilter: "blur(8px)" }}>
-        <TrendingUp className="h-6 w-6 text-primary" />
-        <span className="text-lg font-bold text-primary">SAFPRO</span>
+    <div style={{
+      position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 50,
+      display: "flex", flexDirection: "column",
+      background: `linear-gradient(135deg, #eef2ff 0%, ${C.bg} 100%)`,
+      color: C.text, fontFamily: "inherit", overflow: "hidden",
+    }}>
+
+      {/* ── Header ── */}
+      <div style={{
+        height: 64, flexShrink: 0,
+        display: "flex", alignItems: "center", gap: 10,
+        padding: "0 24px",
+        background: C.white, borderBottom: `1px solid ${C.border}`,
+      }}>
+        <div style={{
+          width: 32, height: 32, borderRadius: 8,
+          background: "linear-gradient(135deg,#6366f1,#8b5cf6)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
+          <TrendingUp style={{ width: 18, height: 18, color: C.white }} />
+        </div>
+        <span style={{ fontSize: 18, fontWeight: 700, color: C.primary }}>SAFPRO</span>
       </div>
 
-      {/* Contenido — flex-1 flex-col permite centrado vertical + scroll cuando el contenido es largo */}
-      <div className="flex-1 overflow-y-auto flex flex-col">
-      <div className="flex-1 flex items-center justify-center p-4 sm:p-6">
-        <div className="w-full max-w-lg">
-          {/* Progress dots */}
-          <div className="flex items-center justify-center gap-2 mb-8">
-            {[1, 2, 3, 4].map((s) => (
-              <div
-                key={s}
-                className={cn(
-                  "h-2 rounded-full transition-all duration-300",
-                  s === step ? "w-8 bg-primary" : s < step ? "w-2 bg-primary/50" : "w-2 bg-muted"
-                )}
-              />
-            ))}
-          </div>
+      {/* ── Área de scroll ── */}
+      <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column" }}>
 
-          {/* Paso 1: Industria */}
-          {step === 1 && (
-            <div className="space-y-6">
-              <div className="text-center space-y-2">
-                <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 mb-2">
-                  <Briefcase className="h-6 w-6 text-primary" />
-                </div>
-                <h1 className="text-2xl font-bold">¿En qué industria trabajas?</h1>
-                <p className="text-muted-foreground text-sm">
-                  Esto nos ayuda a contextualizar tus ingresos y darte recomendaciones más relevantes.
-                </p>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                {INDUSTRIES.map(({ value, label, emoji }) => (
-                  <button
-                    key={value}
-                    onClick={() => setIndustry(value)}
-                    className={cn(
-                      "flex items-center gap-2 rounded-lg border p-3 text-left text-sm transition-colors",
-                      industry === value
-                        ? "border-primary bg-primary/5 text-primary font-medium"
-                        : "border-border hover:border-primary/40 hover:bg-accent"
-                    )}
-                  >
-                    <span className="text-base">{emoji}</span>
-                    {label}
-                  </button>
-                ))}
-              </div>
-              <div className="flex justify-between pt-2">
-                <Button variant="ghost" size="sm" onClick={handleSkip} className="text-muted-foreground">
-                  Omitir por ahora
-                </Button>
-                <Button disabled={!canContinueStep1} onClick={() => setStep(2)}>
-                  Continuar <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
-              </div>
+        {/* Centering wrapper — flex-1 garantiza altura completa para centrado vertical */}
+        <div style={{
+          flex: 1,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          padding: "32px 16px",
+        }}>
+          <div style={{ width: "100%", maxWidth: 520 }}>
+
+            {/* Progress dots */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 32 }}>
+              {[1, 2, 3, 4].map(s => (
+                <div key={s} style={{
+                  height: 8, borderRadius: 999, transition: "all 0.3s",
+                  width: s === step ? 32 : 8,
+                  background: s < step ? C.primary : s === step ? C.primary : C.border,
+                  opacity: s < step ? 0.5 : 1,
+                }} />
+              ))}
             </div>
-          )}
 
-          {/* Paso 2: Ingreso esperado */}
-          {step === 2 && (
-            <div className="space-y-6">
-              <div className="text-center space-y-2">
-                <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 mb-2">
-                  <DollarSign className="h-6 w-6 text-primary" />
-                </div>
-                <h1 className="text-2xl font-bold">¿Cuánto ganas al mes?</h1>
-                <p className="text-muted-foreground text-sm">
-                  Usamos esto para comparar contra lo que realmente llega al banco y calcular tu meta de ahorro.
-                  El dato es solo tuyo — no se comparte con nadie.
-                </p>
-              </div>
-              <Card>
-                <CardContent className="pt-6 space-y-4">
-                  <div className="space-y-1">
-                    <label className="text-sm font-medium">Ingreso mensual neto (después de impuestos)</label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
-                      <input
-                        type="number"
-                        min="0"
-                        step="50"
-                        value={income}
-                        onChange={(e) => setIncome(e.target.value)}
-                        placeholder="0.00"
-                        className="w-full rounded-md border border-input bg-background pl-7 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Opcional — puedes completarlo después en tu perfil.
-                    </p>
+            {/* ══ Paso 1: Industria ══ */}
+            {step === 1 && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+                <div style={{ textAlign: "center" }}>
+                  <div style={{
+                    display: "inline-flex", width: 52, height: 52, borderRadius: "50%",
+                    background: C.primaryLight, alignItems: "center", justifyContent: "center",
+                    marginBottom: 12,
+                  }}>
+                    <Briefcase style={{ width: 26, height: 26, color: C.primary }} />
                   </div>
+                  <h1 style={{ margin: "0 0 8px", fontSize: 24, fontWeight: 700, color: C.text }}>
+                    ¿En qué industria trabajas?
+                  </h1>
+                  <p style={{ margin: 0, fontSize: 14, color: C.muted, lineHeight: 1.5 }}>
+                    Esto nos ayuda a contextualizar tus ingresos y darte recomendaciones más relevantes.
+                  </p>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                  {INDUSTRIES.map(({ value, label, emoji }) => {
+                    const selected = industry === value
+                    return (
+                      <button key={value} onClick={() => setIndustry(value)} style={{
+                        display: "flex", alignItems: "center", gap: 8,
+                        padding: "11px 14px", borderRadius: 10, textAlign: "left",
+                        border: `2px solid ${selected ? C.primary : C.border}`,
+                        background: selected ? C.primaryLight : C.white,
+                        color: selected ? C.primary : C.text,
+                        fontSize: 14, fontWeight: selected ? 600 : 400,
+                        cursor: "pointer", transition: "all 0.15s",
+                      }}>
+                        <span style={{ fontSize: 18, lineHeight: 1 }}>{emoji}</span>
+                        <span>{label}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 4 }}>
+                  <button onClick={() => navigate("/upload")} style={btnGhost}>
+                    Omitir por ahora
+                  </button>
+                  <button disabled={!canStep1} onClick={() => setStep(2)} style={btnPrimary(canStep1)}>
+                    Continuar <ChevronRight style={{ width: 16, height: 16 }} />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ══ Paso 2: Ingreso ══ */}
+            {step === 2 && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+                <div style={{ textAlign: "center" }}>
+                  <div style={{
+                    display: "inline-flex", width: 52, height: 52, borderRadius: "50%",
+                    background: C.primaryLight, alignItems: "center", justifyContent: "center",
+                    marginBottom: 12,
+                  }}>
+                    <DollarSign style={{ width: 26, height: 26, color: C.primary }} />
+                  </div>
+                  <h1 style={{ margin: "0 0 8px", fontSize: 24, fontWeight: 700, color: C.text }}>
+                    ¿Cuánto ganas al mes?
+                  </h1>
+                  <p style={{ margin: 0, fontSize: 14, color: C.muted, lineHeight: 1.5 }}>
+                    Usamos esto para comparar contra lo que realmente llega al banco y calcular tu meta de ahorro.
+                    El dato es solo tuyo — no se comparte con nadie.
+                  </p>
+                </div>
+
+                <div style={{
+                  background: C.white, border: `1px solid ${C.border}`,
+                  borderRadius: 14, padding: 24,
+                }}>
+                  <label style={{ display: "block", fontSize: 14, fontWeight: 500, color: C.text, marginBottom: 8 }}>
+                    Ingreso mensual neto (después de impuestos)
+                  </label>
+                  <div style={{ position: "relative" }}>
+                    <span style={{
+                      position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)",
+                      color: C.muted, fontSize: 14,
+                    }}>$</span>
+                    <input
+                      type="number" min="0" step="50" placeholder="0.00"
+                      value={income} onChange={e => setIncome(e.target.value)}
+                      style={{
+                        width: "100%", boxSizing: "border-box",
+                        padding: "10px 12px 10px 28px", borderRadius: 8,
+                        border: `1px solid ${C.border}`, fontSize: 14,
+                        color: C.text, background: C.white, outline: "none",
+                      }}
+                    />
+                  </div>
+                  <p style={{ margin: "6px 0 0", fontSize: 12, color: C.muted }}>
+                    Opcional — puedes completarlo después en tu perfil.
+                  </p>
+
                   {income && parseFloat(income) > 0 && (
-                    <div className="rounded-md bg-primary/5 p-3 text-sm space-y-1">
-                      <p className="font-medium text-primary">Con ${parseFloat(income).toLocaleString()} al mes:</p>
-                      <p className="text-muted-foreground">
-                        Meta 50/30/20: <span className="font-medium text-foreground">
-                          ${(parseFloat(income) * 0.5).toLocaleString(undefined, { maximumFractionDigits: 0 })} necesidades /
-                          ${(parseFloat(income) * 0.3).toLocaleString(undefined, { maximumFractionDigits: 0 })} deseos /
+                    <div style={{
+                      marginTop: 16, padding: 14, borderRadius: 10,
+                      background: C.primaryLight, border: `1px solid ${C.primaryMid}`,
+                    }}>
+                      <p style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 600, color: C.primary }}>
+                        Con ${parseFloat(income).toLocaleString()} al mes:
+                      </p>
+                      <p style={{ margin: 0, fontSize: 13, color: C.muted }}>
+                        Meta 50/30/20:{" "}
+                        <span style={{ fontWeight: 500, color: C.text }}>
+                          ${(parseFloat(income) * 0.5).toLocaleString(undefined, { maximumFractionDigits: 0 })} necesidades /{" "}
+                          ${(parseFloat(income) * 0.3).toLocaleString(undefined, { maximumFractionDigits: 0 })} deseos /{" "}
                           ${(parseFloat(income) * 0.2).toLocaleString(undefined, { maximumFractionDigits: 0 })} ahorro
                         </span>
                       </p>
                     </div>
                   )}
-                </CardContent>
-              </Card>
-              <div className="flex justify-between pt-2">
-                <Button variant="ghost" size="sm" onClick={() => setStep(1)}>
-                  <ChevronLeft className="h-4 w-4 mr-1" /> Atrás
-                </Button>
-                <Button onClick={() => setStep(3)}>
-                  Continuar <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {/* Paso 3: Metas financieras */}
-          {step === 3 && (
-            <div className="space-y-6">
-              <div className="text-center space-y-2">
-                <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 mb-2">
-                  <Target className="h-6 w-6 text-primary" />
                 </div>
-                <h1 className="text-2xl font-bold">¿Cuáles son tus metas financieras?</h1>
-                <p className="text-muted-foreground text-sm">
-                  Selecciona una o varias. Personalizaremos las recomendaciones para que apunten a lo que te importa.
-                </p>
-              </div>
-              <div className="space-y-2">
-                {GOALS.map(({ value, label, description, emoji }) => {
-                  const selected = goals.includes(value)
-                  return (
-                    <button
-                      key={value}
-                      onClick={() => toggleGoal(value)}
-                      className={cn(
-                        "w-full flex items-start gap-3 rounded-lg border p-4 text-left transition-colors",
-                        selected
-                          ? "border-primary bg-primary/5"
-                          : "border-border hover:border-primary/40 hover:bg-accent"
-                      )}
-                    >
-                      <span className="text-xl mt-0.5">{emoji}</span>
-                      <div className="flex-1 min-w-0">
-                        <p className={cn("text-sm font-medium", selected && "text-primary")}>{label}</p>
-                        <p className="text-xs text-muted-foreground">{description}</p>
-                      </div>
-                      {selected && (
-                        <CheckCircle2 className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                      )}
-                    </button>
-                  )
-                })}
-              </div>
-              <div className="flex justify-between pt-2">
-                <Button variant="ghost" size="sm" onClick={() => setStep(2)}>
-                  <ChevronLeft className="h-4 w-4 mr-1" /> Atrás
-                </Button>
-                <Button disabled={!canFinish || saving} onClick={handleGoToHowTo}>
-                  {saving ? "Guardando…" : "Continuar"} <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
-              </div>
-            </div>
-          )}
 
-          {/* Paso 4: Cómo obtener tu estado de cuenta */}
-          {step === 4 && (
-            <div className="space-y-6">
-              <div className="text-center space-y-2">
-                <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 mb-2">
-                  <BookOpen className="h-6 w-6 text-primary" />
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <button onClick={() => setStep(1)} style={btnGhost}>
+                    <ChevronLeft style={{ width: 16, height: 16 }} /> Atrás
+                  </button>
+                  <button onClick={() => setStep(3)} style={btnPrimary(true)}>
+                    Continuar <ChevronRight style={{ width: 16, height: 16 }} />
+                  </button>
                 </div>
-                <h1 className="text-2xl font-bold">¿Cómo obtener tu estado de cuenta?</h1>
-                <p className="text-muted-foreground text-sm">
-                  Para empezar, necesitas descargar tu estado de cuenta del banco. Aquí te explicamos cómo hacerlo según tu banco.
-                </p>
               </div>
+            )}
 
-              <div className="space-y-3">
-                {/* Banco General */}
-                <div className="rounded-lg border border-border p-4 space-y-2" style={{ background: "#ffffff" }}>
-                  <div className="flex items-center gap-2">
-                    <span style={{ background: "#1a3a8f", width: 10, height: 10, borderRadius: "50%", display: "inline-block", flexShrink: 0 }} />
-                    <p className="text-sm font-semibold">Banco General</p>
-                    <Monitor className="h-4 w-4 text-muted-foreground ml-auto" />
+            {/* ══ Paso 3: Metas financieras ══ */}
+            {step === 3 && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+                <div style={{ textAlign: "center" }}>
+                  <div style={{
+                    display: "inline-flex", width: 52, height: 52, borderRadius: "50%",
+                    background: C.primaryLight, alignItems: "center", justifyContent: "center",
+                    marginBottom: 12,
+                  }}>
+                    <Target style={{ width: 26, height: 26, color: C.primary }} />
                   </div>
-                  <ol className="text-xs text-muted-foreground space-y-1 pl-4 list-decimal">
-                    <li>Entra a <span className="font-medium text-foreground">bgeneral.com</span> → Banca en Línea</li>
-                    <li>Ve a <span className="font-medium text-foreground">Mis cuentas → Movimientos</span></li>
-                    <li>Selecciona el período que deseas analizar</li>
-                    <li>Descarga el estado de cuenta en formato <span className="font-medium text-foreground">Excel (.xlsx)</span></li>
-                  </ol>
-                </div>
-
-                {/* BAC Credomatic */}
-                <div className="rounded-lg border border-border p-4 space-y-2" style={{ background: "#ffffff" }}>
-                  <div className="flex items-center gap-2">
-                    <span style={{ background: "#e31837", width: 10, height: 10, borderRadius: "50%", display: "inline-block", flexShrink: 0 }} />
-                    <p className="text-sm font-semibold">BAC Credomatic</p>
-                    <Monitor className="h-4 w-4 text-muted-foreground ml-auto" />
-                  </div>
-                  <ol className="text-xs text-muted-foreground space-y-1 pl-4 list-decimal">
-                    <li>Entra a <span className="font-medium text-foreground">bac.net</span> → Banca en Línea</li>
-                    <li>Ve a <span className="font-medium text-foreground">Cuentas → Estado de cuenta</span></li>
-                    <li>Selecciona el período deseado</li>
-                    <li>Descarga en formato <span className="font-medium text-foreground">Excel (.xlsx)</span></li>
-                  </ol>
-                </div>
-
-                {/* Banistmo */}
-                <div className="rounded-lg border border-border p-4 space-y-2" style={{ background: "#ffffff" }}>
-                  <div className="flex items-center gap-2">
-                    <span style={{ background: "#00843d", width: 10, height: 10, borderRadius: "50%", display: "inline-block", flexShrink: 0 }} />
-                    <p className="text-sm font-semibold">Banistmo</p>
-                    <Smartphone className="h-4 w-4 text-muted-foreground ml-auto" />
-                  </div>
-                  <ol className="text-xs text-muted-foreground space-y-1 pl-4 list-decimal">
-                    <li>Abre la <span className="font-medium text-foreground">app de Banistmo</span> en tu celular</li>
-                    <li>Ve a <span className="font-medium text-foreground">Mis cuentas → Movimientos</span></li>
-                    <li>Selecciona el período que deseas</li>
-                    <li>Usa la opción <span className="font-medium text-foreground">Descargar</span> directamente desde la app</li>
-                  </ol>
-                </div>
-
-                <div className="rounded-lg bg-primary/5 border border-primary/20 p-3 flex items-start gap-2">
-                  <Download className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                  <p className="text-xs text-primary">
-                    <span className="font-semibold">Tip:</span> También puedes ingresar tus gastos manualmente desde la opción <span className="font-semibold">"Entrada Manual"</span> en el menú lateral, si no tienes acceso al estado de cuenta en este momento.
+                  <h1 style={{ margin: "0 0 8px", fontSize: 24, fontWeight: 700, color: C.text }}>
+                    ¿Cuáles son tus metas financieras?
+                  </h1>
+                  <p style={{ margin: 0, fontSize: 14, color: C.muted, lineHeight: 1.5 }}>
+                    Selecciona una o varias. Personalizaremos las recomendaciones para que apunten a lo que te importa.
                   </p>
                 </div>
-              </div>
 
-              <div className="flex justify-between pt-2">
-                <Button variant="ghost" size="sm" onClick={() => setStep(3)}>
-                  <ChevronLeft className="h-4 w-4 mr-1" /> Atrás
-                </Button>
-                <Button onClick={() => navigate("/upload")}>
-                  Ir a subir mi estado de cuenta <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {GOALS.map(({ value, label, description, emoji }) => {
+                    const selected = goals.includes(value)
+                    return (
+                      <button key={value} onClick={() => toggleGoal(value)} style={{
+                        display: "flex", alignItems: "flex-start", gap: 12,
+                        padding: "14px 16px", borderRadius: 12, textAlign: "left", width: "100%",
+                        border: `2px solid ${selected ? C.primary : C.border}`,
+                        background: selected ? C.primaryLight : C.white,
+                        cursor: "pointer", transition: "all 0.15s",
+                      }}>
+                        <span style={{ fontSize: 22, lineHeight: 1, marginTop: 1, flexShrink: 0 }}>{emoji}</span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ margin: "0 0 2px", fontSize: 14, fontWeight: 600, color: selected ? C.primary : C.text }}>{label}</p>
+                          <p style={{ margin: 0, fontSize: 12, color: C.muted }}>{description}</p>
+                        </div>
+                        {selected && (
+                          <CheckCircle2 style={{ width: 20, height: 20, color: C.primary, flexShrink: 0, marginTop: 2 }} />
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <button onClick={() => setStep(2)} style={btnGhost}>
+                    <ChevronLeft style={{ width: 16, height: 16 }} /> Atrás
+                  </button>
+                  <button disabled={!canStep3 || saving} onClick={handleGoToHowTo} style={btnPrimary(canStep3 && !saving)}>
+                    {saving ? "Guardando…" : "Continuar"} <ChevronRight style={{ width: 16, height: 16 }} />
+                  </button>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+
+            {/* ══ Paso 4: Cómo obtener tu estado de cuenta ══ */}
+            {step === 4 && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                <div style={{ textAlign: "center" }}>
+                  <div style={{
+                    display: "inline-flex", width: 52, height: 52, borderRadius: "50%",
+                    background: C.primaryLight, alignItems: "center", justifyContent: "center",
+                    marginBottom: 12,
+                  }}>
+                    <BookOpen style={{ width: 26, height: 26, color: C.primary }} />
+                  </div>
+                  <h1 style={{ margin: "0 0 8px", fontSize: 22, fontWeight: 700, color: C.text }}>
+                    ¿Cómo obtener tu estado de cuenta?
+                  </h1>
+                  <p style={{ margin: 0, fontSize: 14, color: C.muted, lineHeight: 1.5 }}>
+                    Descarga tu estado de cuenta desde la banca en línea de tu banco. Aquí te explicamos cómo hacerlo.
+                  </p>
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {/* Banco General */}
+                  <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 12, padding: 16 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                      <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#1a3a8f", flexShrink: 0 }} />
+                      <span style={{ fontSize: 14, fontWeight: 600, color: C.text, flex: 1 }}>Banco General</span>
+                      <Monitor style={{ width: 16, height: 16, color: C.muted }} />
+                    </div>
+                    <ol style={{ margin: 0, paddingLeft: 18, display: "flex", flexDirection: "column", gap: 4 }}>
+                      {["Entra a bgeneral.com → Banca en Línea","Ve a Mis cuentas → Movimientos","Selecciona el período que deseas analizar","Descarga en formato Excel (.xlsx)"].map((t, i) => (
+                        <li key={i} style={{ fontSize: 13, color: C.muted }}>{t}</li>
+                      ))}
+                    </ol>
+                  </div>
+
+                  {/* BAC */}
+                  <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 12, padding: 16 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                      <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#e31837", flexShrink: 0 }} />
+                      <span style={{ fontSize: 14, fontWeight: 600, color: C.text, flex: 1 }}>BAC Credomatic</span>
+                      <Monitor style={{ width: 16, height: 16, color: C.muted }} />
+                    </div>
+                    <ol style={{ margin: 0, paddingLeft: 18, display: "flex", flexDirection: "column", gap: 4 }}>
+                      {["Entra a bac.net → Banca en Línea","Ve a Cuentas → Estado de cuenta","Selecciona el período deseado","Descarga en formato Excel (.xlsx)"].map((t, i) => (
+                        <li key={i} style={{ fontSize: 13, color: C.muted }}>{t}</li>
+                      ))}
+                    </ol>
+                  </div>
+
+                  {/* Banistmo */}
+                  <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 12, padding: 16 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                      <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#00843d", flexShrink: 0 }} />
+                      <span style={{ fontSize: 14, fontWeight: 600, color: C.text, flex: 1 }}>Banistmo</span>
+                      <Smartphone style={{ width: 16, height: 16, color: C.muted }} />
+                    </div>
+                    <ol style={{ margin: 0, paddingLeft: 18, display: "flex", flexDirection: "column", gap: 4 }}>
+                      {["Abre la app de Banistmo en tu celular","Ve a Mis cuentas → Movimientos","Selecciona el período que deseas","Usa la opción Descargar directamente desde la app"].map((t, i) => (
+                        <li key={i} style={{ fontSize: 13, color: C.muted }}>{t}</li>
+                      ))}
+                    </ol>
+                  </div>
+
+                  {/* Tip */}
+                  <div style={{
+                    display: "flex", gap: 10, padding: 14, borderRadius: 10,
+                    background: C.primaryLight, border: `1px solid ${C.primaryMid}`,
+                  }}>
+                    <Download style={{ width: 16, height: 16, color: C.primary, flexShrink: 0, marginTop: 1 }} />
+                    <p style={{ margin: 0, fontSize: 13, color: C.primary, lineHeight: 1.5 }}>
+                      <strong>Tip:</strong> También puedes ingresar tus gastos manualmente desde la opción{" "}
+                      <strong>"Entrada Manual"</strong> en el menú lateral.
+                    </p>
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <button onClick={() => setStep(3)} style={btnGhost}>
+                    <ChevronLeft style={{ width: 16, height: 16 }} /> Atrás
+                  </button>
+                  <button onClick={() => navigate("/upload")} style={btnPrimary(true)}>
+                    Ir a subir mi estado de cuenta <ChevronRight style={{ width: 16, height: 16 }} />
+                  </button>
+                </div>
+              </div>
+            )}
+
+          </div>
         </div>
-      </div>
       </div>
     </div>
   )
 }
-
