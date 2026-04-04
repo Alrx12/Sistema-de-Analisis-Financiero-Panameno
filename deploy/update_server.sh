@@ -32,7 +32,18 @@ tar -czf "$BACKEND_TAR" \
     --exclude='.env' \
     -C "$PROJECT_DIR/backend" .
 scp -q "$BACKEND_TAR" "$SERVER:/tmp/safpro_backend_update.tar.gz"
-ssh "$SERVER" "cd $REMOTE_DIR/backend && tar xzf /tmp/safpro_backend_update.tar.gz && rm /tmp/safpro_backend_update.tar.gz"
+ssh "$SERVER" "
+    # Backup explícito del .env antes de extraer (protección extra)
+    cp $REMOTE_DIR/backend/.env /tmp/safpro_env_backup 2>/dev/null || true
+    cd $REMOTE_DIR/backend
+    tar xzf /tmp/safpro_backend_update.tar.gz
+    rm /tmp/safpro_backend_update.tar.gz
+    # Restaurar .env si fue sobreescrito
+    if [ -f /tmp/safpro_env_backup ]; then
+        cp /tmp/safpro_env_backup $REMOTE_DIR/backend/.env
+        rm /tmp/safpro_env_backup
+    fi
+"
 rm -f "$BACKEND_TAR"
 echo "    ✅ Backend actualizado."
 
