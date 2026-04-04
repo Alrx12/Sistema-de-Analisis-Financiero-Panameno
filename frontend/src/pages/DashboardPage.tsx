@@ -1,6 +1,6 @@
 import { type ReactNode, useState, useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import {
   TrendingUp, TrendingDown, Wallet, AlertTriangle,
   Upload, ArrowRight, BarChart2, Building2, Layers, ShoppingBag,
@@ -21,6 +21,34 @@ import type { AnalysisSnapshot, AggregatedSummary } from "@/types"
 
 // ─── Paleta ──────────────────────────────────────────────────────────────────
 const CAT_COLORS = ["#3b82f6","#10b981","#f59e0b","#ef4444","#8b5cf6","#06b6d4","#f97316","#84cc16"]
+
+// Emojis por categoría para la vista de lista
+const CAT_EMOJI: Record<string, string> = {
+  alimentacion: "🛒", comida: "🛒", supermercado: "🛒", mercado: "🛒",
+  restaurantes: "🍽️", restaurante: "🍽️", cafe: "☕",
+  transporte: "🚗", gasolina: "⛽",
+  servicios: "💡", servicios_basicos: "💡", agua: "💧", luz: "💡",
+  internet: "📶", telefono: "📱",
+  entretenimiento: "🎮", ocio: "🎭", streaming: "📺",
+  salud: "🏥", farmacia: "💊",
+  educacion: "📚",
+  vivienda: "🏠", alquiler: "🏠", hipoteca: "🏠",
+  tecnologia: "💻",
+  suscripciones: "🔔", suscripcion: "🔔",
+  mascotas: "🐾",
+  ropa: "👕",
+  deporte: "⚽", gym: "🏋️",
+  belleza: "💅",
+  viajes: "✈️", viaje: "✈️",
+  bares: "🍺",
+  ahorro: "🐖", inversion: "📈",
+  deuda: "💳", deudas: "💳",
+  cargo_financiero: "🏦", gasto_financiero: "🏦", financiero: "🏦",
+  comision: "💰", impuesto: "📋",
+  transferencias: "↔️",
+  consumo_desconocido: "⚠️",
+  otros: "📦",
+}
 
 const ETYPE_COLORS: Record<string, string> = {
   gasto:                "#ef4444",
@@ -157,6 +185,7 @@ function SavingsDot(props: { cx?: number; cy?: number; value?: number }) {
 }
 
 export default function DashboardPage() {
+  const navigate = useNavigate()
   const { data: snapshots, isLoading, isError } = useQuery({
     queryKey: ["analysis"],
     queryFn: listAnalysis,
@@ -779,24 +808,58 @@ export default function DashboardPage() {
             {categoryData.length === 0
               ? <p className="text-sm text-muted-foreground">Sin datos</p>
               : (
-                <ResponsiveContainer width="100%" height={240}>
-                  <BarChart data={categoryData} layout="vertical" margin={{ left: 8 }}
-                    onClick={(data) => {
-                      if (!data?.activePayload?.[0]) return
-                      const rawKey = data.activePayload[0].payload.rawKey
-                      setSelectedCategory(prev => prev === rawKey ? null : rawKey)
-                    }} style={{ cursor: "pointer" }}>
-                    <XAxis type="number" tickFormatter={v => `$${v}`} tick={{ fontSize: 11 }} />
-                    <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={105} />
-                    <Tooltip formatter={(v: number) => formatCurrency(v)} />
-                    <Bar dataKey="value" radius={[0,4,4,0]}>
-                      {categoryData.map((entry, i) => (
-                        <Cell key={i} fill={CAT_COLORS[i % CAT_COLORS.length]}
-                          opacity={!selectedCategory || selectedCategory === entry.rawKey ? 1 : 0.3} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
+                <div className="space-y-2">
+                  {categoryData.map((entry, i) => {
+                    const color = CAT_COLORS[i % CAT_COLORS.length]
+                    const emoji = CAT_EMOJI[entry.rawKey] ?? "📦"
+                    const isUnknown = entry.rawKey === "otros" || entry.rawKey === "consumo_desconocido"
+                    const isSelected = selectedCategory === entry.rawKey
+                    const dimmed = !!selectedCategory && !isSelected
+                    return (
+                      <div
+                        key={entry.rawKey}
+                        onClick={() => setSelectedCategory(prev => prev === entry.rawKey ? null : entry.rawKey)}
+                        className="flex items-center gap-3 rounded-xl border px-3 py-2.5 cursor-pointer transition-all hover:shadow-sm"
+                        style={{
+                          borderLeftWidth: 4,
+                          borderLeftColor: color,
+                          borderColor: isSelected ? color : undefined,
+                          backgroundColor: isSelected ? `${color}18` : undefined,
+                          opacity: dimmed ? 0.45 : 1,
+                        }}
+                      >
+                        {/* Emoji icon */}
+                        <span
+                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-base"
+                          style={{ backgroundColor: `${color}22` }}
+                        >
+                          {emoji}
+                        </span>
+                        {/* Nombre */}
+                        <span className="flex-1 min-w-0">
+                          <span className="text-sm font-medium leading-none">{entry.name}</span>
+                          {isUnknown && (
+                            <span className="block text-xs text-amber-600 mt-0.5">Sin categoría — afecta tu presupuesto</span>
+                          )}
+                        </span>
+                        {/* Monto */}
+                        <span className="text-sm font-bold tabular-nums shrink-0" style={{ color }}>
+                          {formatCurrency(entry.value)}
+                        </span>
+                        {/* Botón corregir para desconocidos */}
+                        {isUnknown && (
+                          <button
+                            className="shrink-0 rounded-lg px-2.5 py-1 text-xs font-semibold text-white transition-colors"
+                            style={{ backgroundColor: "#d97706" }}
+                            onClick={(e) => { e.stopPropagation(); navigate("/retrain") }}
+                          >
+                            Corregir
+                          </button>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
               )}
           </CardContent>
         </Card>
