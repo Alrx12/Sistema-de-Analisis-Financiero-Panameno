@@ -22,21 +22,22 @@ import { formatCurrency } from "@/lib/utils"
 // ─── Mapeo de categorías a cubetas 50/30/20 ───────────────────────────────────
 
 const NEEDS_CATEGORIES = new Set([
-  "alimentacion", "comida", "vivienda", "alquiler", "hipoteca",
+  "alimentacion", "comida", "mercado", "vivienda", "alquiler", "hipoteca",
   "servicios", "servicios_basicos", "agua", "luz", "internet", "telefono",
   "transporte", "gasolina", "salud", "farmacia", "educacion",
-  "supermercado", "hogar", "seguro",
+  "supermercado", "hogar", "seguro", "higiene", "renta",
 ])
 
 const WANTS_CATEGORIES = new Set([
-  "restaurantes", "entretenimiento", "compras", "viajes", "suscripciones",
-  "ocio", "belleza", "mascotas", "ropa", "tecnologia", "deporte",
-  "streaming", "cafe", "bares",
+  "restaurantes", "restaurante", "entretenimiento", "compras", "viajes", "viaje",
+  "suscripciones", "suscripcion", "ocio", "belleza", "mascotas", "ropa",
+  "tecnologia", "deporte", "gym", "streaming", "cafe", "bares", "cine",
 ])
 
 const SAVINGS_CATEGORIES = new Set([
-  "ahorro", "inversion", "cargo_financiero", "deuda", "pension",
-  "gasto_financiero",
+  "ahorro", "inversion", "cargo_financiero", "deuda", "deudas", "pension",
+  "gasto_financiero", "comision", "financiero", "prestamo", "credito",
+  "transferencias",
 ])
 
 type BucketKey = "needs" | "wants" | "savings" | "other"
@@ -252,10 +253,32 @@ cuenta, esas transacciones llegarán ya categorizadas.`,
 
 // ─── Componente principal ──────────────────────────────────────────────────────
 
+const MONTH_NAMES = [
+  "Enero","Febrero","Marzo","Abril","Mayo","Junio",
+  "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre",
+]
+
+// Genera los últimos 18 meses como opciones
+function recentMonths(n = 18) {
+  const opts: { year: number; month: number; label: string }[] = []
+  const now = new Date()
+  for (let i = 0; i < n; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    opts.push({ year: d.getFullYear(), month: d.getMonth() + 1, label: `${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}` })
+  }
+  return opts
+}
+
 export default function BudgetPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [openEdu, setOpenEdu] = useState<number | null>(0)
+
+  // Filtro de mes — por defecto el mes actual
+  const now = new Date()
+  const [selectedYear,  setSelectedYear]  = useState<number>(now.getFullYear())
+  const [selectedMonth, setSelectedMonth] = useState<number>(now.getMonth() + 1)
+  const monthOptions = recentMonths(18)
 
   // Modal de gastos adicionales
   const [showModal, setShowModal] = useState(false)
@@ -268,8 +291,8 @@ export default function BudgetPage() {
   })
 
   const { data: aggregated, isLoading: aggLoading } = useQuery<AggregatedSummary>({
-    queryKey: ["aggregated"],
-    queryFn: () => getAggregatedSummary({}),
+    queryKey: ["aggregated", selectedYear, selectedMonth],
+    queryFn: () => getAggregatedSummary({ year: selectedYear, month: selectedMonth }),
   })
 
   const loading = profileLoading || aggLoading
@@ -339,18 +362,36 @@ export default function BudgetPage() {
   }
 
   if (!aggregated || totalExpenses === 0) {
+    const selectedMonthLabel = monthOptions.find(o => o.year === selectedYear && o.month === selectedMonth)?.label ?? ""
     return (
-      <div className="mx-auto max-w-2xl space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold">Mi Presupuesto</h1>
-          <p className="text-sm text-muted-foreground">Análisis 50/30/20 de tus finanzas</p>
+      <div className="mx-auto max-w-5xl space-y-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Mi Presupuesto</h1>
+            <p className="text-sm text-muted-foreground">Análisis 50/30/20 de tus finanzas</p>
+          </div>
+          <select
+            className="rounded-md border border-input bg-background px-3 py-1.5 text-sm self-start"
+            value={`${selectedYear}-${selectedMonth}`}
+            onChange={(e) => {
+              const [y, m] = e.target.value.split("-").map(Number)
+              setSelectedYear(y)
+              setSelectedMonth(m)
+            }}
+          >
+            {monthOptions.map((o) => (
+              <option key={`${o.year}-${o.month}`} value={`${o.year}-${o.month}`}>
+                {o.label}
+              </option>
+            ))}
+          </select>
         </div>
         <Card>
           <CardContent className="pt-6 text-center space-y-4 py-12">
             <TrendingDown className="h-10 w-10 text-muted-foreground mx-auto" />
-            <p className="font-medium">Sin datos para analizar</p>
+            <p className="font-medium">Sin datos para {selectedMonthLabel}</p>
             <p className="text-sm text-muted-foreground">
-              Sube un estado de cuenta para ver tu análisis de presupuesto.
+              No hay transacciones registradas en ese mes. Prueba seleccionar otro mes o sube un estado de cuenta.
             </p>
             <Button onClick={() => navigate("/upload")}>Subir estado de cuenta</Button>
           </CardContent>
@@ -377,7 +418,7 @@ export default function BudgetPage() {
   }))
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8">
+    <div className="mx-auto max-w-5xl space-y-8">
 
       {/* ── Modal de gastos adicionales ── */}
       {showModal && (
@@ -548,7 +589,7 @@ export default function BudgetPage() {
       )}
 
       {/* ── Header ── */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold">Mi Presupuesto</h1>
           <p className="text-sm text-muted-foreground">
@@ -556,7 +597,23 @@ export default function BudgetPage() {
             {manualMonthly > 0 && ` + ${formatCurrency(manualMonthly)}/mes adicionales`}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Selector de mes */}
+          <select
+            className="rounded-md border border-input bg-background px-3 py-1.5 text-sm"
+            value={`${selectedYear}-${selectedMonth}`}
+            onChange={(e) => {
+              const [y, m] = e.target.value.split("-").map(Number)
+              setSelectedYear(y)
+              setSelectedMonth(m)
+            }}
+          >
+            {monthOptions.map((o) => (
+              <option key={`${o.year}-${o.month}`} value={`${o.year}-${o.month}`}>
+                {o.label}
+              </option>
+            ))}
+          </select>
           <Button variant="outline" size="sm" onClick={openEditModal}>
             <Plus className="h-3 w-3 mr-1.5" /> Gastos adicionales
           </Button>
@@ -736,6 +793,24 @@ export default function BudgetPage() {
                     {bucket.categories.length > 5 && (
                       <span className="text-xs text-muted-foreground">+{bucket.categories.length - 5} más</span>
                     )}
+                  </div>
+                )}
+                {/* CTA de corrección para "Sin clasificar" */}
+                {bucket.key === "other" && bucket.actual > 0 && (
+                  <div className="mt-2 flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 gap-3">
+                    <div className="flex items-start gap-2 min-w-0">
+                      <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                      <p className="text-xs text-amber-800 leading-relaxed">
+                        <span className="font-semibold">{formatCurrency(bucket.actual)}</span> en gastos sin categoría.
+                        Corrígelos para que aparezcan en Necesidades, Deseos o Ahorro y tener un presupuesto preciso.
+                      </p>
+                    </div>
+                    <button
+                      className="shrink-0 rounded-md bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-700 transition-colors"
+                      onClick={() => navigate("/retrain")}
+                    >
+                      Corregir →
+                    </button>
                   </div>
                 )}
               </div>
