@@ -44,17 +44,18 @@ class ProfileService:
     def update(self, user_id: uuid.UUID, data: UserProfileUpdate) -> UserProfile:
         """
         Actualiza el perfil del usuario. Hace get-or-create si no existe,
-        luego aplica los campos del body y persiste.
+        luego aplica solo los campos explícitamente enviados en el body (exclude_unset).
+
+        Esto permite que distintas partes del frontend actualicen subconjuntos
+        del perfil sin pisar los campos que no enviaron (e.g., AccountPage
+        actualiza campos extendidos sin borrar manual_expenses, y BudgetPage
+        actualiza manual_expenses sin borrar los campos extendidos).
         """
         profile = self.get_or_create(user_id)
 
-        if data.industry is not None:
-            profile.industry = data.industry
-        if data.expected_monthly_income is not None:
-            profile.expected_monthly_income = data.expected_monthly_income
-        # financial_goals y onboarding_completed siempre se actualizan
-        profile.financial_goals = data.financial_goals
-        profile.onboarding_completed = data.onboarding_completed
+        # Solo actualizamos los campos que el cliente envió explícitamente
+        for field, value in data.model_dump(exclude_unset=True).items():
+            setattr(profile, field, value)
 
         self.db.commit()
         self.db.refresh(profile)

@@ -1,5 +1,6 @@
-import { useState, useEffect, useMemo } from "react"
+import { useState, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend,
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -100,7 +101,7 @@ interface AdjustedTargets {
   adjustments: string[]
 }
 
-function getAdjustedTargets(profile: UserProfile | null): AdjustedTargets {
+function getAdjustedTargets(profile: UserProfile | null | undefined): AdjustedTargets {
   let needs = 50
   let wants = 30
   let savings = 20
@@ -253,41 +254,39 @@ cuenta, esas transacciones llegarán ya categorizadas.`,
 
 export default function BudgetPage() {
   const navigate = useNavigate()
-  const [aggregated, setAggregated] = useState<AggregatedSummary | null>(null)
-  const [profile, setProfile] = useState<UserProfile | null>(null)
-  const [loading, setLoading] = useState(true)
+  const queryClient = useQueryClient()
   const [openEdu, setOpenEdu] = useState<number | null>(0)
 
   // Modal de gastos adicionales
   const [showModal, setShowModal] = useState(false)
   const [draftExpenses, setDraftExpenses] = useState<ManualExpense[]>([])
-  const [savingExpenses, setSavingExpenses] = useState(false)
 
-  useEffect(() => {
-    Promise.all([getAggregatedSummary({}), getProfile()])
-      .then(([agg, prof]) => {
-        setAggregated(agg)
-        setProfile(prof)
-      })
-      .finally(() => setLoading(false))
-  }, [])
+  // ── Datos del servidor vía TanStack Query (reaccionan a invalidaciones) ──────
+  const { data: profile, isLoading: profileLoading } = useQuery<UserProfile>({
+    queryKey: ["profile"],
+    queryFn: getProfile,
+  })
 
-  async function saveManualExpenses(expenses: ManualExpense[]) {
-    if (!profile) return
-    setSavingExpenses(true)
-    try {
-      const updated = await updateProfile({
-        industry: profile.industry,
-        expected_monthly_income: profile.expected_monthly_income,
-        financial_goals: profile.financial_goals as GoalType[],
-        onboarding_completed: profile.onboarding_completed,
-        manual_expenses: expenses,
-      })
-      setProfile(updated)
+  const { data: aggregated, isLoading: aggLoading } = useQuery<AggregatedSummary>({
+    queryKey: ["aggregated"],
+    queryFn: () => getAggregatedSummary({}),
+  })
+
+  const loading = profileLoading || aggLoading
+
+  // ── Guardar gastos adicionales — solo envía manual_expenses (exclude_unset en backend) ─
+  const saveExpensesMutation = useMutation({
+    mutationFn: (expenses: ManualExpense[]) =>
+      updateProfile({ manual_expenses: expenses }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["profile"] })
+      queryClient.invalidateQueries({ queryKey: ["aggregated"] })
       setShowModal(false)
-    } finally {
-      setSavingExpenses(false)
-    }
+    },
+  })
+
+  function saveManualExpenses(expenses: ManualExpense[]) {
+    saveExpensesMutation.mutate(expenses)
   }
 
   function openEditModal() {
@@ -526,9 +525,9 @@ export default function BudgetPage() {
               </button>
               <Button
                 onClick={() => saveManualExpenses(draftExpenses.filter((e) => e.amount > 0 && e.description))}
-                disabled={savingExpenses}
+                disabled={saveExpensesMutation.isPending}
               >
-                {savingExpenses ? "Guardando…" : "Guardar y continuar"}
+                {saveExpensesMutation.isPending ? "Guardando…" : "Guardar y continuar"}
               </Button>
             </div>
           </div>

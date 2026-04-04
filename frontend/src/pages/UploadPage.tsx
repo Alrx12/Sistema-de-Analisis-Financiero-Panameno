@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { Upload, FileSpreadsheet, CheckCircle2, XCircle, Loader2, PenLine } from "lucide-react"
+import { Upload, FileSpreadsheet, CheckCircle2, XCircle, Loader2, PenLine, Lock, ShieldCheck, X } from "lucide-react"
 import { Link } from "react-router-dom"
 import { uploadFile } from "@/api/files"
 import { getJob } from "@/api/jobs"
@@ -22,8 +22,25 @@ export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null)
   const [dragOver, setDragOver] = useState(false)
   const [jobStatus, setJobStatus] = useState<JobStatus | null>(null)
+  const [showTrustLayer, setShowTrustLayer] = useState(false)
+  const [trustAccepted, setTrustAccepted] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const navigate = useNavigate()
+
+  function handleDropZoneClick() {
+    if (state.phase === "uploading" || state.phase === "polling") return
+    if (!trustAccepted) {
+      setShowTrustLayer(true)
+    } else {
+      inputRef.current?.click()
+    }
+  }
+
+  function handleTrustAccept() {
+    setTrustAccepted(true)
+    setShowTrustLayer(false)
+    setTimeout(() => inputRef.current?.click(), 80)
+  }
 
   // Auto-navegar 1.5s después de completar exitosamente.
   // Si es el primer análisis (onboarding_completed=false) → onboarding, si no → /analysis
@@ -150,8 +167,8 @@ export default function UploadPage() {
             )}
             onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
             onDragLeave={() => setDragOver(false)}
-            onDrop={onDrop}
-            onClick={() => !isProcessing && inputRef.current?.click()}
+            onDrop={(e) => { if (!trustAccepted) { e.preventDefault(); setDragOver(false); setShowTrustLayer(true) } else { onDrop(e) } }}
+            onClick={handleDropZoneClick}
           >
             <input
               ref={inputRef}
@@ -262,6 +279,140 @@ export default function UploadPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* ── Trust Layer Modal ───────────────────────────────────────────────── */}
+      {showTrustLayer && (
+        <div
+          style={{
+            position: "fixed", inset: 0, zIndex: 50,
+            background: "rgba(15,23,42,0.65)",
+            backdropFilter: "blur(4px)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: "1rem",
+          }}
+          onClick={(e) => { if (e.target === e.currentTarget) setShowTrustLayer(false) }}
+        >
+          <div
+            style={{
+              background: "#ffffff", borderRadius: "1rem", maxWidth: 520, width: "100%",
+              maxHeight: "90vh", overflowY: "auto",
+              boxShadow: "0 25px 60px rgba(0,0,0,0.35)",
+            }}
+          >
+            {/* Header navy */}
+            <div style={{ background: "#1c2b4b", borderRadius: "1rem 1rem 0 0", padding: "1.5rem" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                  <div style={{
+                    background: "rgba(255,255,255,0.12)", borderRadius: "50%",
+                    width: 44, height: 44,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}>
+                    <ShieldCheck style={{ width: 22, height: 22, color: "#4ade80" }} />
+                  </div>
+                  <div>
+                    <p style={{ color: "#ffffff", fontWeight: 700, fontSize: "1.05rem", margin: 0 }}>
+                      Tus datos financieros están bajo tu control
+                    </p>
+                    <p style={{ color: "rgba(255,255,255,0.55)", fontSize: "0.8rem", margin: 0, marginTop: 2 }}>
+                      SAFPRO analiza tu archivo SIN acceso a tu banca online
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowTrustLayer(false)}
+                  style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.5)", padding: 4 }}
+                >
+                  <X style={{ width: 18, height: 18 }} />
+                </button>
+              </div>
+            </div>
+
+            <div style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+              {/* Checklist */}
+              <div style={{ background: "#f0fdf4", borderRadius: "0.75rem", padding: "1rem 1.25rem" }}>
+                {[
+                  "No pedimos usuario ni contraseña bancaria",
+                  "No tenemos acceso a tu cuenta bancaria",
+                  "Solo analizamos el archivo que tú descargas y subes",
+                  "Tus datos no se comparten con nadie",
+                  "Puedes eliminar tu información en cualquier momento",
+                ].map((item) => (
+                  <div key={item} style={{ display: "flex", alignItems: "flex-start", gap: "0.6rem", marginBottom: "0.5rem" }}>
+                    <CheckCircle2 style={{ width: 16, height: 16, color: "#16a34a", flexShrink: 0, marginTop: 2 }} />
+                    <span style={{ fontSize: "0.875rem", color: "#166534" }}>{item}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Qué estás subiendo */}
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
+                  <FileSpreadsheet style={{ width: 16, height: 16, color: "#6366f1" }} />
+                  <p style={{ fontWeight: 600, fontSize: "0.875rem", color: "#1e293b", margin: 0 }}>¿Qué estás subiendo realmente?</p>
+                </div>
+                <p style={{ fontSize: "0.84rem", color: "#475569", lineHeight: 1.6, margin: 0 }}>
+                  Es el mismo archivo que <strong>tú descargaste de tu banco</strong>. SAFPRO solo lo lee para
+                  organizar tus gastos automáticamente. No puede acceder a tu cuenta ni realizar movimientos.
+                  Es idéntico al archivo que podrías abrir en Excel.
+                </p>
+              </div>
+
+              {/* Disclaimer honesto */}
+              <div style={{ background: "#fffbeb", border: "1px solid #fde68a", borderRadius: "0.75rem", padding: "1rem 1.25rem" }}>
+                <p style={{ fontWeight: 600, fontSize: "0.84rem", color: "#92400e", margin: "0 0 0.4rem 0" }}>⚠️ Queremos ser honestos</p>
+                <p style={{ fontSize: "0.82rem", color: "#78350f", lineHeight: 1.6, margin: 0 }}>
+                  Sí, el archivo contiene información sensible — igual que cuando lo guardas en tu laptop
+                  o lo adjuntas en un email. El riesgo no es el archivo en sí, sino <strong>cómo se maneja</strong>.
+                  En SAFPRO no vendemos ni compartimos tus datos, no los usamos fuera de tu análisis y
+                  no accedemos a ninguna otra información tuya.
+                </p>
+              </div>
+
+              {/* Control del usuario */}
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
+                  <Lock style={{ width: 15, height: 15, color: "#e05c19" }} />
+                  <p style={{ fontWeight: 600, fontSize: "0.875rem", color: "#1e293b", margin: 0 }}>Tú tienes el control</p>
+                </div>
+                <ul style={{ margin: 0, paddingLeft: "1.1rem", fontSize: "0.84rem", color: "#475569", lineHeight: 1.8 }}>
+                  <li>Puedes eliminar tus datos en <strong>Configuración → Zona peligrosa</strong></li>
+                  <li>Nada se conecta automáticamente a tu banco</li>
+                  <li>Puedes dejar de usar la app en cualquier momento</li>
+                </ul>
+              </div>
+
+              {/* CTAs */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", paddingTop: "0.25rem" }}>
+                <button
+                  onClick={handleTrustAccept}
+                  style={{
+                    background: "#e05c19", color: "#ffffff",
+                    border: "none", borderRadius: "0.6rem",
+                    padding: "0.75rem 1.5rem",
+                    fontWeight: 700, fontSize: "0.95rem",
+                    cursor: "pointer", width: "100%",
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem",
+                    transition: "background 0.15s",
+                  }}
+                  onMouseOver={(e) => (e.currentTarget.style.background = "#c94f13")}
+                  onMouseOut={(e) => (e.currentTarget.style.background = "#e05c19")}
+                >
+                  <Upload style={{ width: 16, height: 16 }} />
+                  Entiendo y quiero continuar
+                </button>
+                <Link
+                  to="/privacy"
+                  style={{ textAlign: "center", fontSize: "0.8rem", color: "#64748b", textDecoration: "underline" }}
+                  onClick={() => setShowTrustLayer(false)}
+                >
+                  Ver política de privacidad completa
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
