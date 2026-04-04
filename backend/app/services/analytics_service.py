@@ -48,16 +48,19 @@ def track_event(
 
         db = SessionLocal()
         try:
+            # Columnas reales de analytics.product_events:
+            #   event_name  (TEXT NOT NULL)  ← el parámetro se llama event_type en Python por legibilidad
+            #   properties  (JSONB NOT NULL DEFAULT '{}')  ← el parámetro se llama metadata en Python
             db.execute(
                 text("""
-                    INSERT INTO analytics.product_events (user_id, event_type, plan, metadata)
-                    VALUES (:user_id, :event_type, :plan, :metadata::jsonb)
+                    INSERT INTO analytics.product_events (user_id, event_name, plan, properties)
+                    VALUES (:user_id, :event_name, :plan, :properties::jsonb)
                 """),
                 {
                     "user_id": str(user_id),
-                    "event_type": event_type,
+                    "event_name": event_type,
                     "plan": plan,
-                    "metadata": json.dumps(metadata) if metadata is not None else None,
+                    "properties": json.dumps(metadata) if metadata is not None else "{}",
                 },
             )
             db.commit()
