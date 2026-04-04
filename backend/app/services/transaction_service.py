@@ -57,6 +57,7 @@ def reclassify_transaction(
     tx.budget_role = budget_role
     tx.confidence = 1.0
     tx.method = "user_reclassified"
+    tx.user_reclassified = True
 
     db.commit()
     db.refresh(tx)

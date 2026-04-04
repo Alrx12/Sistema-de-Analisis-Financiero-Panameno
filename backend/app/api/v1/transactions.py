@@ -169,6 +169,7 @@ def apply_review_group(
             budget_role=body.budget_role,
             confidence=1.0,
             method="user_reclassified",
+            user_reclassified=True,
         )
     )
     db.commit()
