@@ -106,34 +106,9 @@ WHERE j.status = 'error'
 );
 
 -- 1d) BACKFILL: learn_transaction
--- Una fila por transacción reclasificada por el usuario.
--- Usamos snapshot_id + transaction_id como clave de deduplicación.
-INSERT INTO analytics.product_events (
-    user_id, event_name, plan, snapshot_id, transaction_id, properties, event_at, created_at
-)
-SELECT
-    t.user_id::uuid,
-    'learn_transaction'::text,
-    u.plan,
-    t.snapshot_id::uuid,
-    t.transaction_id::uuid,
-    jsonb_build_object(
-        'budget_category', t.budget_category,
-        'confidence',      t.confidence,
-        'backfill',        true
-    ),
-    s.created_at,    -- mejor aproximación: fecha del snapshot
-    s.created_at
-FROM analysis_transactions t
-JOIN analysis_snapshots s ON s.snapshot_id = t.snapshot_id
-JOIN users u ON u.user_id = t.user_id
-WHERE t.user_reclassified = TRUE
-  AND NOT EXISTS (
-    SELECT 1
-    FROM analytics.product_events pe
-    WHERE pe.event_name = 'learn_transaction'
-      AND pe.transaction_id = t.transaction_id::uuid
-);
+-- NOTA: La columna user_reclassified nunca se agregó a analysis_transactions en la DB real.
+-- Los learns históricos no son recuperables por esta vía.
+-- A partir del fix de analytics_service.py (sesión 38) los learns quedan registrados en tiempo real.
 
 -- =============================================================================
 -- PARTE 2: VISTA public.analytics_powerbi_main
@@ -168,10 +143,10 @@ transactions_agg AS (
             COUNT(*) FILTER (WHERE t.confidence < 0.8)::numeric
             / NULLIF(COUNT(*), 0), 4
         )                                       AS low_confidence_pct,
-        COUNT(*) FILTER (WHERE t.classified_by LIKE 'personal:%')  AS classified_by_personal_kb,
-        COUNT(*) FILTER (WHERE t.classified_by LIKE 'global:%')    AS classified_by_global_kb,
-        COUNT(*) FILTER (WHERE t.classified_by LIKE 'fallback%')   AS classified_by_fallback,
-        COUNT(*) FILTER (WHERE t.classified_by LIKE 'builtin:%')   AS classified_by_builtin
+        COUNT(*) FILTER (WHERE t.method LIKE 'personal:%')  AS classified_by_personal_kb,
+        COUNT(*) FILTER (WHERE t.method LIKE 'global:%')    AS classified_by_global_kb,
+        COUNT(*) FILTER (WHERE t.method LIKE 'fallback%')   AS classified_by_fallback,
+        COUNT(*) FILTER (WHERE t.method LIKE 'builtin:%')   AS classified_by_builtin
     FROM analysis_transactions t
     GROUP BY t.user_id
 )
