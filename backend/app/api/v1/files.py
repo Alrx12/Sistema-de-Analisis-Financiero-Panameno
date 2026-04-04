@@ -43,13 +43,14 @@ def clear_uploaded_files(
 
     deleted_physical = 0
     for uf in uploaded:
-        path = Path(uf.storage_path)
-        if path.exists():
-            try:
-                path.unlink()
-                deleted_physical += 1
-            except Exception:
-                pass
+        try:
+            if uf.storage_path:
+                path = Path(uf.storage_path)
+                if path.exists():
+                    path.unlink()
+                    deleted_physical += 1
+        except Exception:
+            pass  # archivo físico ya eliminado o path inválido — continuar
         db.delete(uf)
 
     db.commit()

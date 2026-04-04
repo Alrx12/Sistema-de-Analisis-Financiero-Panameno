@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import {
@@ -274,11 +274,12 @@ export default function BudgetPage() {
   const queryClient = useQueryClient()
   const [openEdu, setOpenEdu] = useState<number | null>(0)
 
-  // Filtro de mes — por defecto el mes actual
+  // Filtro de mes — por defecto el mes actual (se auto-ajusta si no hay datos)
   const now = new Date()
   const [selectedYear,  setSelectedYear]  = useState<number>(now.getFullYear())
   const [selectedMonth, setSelectedMonth] = useState<number>(now.getMonth() + 1)
   const monthOptions = recentMonths(18)
+  const autoSelectedRef = useRef(false)  // evita ciclos al auto-seleccionar mes
 
   // Modal de gastos adicionales
   const [showModal, setShowModal] = useState(false)
@@ -290,10 +291,41 @@ export default function BudgetPage() {
     queryFn: getProfile,
   })
 
+  // Query sin filtro de mes → para descubrir qué meses tienen datos
+  const { data: allTimeData } = useQuery<AggregatedSummary>({
+    queryKey: ["aggregated", "all"],
+    queryFn: () => getAggregatedSummary({}),
+  })
+
   const { data: aggregated, isLoading: aggLoading } = useQuery<AggregatedSummary>({
     queryKey: ["aggregated", selectedYear, selectedMonth],
     queryFn: () => getAggregatedSummary({ year: selectedYear, month: selectedMonth }),
   })
+
+  // Auto-seleccionar el último mes disponible si el mes actual no tiene datos
+  useEffect(() => {
+    if (autoSelectedRef.current) return
+    if (!allTimeData?.monthly_trend?.length) return
+
+    const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`
+    const trend = allTimeData.monthly_trend
+    const currentHasData = trend.some(
+      m => m.month === currentMonthKey && (m.income > 0 || m.expenses > 0)
+    )
+    if (currentHasData) {
+      autoSelectedRef.current = true
+      return
+    }
+    // Mes actual sin datos → buscar el más reciente con datos
+    const withData = trend.filter(m => m.income > 0 || m.expenses > 0)
+    if (withData.length > 0) {
+      const latest = withData[withData.length - 1]
+      const [y, mo] = latest.month.split("-").map(Number)
+      setSelectedYear(y)
+      setSelectedMonth(mo)
+    }
+    autoSelectedRef.current = true
+  }, [allTimeData])  // eslint-disable-line react-hooks/exhaustive-deps
 
   const loading = profileLoading || aggLoading
 
