@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timezone
+from uuid import UUID as _UUID
 
 from sqlalchemy.orm import Session
 
@@ -200,9 +201,13 @@ def _on_checkout_completed(session_obj: dict, db: Session) -> None:
         # Intentar por metadata si por algún motivo el customer_id no matchea
         safpro_user_id = (session_obj.get("metadata") or {}).get("safpro_user_id")
         if safpro_user_id:
-            user = db.query(User).filter(
-                User.user_id == safpro_user_id
-            ).first()
+            try:
+                user = db.query(User).filter(
+                    User.user_id == _UUID(safpro_user_id)
+                ).first()
+            except (ValueError, AttributeError):
+                logger.warning("safpro_user_id inválido en metadata: %s", safpro_user_id)
+                user = None
         if not user:
             logger.warning("checkout.session.completed: usuario no encontrado — customer=%s", customer_id)
             return

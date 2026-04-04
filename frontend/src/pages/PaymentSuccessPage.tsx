@@ -41,12 +41,12 @@ export default function PaymentSuccessPage() {
           className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full"
           style={{ background: "linear-gradient(135deg, #d1fae5, #a7f3d0)" }}
         >
-          <CheckCircle className="h-10 w-10 text-green-600" />
+          <CheckCircle className="h-10 w-10" style={{ color: "#16a34a" }} />
         </div>
 
         {/* Badge Pro */}
         <div className="flex items-center justify-center gap-2 mb-3">
-          <Crown className="h-5 w-5 text-yellow-500" />
+          <Crown className="h-5 w-5" style={{ color: "#eab308" }} />
           <span
             className="text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full"
             style={{ background: "#fef3c7", color: "#92400e" }}
@@ -55,11 +55,11 @@ export default function PaymentSuccessPage() {
           </span>
         </div>
 
-        <h1 className="text-2xl font-extrabold text-gray-900 mb-2">
+        <h1 className="text-2xl font-extrabold mb-2" style={{ color: "#111827" }}>
           ¡Pago confirmado!
         </h1>
-        <p className="text-gray-500 text-sm mb-6 leading-relaxed">
-          Tu suscripción a <strong>SAFPRO Pro</strong> está activa.
+        <p className="text-sm mb-6 leading-relaxed" style={{ color: "#6b7280" }}>
+          Tu suscripción a <strong style={{ color: "#111827" }}>SAFPRO Pro</strong> está activa.
           En unos segundos recibirás un email de confirmación con los detalles.
         </p>
 
@@ -68,7 +68,7 @@ export default function PaymentSuccessPage() {
           className="rounded-xl p-4 mb-6 text-left"
           style={{ background: "#f9fafb" }}
         >
-          <p className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">
+          <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: "#9ca3af" }}>
             Ahora tienes acceso a
           </p>
           {[
@@ -78,8 +78,8 @@ export default function PaymentSuccessPage() {
             "Soporte prioritario",
           ].map((f) => (
             <div key={f} className="flex items-center gap-2 py-1">
-              <CheckCircle className="h-3.5 w-3.5 text-green-500 shrink-0" />
-              <span className="text-gray-600 text-sm">{f}</span>
+              <CheckCircle className="h-3.5 w-3.5 shrink-0" style={{ color: "#22c55e" }} />
+              <span className="text-sm" style={{ color: "#4b5563" }}>{f}</span>
             </div>
           ))}
         </div>
@@ -93,7 +93,7 @@ export default function PaymentSuccessPage() {
           <ArrowRight className="h-4 w-4" />
         </button>
 
-        <p className="text-gray-300 text-xs mt-4">
+        <p className="text-xs mt-4" style={{ color: "#9ca3af" }}>
           Redirigiendo automáticamente en 5 segundos…
         </p>
       </div>
