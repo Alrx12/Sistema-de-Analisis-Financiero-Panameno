@@ -54,7 +54,7 @@ def track_event(
             db.execute(
                 text("""
                     INSERT INTO analytics.product_events (user_id, event_name, plan, properties)
-                    VALUES (:user_id, :event_name, :plan, :properties::jsonb)
+                    VALUES (:user_id, :event_name, :plan, CAST(:properties AS jsonb))
                 """),
                 {
                     "user_id": str(user_id),
