@@ -138,19 +138,19 @@ class FinancialClassifier:
             "builtin:entre_cuentas",
         ),
         (
-            r"^YAPPY BG DE ",
+            r"\bYAPPY BG DE\b",
             {
                 "Economic Type": "ingreso",
                 "Economic Type Detail": "otros_ingresos",
                 "SubType Economic": "variable",
-                "Categoría de presupuesto": "transferencias",
+                "Categoría de presupuesto": "otros",
                 "budget_role": "presupuestable",
             },
             0.90,
             "builtin:yappy_ingreso",
         ),
         (
-            r"^PAGO YAPPY BG A |^YAPPY BG A ",
+            r"\bPAGO YAPPY BG A\b|\bYAPPY BG A\b",
             {
                 "Economic Type": "transferencia_tercero",
                 "Economic Type Detail": "transferencia_tercero",
