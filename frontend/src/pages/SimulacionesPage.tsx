@@ -10,6 +10,7 @@ import {
   Plus, Trash2, Banknote, ArrowUpCircle, ArrowDownCircle, CreditCard,
 } from "lucide-react"
 import { getAggregatedSummary } from "@/api/analysis"
+import ProGate from "@/components/ProGate"
 import { formatCurrency } from "@/lib/utils"
 import { cn } from "@/lib/utils"
 
@@ -1107,6 +1108,10 @@ export default function SimulacionesPage() {
   const totalMonths = aggregated?.monthly_trend?.length ?? 1
 
   return (
+    <ProGate
+      feature="Simulaciones"
+      description="Explora escenarios de runway, ¿qué pasa si...?, ciclos anuales y planificador de quincena usando tus datos reales."
+    >
     <div className="space-y-6 animate-fade-up">
       {/* Header */}
       <div className="page-header">
@@ -1200,5 +1205,6 @@ export default function SimulacionesPage() {
         </>
       )}
     </div>
+    </ProGate>
   )
 }

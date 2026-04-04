@@ -17,6 +17,7 @@ import { listAnalysis } from "@/api/analysis"
 import { updateAccount } from "@/api/accounts"
 import type { ManualWallet, SavingsGoal, AnalysisSnapshot, WalletCreate, GoalCreate } from "@/types"
 import { formatCurrency, cn } from "@/lib/utils"
+import ProGate from "@/components/ProGate"
 
 // ─── Mapas de íconos disponibles ──────────────────────────────────────────────
 
@@ -754,6 +755,11 @@ export default function CuentasPage() {
 
       {/* ══ TAB: Metas ══ */}
       {tab === "metas" && (
+        <ProGate
+          feature="Metas de Ahorro"
+          description="Crea y gestiona metas de ahorro con seguimiento de progreso, depósitos y retiros. Mantén el foco en tus objetivos financieros."
+          variant="section"
+        >
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Metas de Ahorro</p>
@@ -866,6 +872,7 @@ export default function CuentasPage() {
             </div>
           )}
         </div>
+        </ProGate>
       )}
 
       {/* ── Modals ── */}

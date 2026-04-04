@@ -18,6 +18,7 @@ import {
   ShieldCheck,
   Crown,
   Zap,
+  Lock,
 } from "lucide-react"
 import { useState } from "react"
 import { useAuthStore } from "@/stores/authStore"
@@ -28,32 +29,32 @@ const navSections = [
   {
     label: "Principal",
     items: [
-      { to: "/",        label: "Dashboard",             icon: LayoutDashboard, end: true  },
-      { to: "/upload",  label: "Subir estado de cuenta", icon: Upload,          end: false },
-      { to: "/manual",  label: "Entrada Manual",          icon: PenLine,         end: false },
-      { to: "/cuentas", label: "Cuentas y Metas",         icon: Wallet,          end: false },
+      { to: "/",        label: "Dashboard",             icon: LayoutDashboard, end: true,  pro: false },
+      { to: "/upload",  label: "Subir estado de cuenta", icon: Upload,          end: false, pro: false },
+      { to: "/manual",  label: "Entrada Manual",          icon: PenLine,         end: false, pro: false },
+      { to: "/cuentas", label: "Cuentas y Metas",         icon: Wallet,          end: false, pro: false },
     ],
   },
   {
     label: "Análisis",
     items: [
-      { to: "/analysis", label: "Mis análisis",   icon: BarChart2, end: false },
-      { to: "/budget",   label: "Mi Presupuesto", icon: PiggyBank, end: false },
+      { to: "/analysis", label: "Mis análisis",   icon: BarChart2, end: false, pro: false },
+      { to: "/budget",   label: "Mi Presupuesto", icon: PiggyBank, end: false, pro: false },
     ],
   },
   {
     label: "Inteligencia",
     items: [
-      { to: "/kb",      label: "Knowledge Base",  icon: Brain,    end: false },
-      { to: "/retrain",      label: "Entrenamiento",  icon: Sparkles,      end: false },
-      { to: "/simulaciones", label: "Simulaciones",   icon: FlaskConical,  end: false },
+      { to: "/kb",      label: "Knowledge Base",  icon: Brain,    end: false, pro: false },
+      { to: "/retrain",      label: "Entrenamiento",  icon: Sparkles,      end: false, pro: true },
+      { to: "/simulaciones", label: "Simulaciones",   icon: FlaskConical,  end: false, pro: true },
     ],
   },
   {
     label: "Soporte",
     items: [
-      { to: "/ayuda", label: "Centro de ayuda",       icon: HelpCircle,          end: false },
-      { to: "/faq",   label: "Preguntas frecuentes",  icon: MessageCircleQuestion, end: false },
+      { to: "/ayuda", label: "Centro de ayuda",       icon: HelpCircle,           end: false, pro: false },
+      { to: "/faq",   label: "Preguntas frecuentes",  icon: MessageCircleQuestion, end: false, pro: false },
     ],
   },
 ]
@@ -123,7 +124,7 @@ export default function AppShell() {
           {navSections.map((section) => (
             <div key={section.label}>
               <div className="sidebar-section-label">{section.label}</div>
-              {section.items.map(({ to, label, icon: Icon, end }) => (
+              {section.items.map(({ to, label, icon: Icon, end, pro }) => (
                 <NavLink
                   key={to}
                   to={to}
@@ -134,7 +135,10 @@ export default function AppShell() {
                   onClick={() => setSidebarOpen(false)}
                 >
                   <Icon className="h-4 w-4 shrink-0" />
-                  <span className="truncate">{label}</span>
+                  <span className="truncate flex-1">{label}</span>
+                  {pro && isFree && (
+                    <Lock className="h-3 w-3 shrink-0 opacity-50" />
+                  )}
                 </NavLink>
               ))}
             </div>

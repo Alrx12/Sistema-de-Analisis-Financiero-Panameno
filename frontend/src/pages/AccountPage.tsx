@@ -25,6 +25,7 @@ import { deleteMyAccount, deleteMyUploads } from "@/api/users"
 import { useAuthStore } from "@/stores/authStore"
 import { cn } from "@/lib/utils"
 import { toast } from "@/components/ui/toast"
+import ProGate from "@/components/ProGate"
 import type { IndustryType, GoalType, UserProfileUpdate, HousingType, EmploymentType } from "@/types"
 
 // ─── Opciones ─────────────────────────────────────────────────────────────────
@@ -449,6 +450,11 @@ export default function AccountPage() {
       </div>
 
       {/* ─────────────── SECCIÓN 2b: Presupuesto personalizado ────────────────── */}
+      <ProGate
+        feature="Presupuesto personalizado"
+        description="Ajusta las metas 50/30/20 a tu situación real según dependientes, tipo de vivienda, empleo y deudas activas."
+        variant="section"
+      >
       <div className="zoho-card p-5 space-y-4">
         <div className="flex items-center gap-3 pb-1 border-b border-border">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50">
@@ -609,6 +615,7 @@ export default function AccountPage() {
           </div>
         )}
       </div>
+      </ProGate>
 
       {/* ─────────────────────── SECCIÓN 3: Zona peligrosa ───────────────────── */}
       <div className="zoho-card p-5 space-y-4 border-red-200">

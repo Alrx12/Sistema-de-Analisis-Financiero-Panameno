@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { formatCurrency } from "@/lib/utils"
 import { toast } from "@/components/ui/toast"
 import { BUDGET_CATEGORIES } from "@/lib/categories"
+import ProGate from "@/components/ProGate"
 
 const ROLES: { value: string; label: string }[] = [
   { value: "presupuestable",    label: "Presupuestable" },
@@ -215,6 +216,10 @@ export default function RetrainPage() {
   }
 
   return (
+    <ProGate
+      feature="Entrenamiento masivo"
+      description="Revisa y corrige grupos de transacciones de un mismo comercio en bloque. El sistema aprende de todas tus correcciones y mejora su precisión con el tiempo."
+    >
     <div className="mx-auto max-w-5xl space-y-5">
 
       {/* Header */}
@@ -308,5 +313,6 @@ export default function RetrainPage() {
         </Card>
       )}
     </div>
+    </ProGate>
   )
 }
