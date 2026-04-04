@@ -123,6 +123,13 @@ class ProcessingService:
                     account.confidence_score,
                 )
 
+            # Guardar el saldo más reciente del estado de cuenta en la cuenta bancaria
+            latest_balance = parse_result.get("latest_balance")
+            if latest_balance is not None:
+                account.available_balance = latest_balance
+                self.db.add(account)
+                self.db.commit()
+
             normalized_transactions = [
                 {
                     **t,

@@ -30,6 +30,7 @@ export async function getAggregatedSummary(params: {
   year?: number
   month?: number
   bank_account_id?: string
+  budget_category?: string
 }): Promise<AggregatedSummary> {
   const res = await apiClient.get<AggregatedSummary>("/analysis/aggregated", { params })
   return res.data

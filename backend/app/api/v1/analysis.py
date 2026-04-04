@@ -79,6 +79,7 @@ def get_aggregated_summary(
     year: int | None = Query(default=None, description="Año de la transacción (EXTRACT year)"),
     month: int | None = Query(default=None, description="Mes de la transacción 1–12"),
     bank_account_id: UUID | None = Query(default=None, description="Filtrar por banco"),
+    budget_category: str | None = Query(default=None, description="Filtrar top_merchants por categoría de presupuesto"),
 ) -> AggregatedSummaryResponse:
     _MONTH_ABBR = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"]
 
@@ -142,14 +143,18 @@ def get_aggregated_summary(
 
         # ── Top merchants (solo gastos con detalle) ──
         if amount < 0 and tx.detail:
-            try:
-                key = canonicalize_detail(tx.detail) or tx.detail[:30]
-            except Exception:
-                key = tx.detail[:30]
-            merchants[key][0] += abs_amount
-            merchants[key][1] += 1
-            if tx.budget_category:
-                merchants[key][2] = tx.budget_category
+            # Si se pidió filtro por categoría, solo acumular merchants de esa categoría
+            tx_cat = (tx.budget_category or "").lower().strip()
+            filter_cat = budget_category.lower().strip() if budget_category else None
+            if filter_cat is None or tx_cat == filter_cat:
+                try:
+                    key = canonicalize_detail(tx.detail) or tx.detail[:30]
+                except Exception:
+                    key = tx.detail[:30]
+                merchants[key][0] += abs_amount
+                merchants[key][1] += 1
+                if tx.budget_category:
+                    merchants[key][2] = tx.budget_category
 
         # ── Por tipo económico ──
         etype = (tx.economic_type or "desconocido").lower()

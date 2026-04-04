@@ -279,17 +279,39 @@ class BaseStatementParser:
     def _to_amount(self, valor: Any) -> float:
         return self.limpiar_monto(valor)
 
+    # Mapeo de abreviaturas de meses en español → inglés para parsear_fecha.
+    # Banistmo exporta fechas como "17 mar. 2026", "2 abr. 2026", etc.
+    # Python/pandas con locale inglés no reconoce "abr.", "ago.", "ene.", "dic.".
+    _SPANISH_MONTHS = {
+        "ene": "Jan", "feb": "Feb", "mar": "Mar", "abr": "Apr",
+        "may": "May", "jun": "Jun", "jul": "Jul", "ago": "Aug",
+        "sep": "Sep", "oct": "Oct", "nov": "Nov", "dic": "Dec",
+    }
+    _SPANISH_MONTH_RE = re.compile(
+        r"\b(" + "|".join(_SPANISH_MONTHS) + r")\.?\b",
+        re.IGNORECASE,
+    )
+
+    def _normalize_spanish_months(self, text: str) -> str:
+        """Reemplaza abreviaturas de meses en español por su equivalente en inglés."""
+        def _replace(m: re.Match) -> str:
+            return self._SPANISH_MONTHS[m.group(1).lower()]
+        return self._SPANISH_MONTH_RE.sub(_replace, text)
+
     def parsear_fecha(self, fecha_str: Any) -> datetime | None:
         if fecha_str is None or pd.isna(fecha_str):
             return None
-        
+
         if isinstance(fecha_str, datetime):
             return fecha_str
-        
+
         fecha_texto = str(fecha_str).strip()
         if not fecha_texto or fecha_texto.lower() in {"nan", "none"}:
             return None
-        
+
+        # Normalizar meses en español antes de parsear (ej: "abr." → "Apr")
+        fecha_norm = self._normalize_spanish_months(fecha_texto)
+
         formatos = [
             "%Y-%m-%d %H:%M:%S",
             "%d/%m/%Y",
@@ -301,20 +323,29 @@ class BaseStatementParser:
             "%d %b %Y",
             "%d-%b-%y",
         ]
-        
-        for fmt in formatos:
-            try:
-                return datetime.strptime(fecha_texto, fmt)
-            except Exception:
-                continue
-        
+
+        # Intentar primero con la versión normalizada, luego con el original
+        for texto in (fecha_norm, fecha_texto):
+            for fmt in formatos:
+                try:
+                    return datetime.strptime(texto, fmt)
+                except Exception:
+                    continue
+
+        try:
+            fecha = pd.to_datetime(fecha_norm, errors="coerce", dayfirst=True)
+            if pd.notna(fecha):
+                return fecha.to_pydatetime()
+        except Exception:
+            pass
+
         try:
             fecha = pd.to_datetime(fecha_texto, errors="coerce", dayfirst=True)
             if pd.notna(fecha):
                 return fecha.to_pydatetime()
         except Exception:
             pass
-        
+
         return None
 
     def _detectar_metodo_pago(self, descripcion: str) -> str:
@@ -400,12 +431,23 @@ class BaseStatementParser:
         
         if not transacciones:
             raise ValueError("No se pudieron extraer transacciones validas del archivo")
-        
+
+        # Extraer el saldo más reciente de las filas con campo "saldo"
+        # (Banistmo y otros parsers que incluyan el campo en extraer_datos)
+        latest_balance: float | None = None
+        for _, row in df_limpio.iterrows():
+            saldo = row.get("saldo")
+            if saldo is not None and not (isinstance(saldo, float) and pd.isna(saldo)):
+                val = self.limpiar_monto(saldo)
+                if val != 0:
+                    latest_balance = val  # el último no-cero es el más reciente
+
         detected_last4 = sorted(account_signatures)[0] if len(account_signatures) == 1 else None
         return {
             "transactions": transacciones,
             "account_signatures": sorted(account_signatures),
             "detected_account_last4": detected_last4,
+            "latest_balance": latest_balance,
         }
 
     @staticmethod

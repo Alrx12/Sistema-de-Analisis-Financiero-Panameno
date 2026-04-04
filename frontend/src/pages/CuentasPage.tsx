@@ -690,11 +690,16 @@ export default function CuentasPage() {
                         </div>
                       </div>
 
-                      {/* Saldo disponible */}
+                      {/* Saldo en cuenta */}
                       <div className="mt-2.5 pt-2.5 border-t border-border/40 flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-1.5">
-                          <DollarSign className="h-3.5 w-3.5 text-muted-foreground/60" />
-                          <span className="text-xs text-muted-foreground font-medium">Saldo disponible</span>
+                        <div className="flex items-start gap-1.5">
+                          <DollarSign className="h-3.5 w-3.5 text-muted-foreground/60 mt-0.5" />
+                          <div>
+                            <span className="text-xs text-muted-foreground font-medium">Saldo en cuenta</span>
+                            {avail != null && !isEditingThis && (
+                              <p className="text-[10px] text-muted-foreground/60 leading-tight">según estado de cuenta</p>
+                            )}
+                          </div>
                         </div>
 
                         {isEditingThis ? (
@@ -728,7 +733,8 @@ export default function CuentasPage() {
                             </span>
                             <button type="button"
                               onClick={() => { setEditingBalanceId(ba.account_id); setBalanceInput(String(avail)) }}
-                              className="p-1.5 rounded-lg text-muted-foreground hover:text-primary hover:bg-muted transition-colors">
+                              className="p-1.5 rounded-lg text-muted-foreground hover:text-primary hover:bg-muted transition-colors"
+                              title="Corregir saldo manualmente">
                               <Pencil className="h-3 w-3" />
                             </button>
                           </div>
@@ -745,8 +751,8 @@ export default function CuentasPage() {
                 })}
               </div>
               <p className="text-xs text-muted-foreground mt-2 text-center">
-                El balance calculado se basa en tus estados de cuenta subidos.
-                Configura el saldo disponible para ver lo que realmente tienes.
+                El saldo en cuenta se toma del último movimiento de tu estado de cuenta.
+                Puedes corregirlo manualmente si es necesario.
               </p>
             </div>
           )}

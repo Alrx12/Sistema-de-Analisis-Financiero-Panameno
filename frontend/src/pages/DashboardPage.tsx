@@ -276,6 +276,19 @@ export default function DashboardPage() {
     enabled: !!(snapshots?.length),
   })
 
+  // Query separada para merchants de la categoría seleccionada
+  // (el endpoint agrega solo merchants de esa categoría, sin límite de top-15 global)
+  const { data: categoryMerchants } = useQuery({
+    queryKey: ["analysis-merchants-by-cat", selectedYear, selectedMonth, bankAccountIdForQuery, selectedCategory],
+    queryFn: () => getAggregatedSummary({
+      year:            selectedYear   ?? undefined,
+      month:           selectedMonth  ?? undefined,
+      bank_account_id: bankAccountIdForQuery,
+      budget_category: selectedCategory ?? undefined,
+    }),
+    enabled: !!(snapshots?.length && selectedCategory),
+  })
+
   const { data: profile } = useQuery({
     queryKey: ["profile"],
     queryFn: getProfile,
@@ -344,8 +357,11 @@ export default function DashboardPage() {
   const allMerchantData = (kpis.top_merchants ?? [])
     .map(m => ({ name: m.name.length > 28 ? m.name.slice(0, 26) + "…" : m.name, value: m.amount, count: m.count, category: m.category }))
 
+  // Cuando hay categoría seleccionada, usar la query específica que trae merchants de esa categoría
   const merchantData = selectedCategory
-    ? allMerchantData.filter(m => normCat(m.category ?? "") === normCat(selectedCategory)).slice(0, 10)
+    ? (categoryMerchants?.top_merchants ?? [])
+        .map(m => ({ name: m.name.length > 28 ? m.name.slice(0, 26) + "…" : m.name, value: m.amount, count: m.count, category: m.category }))
+        .slice(0, 10)
     : allMerchantData.slice(0, 10)
 
   const etypeData = (kpis.by_economic_type ?? [])

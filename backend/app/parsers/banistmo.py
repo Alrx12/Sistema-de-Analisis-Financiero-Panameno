@@ -149,11 +149,16 @@ class BanistmoParser(BaseStatementParser):
                 else:
                     continue
 
+                # Extraer saldo de col 5 si existe
+                saldo_raw = row.iloc[5] if len(row) > 5 else None
+                saldo_val = self.limpiar_monto(saldo_raw) if saldo_raw is not None and pd.notna(saldo_raw) else None
+
                 datos.append({
                     "fecha": fecha,
                     "descripcion": descripcion_str,
                     "monto": monto,
                     "account_number": account_number,
+                    "saldo": saldo_val,
                 })
 
             return pd.DataFrame(datos)
