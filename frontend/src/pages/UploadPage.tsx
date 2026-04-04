@@ -49,7 +49,10 @@ export default function UploadPage() {
       const timer = setTimeout(async () => {
         try {
           const profile = await getProfile()
-          if (!profile.onboarding_completed) {
+          // Solo redirigir al onboarding si el perfil está verdaderamente vacío
+          // (onboarding_completed puede haberse reseteado por bug del profile_service antiguo)
+          const profileIsEmpty = !profile.industry && (!profile.financial_goals || profile.financial_goals.length === 0)
+          if (!profile.onboarding_completed && profileIsEmpty) {
             navigate("/onboarding")
           } else {
             navigate("/analysis")
@@ -142,6 +145,7 @@ export default function UploadPage() {
   const isProcessing = state.phase === "uploading" || state.phase === "polling"
 
   return (
+    <>
     <div className="mx-auto max-w-xl space-y-5">
       <div className="page-header">
         <div>
@@ -280,16 +284,13 @@ export default function UploadPage() {
         </CardContent>
       </Card>
 
-      {/* ── Trust Layer Modal ───────────────────────────────────────────────── */}
+    </div>
+
+      {/* ── Trust Layer Modal — fuera del max-w-xl para evitar conflictos de stacking ── */}
       {showTrustLayer && (
         <div
-          style={{
-            position: "fixed", inset: 0, zIndex: 50,
-            background: "rgba(15,23,42,0.65)",
-            backdropFilter: "blur(4px)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            padding: "1rem",
-          }}
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+          style={{ background: "rgba(15,23,42,0.72)", backdropFilter: "blur(4px)" }}
           onClick={(e) => { if (e.target === e.currentTarget) setShowTrustLayer(false) }}
         >
           <div
@@ -413,7 +414,7 @@ export default function UploadPage() {
           </div>
         </div>
       )}
-    </div>
+    </>
   )
 }
 

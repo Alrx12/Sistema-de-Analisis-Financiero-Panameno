@@ -106,8 +106,9 @@ export default function OnboardingPage() {
         <span className="text-lg font-bold text-primary">SAFPRO</span>
       </div>
 
-      {/* Contenido */}
-      <div className="flex-1 flex items-center justify-center p-6">
+      {/* Contenido — overflow-y-auto para que Step 4 (largo) no se corte */}
+      <div className="flex-1 overflow-y-auto">
+      <div className="min-h-full flex items-center justify-center p-6">
         <div className="w-full max-w-lg mx-auto">
           {/* Progress dots */}
           <div className="flex items-center justify-center gap-2 mb-8">
@@ -347,6 +348,7 @@ export default function OnboardingPage() {
             </div>
           )}
         </div>
+      </div>
       </div>
     </div>
   )
