@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom"
 import {
   TrendingUp, ChevronRight, ChevronLeft, Target, Briefcase,
   DollarSign, CheckCircle2, BookOpen, Smartphone, Monitor, Download,
+  ShieldCheck,
 } from "lucide-react"
 import { updateProfile } from "@/api/profile"
 import type { IndustryType, GoalType } from "@/types"
@@ -35,6 +36,8 @@ const C = {
   primary:      "#6366f1",
   primaryLight: "rgba(99,102,241,0.08)",
   primaryMid:   "rgba(99,102,241,0.18)",
+  navy:         "#1c2b4b",
+  navyDark:     "#162038",
   text:         "#1e293b",
   muted:        "#64748b",
   border:       "#e2e8f0",
@@ -42,6 +45,11 @@ const C = {
   white:        "#ffffff",
   disabled:     "#c7d2fe",
   success:      "#22c55e",
+  successLight: "rgba(34,197,94,0.1)",
+  orange:       "#e05c19",
+  orangeLight:  "rgba(224,92,25,0.1)",
+  yellow:       "#fbbf24",
+  yellowLight:  "rgba(251,191,36,0.12)",
 }
 
 // ─── Estilos reutilizables ─────────────────────────────────────────────────────
@@ -65,7 +73,7 @@ const btnGhost: React.CSSProperties = {
 
 export default function OnboardingPage() {
   const navigate = useNavigate()
-  const [step,     setStep]     = useState<1 | 2 | 3 | 4>(1)
+  const [step,     setStep]     = useState<1 | 2 | 3 | 4 | 5>(1)
   const [industry, setIndustry] = useState<IndustryType | null>(null)
   const [income,   setIncome]   = useState("")
   const [goals,    setGoals]    = useState<GoalType[]>([])
@@ -75,7 +83,7 @@ export default function OnboardingPage() {
     setGoals(prev => prev.includes(g) ? prev.filter(x => x !== g) : [...prev, g])
   }
 
-  async function handleGoToHowTo() {
+  async function handleGoToTrust() {
     setSaving(true)
     try {
       await updateProfile({
@@ -130,7 +138,7 @@ export default function OnboardingPage() {
 
             {/* Progress dots */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 32 }}>
-              {[1, 2, 3, 4].map(s => (
+              {[1, 2, 3, 4, 5].map(s => (
                 <div key={s} style={{
                   height: 8, borderRadius: 999, transition: "all 0.3s",
                   width: s === step ? 32 : 8,
@@ -315,15 +323,124 @@ export default function OnboardingPage() {
                   <button onClick={() => setStep(2)} style={btnGhost}>
                     <ChevronLeft style={{ width: 16, height: 16 }} /> Atrás
                   </button>
-                  <button disabled={!canStep3 || saving} onClick={handleGoToHowTo} style={btnPrimary(canStep3 && !saving)}>
+                  <button disabled={!canStep3 || saving} onClick={handleGoToTrust} style={btnPrimary(canStep3 && !saving)}>
                     {saving ? "Guardando…" : "Continuar"} <ChevronRight style={{ width: 16, height: 16 }} />
                   </button>
                 </div>
               </div>
             )}
 
-            {/* ══ Paso 4: Cómo obtener tu estado de cuenta ══ */}
+            {/* ══ Paso 4: Seguridad y privacidad ══ */}
             {step === 4 && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                {/* Header con navy */}
+                <div style={{
+                  borderRadius: 16, overflow: "hidden",
+                  border: `1px solid ${C.border}`,
+                }}>
+                  <div style={{
+                    background: C.navy,
+                    padding: "20px 24px",
+                    display: "flex", flexDirection: "column", alignItems: "center", gap: 12,
+                    textAlign: "center",
+                  }}>
+                    <div style={{
+                      width: 56, height: 56, borderRadius: "50%",
+                      background: "rgba(255,255,255,0.1)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                    }}>
+                      <ShieldCheck style={{ width: 30, height: 30, color: C.white }} />
+                    </div>
+                    <div>
+                      <h1 style={{ margin: "0 0 6px", fontSize: 22, fontWeight: 700, color: C.white }}>
+                        Tu seguridad, primero
+                      </h1>
+                      <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.75)", lineHeight: 1.5 }}>
+                        Antes de subir tu estado de cuenta, queremos ser completamente transparentes contigo.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Checklist */}
+                  <div style={{ background: C.white, padding: "20px 24px", display: "flex", flexDirection: "column", gap: 12 }}>
+                    {[
+                      "No pedimos usuario ni contraseña bancaria",
+                      "No tenemos acceso a tu cuenta bancaria",
+                      "Solo analizamos el archivo que tú descargas y subes",
+                      "Tus datos no se comparten con nadie",
+                      "Puedes eliminar tu información en cualquier momento",
+                    ].map((item, i) => (
+                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        <div style={{
+                          width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
+                          background: C.successLight,
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                        }}>
+                          <CheckCircle2 style={{ width: 14, height: 14, color: C.success }} />
+                        </div>
+                        <span style={{ fontSize: 14, color: C.text, lineHeight: 1.4 }}>{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* ¿Qué estás subiendo? */}
+                <div style={{
+                  background: C.white, border: `1px solid ${C.border}`,
+                  borderRadius: 12, padding: "16px 20px",
+                }}>
+                  <p style={{ margin: "0 0 10px", fontSize: 14, fontWeight: 600, color: C.text }}>
+                    ¿Qué estás subiendo realmente?
+                  </p>
+                  <p style={{ margin: "0 0 8px", fontSize: 13, color: C.muted, lineHeight: 1.5 }}>
+                    Un archivo Excel con el <strong style={{ color: C.text }}>historial de tus transacciones</strong> —
+                    el mismo que tu banco te deja descargar desde la banca en línea.
+                    No contiene contraseñas ni acceso a tu cuenta.
+                  </p>
+                  <p style={{ margin: 0, fontSize: 13, color: C.muted, lineHeight: 1.5 }}>
+                    SAFPRO <strong style={{ color: C.text }}>lee ese archivo localmente en el servidor</strong>,
+                    extrae los montos y comercios, y los analiza para mostrarte tus patrones de gasto.
+                    Nadie más ve esos datos.
+                  </p>
+                </div>
+
+                {/* Disclaimer honesto */}
+                <div style={{
+                  display: "flex", gap: 12, padding: "14px 16px", borderRadius: 10,
+                  background: C.yellowLight, border: `1px solid ${C.yellow}`,
+                  alignItems: "flex-start",
+                }}>
+                  <span style={{ fontSize: 18, flexShrink: 0, lineHeight: 1, marginTop: 1 }}>⚠️</span>
+                  <div>
+                    <p style={{ margin: "0 0 4px", fontSize: 13, fontWeight: 600, color: "#92400e" }}>
+                      Honestidad ante todo
+                    </p>
+                    <p style={{ margin: 0, fontSize: 12, color: "#78350f", lineHeight: 1.5 }}>
+                      El archivo viaja por internet cifrado (HTTPS) y se almacena en un servidor seguro.
+                      Si prefieres no subir el archivo, también puedes ingresar tus gastos{" "}
+                      <strong>manualmente</strong> desde el menú "Entrada manual".
+                    </p>
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <button onClick={() => setStep(3)} style={btnGhost}>
+                    <ChevronLeft style={{ width: 16, height: 16 }} /> Atrás
+                  </button>
+                  <button onClick={() => setStep(5)} style={{
+                    display: "inline-flex", alignItems: "center", gap: 6,
+                    padding: "11px 24px", borderRadius: 10, border: "none",
+                    background: C.orange, color: C.white,
+                    fontSize: 14, fontWeight: 600, cursor: "pointer",
+                  }}>
+                    Lo entiendo, continuar <ChevronRight style={{ width: 16, height: 16 }} />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ══ Paso 5: Cómo obtener tu estado de cuenta ══ */}
+            {step === 5 && (
               <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
                 <div style={{ textAlign: "center" }}>
                   <div style={{
@@ -398,11 +515,16 @@ export default function OnboardingPage() {
                 </div>
 
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <button onClick={() => setStep(3)} style={btnGhost}>
+                  <button onClick={() => setStep(4)} style={btnGhost}>
                     <ChevronLeft style={{ width: 16, height: 16 }} /> Atrás
                   </button>
-                  <button onClick={() => navigate("/upload")} style={btnPrimary(true)}>
-                    Ir a subir mi estado de cuenta <ChevronRight style={{ width: 16, height: 16 }} />
+                  <button onClick={() => navigate("/upload")} style={{
+                    display: "inline-flex", alignItems: "center", gap: 6,
+                    padding: "11px 24px", borderRadius: 10, border: "none",
+                    background: C.orange, color: C.white,
+                    fontSize: 14, fontWeight: 600, cursor: "pointer",
+                  }}>
+                    Subir mi estado de cuenta <ChevronRight style={{ width: 16, height: 16 }} />
                   </button>
                 </div>
               </div>

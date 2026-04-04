@@ -27,6 +27,14 @@ export default function UploadPage() {
   const inputRef = useRef<HTMLInputElement>(null)
   const navigate = useNavigate()
 
+  // Mostrar el Trust Layer automáticamente al entrar a la página (solo si aún no se ha aceptado)
+  useEffect(() => {
+    if (!trustAccepted) {
+      setShowTrustLayer(true)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   function handleDropZoneClick() {
     if (state.phase === "uploading" || state.phase === "polling") return
     if (!trustAccepted) {
