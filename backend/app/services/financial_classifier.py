@@ -150,15 +150,15 @@ class FinancialClassifier:
             "builtin:yappy_ingreso",
         ),
         (
-            r"\bPAGO YAPPY BG A\b|\bYAPPY BG A\b",
+            r"\bPAGO YAPPY BG A\b|\bYAPPY BG A\b|\bYAPPY A\b",
             {
                 "Economic Type": "transferencia_tercero",
                 "Economic Type Detail": "transferencia_tercero",
-                "SubType Economic": "variable",
+                "SubType Economic": "extraordinario",
                 "Categoría de presupuesto": "otros",
-                "budget_role": "revisar",
+                "budget_role": "no_presupuestable",
             },
-            0.82,
+            0.90,
             "builtin:yappy_gasto",
         ),
         (
