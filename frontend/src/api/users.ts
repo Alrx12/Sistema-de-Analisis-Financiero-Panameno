@@ -30,3 +30,13 @@ export async function deleteMyUploads(): Promise<{
   const res = await apiClient.delete("/files/uploads")
   return res.data
 }
+
+export async function deleteAllAnalysis(): Promise<{
+  message: string
+  snapshots_deleted: number
+  transactions_deleted: number
+  files_deleted: number
+}> {
+  const res = await apiClient.delete("/analysis/all")
+  return res.data
+}

@@ -21,7 +21,7 @@ import {
   Users,
 } from "lucide-react"
 import { getProfile, updateProfile } from "@/api/profile"
-import { deleteMyAccount, deleteMyUploads } from "@/api/users"
+import { deleteMyAccount, deleteMyUploads, deleteAllAnalysis } from "@/api/users"
 import { useAuthStore } from "@/stores/authStore"
 import { cn } from "@/lib/utils"
 import { toast } from "@/components/ui/toast"
@@ -193,6 +193,7 @@ export default function AccountPage() {
 
   // ── Danger zone modals ────────────────────────────────────────────────────────
   const [confirmUploads, setConfirmUploads]   = useState(false)
+  const [confirmAnalysis, setConfirmAnalysis] = useState(false)
   const [confirmAccount, setConfirmAccount]   = useState(false)
   const [confirmText, setConfirmText]         = useState("")
 
@@ -212,6 +213,23 @@ export default function AccountPage() {
     },
     onError: () => {
       toast("Error al borrar los archivos. Intenta de nuevo.", "error")
+    },
+  })
+
+  const deleteAnalysisMutation = useMutation({
+    mutationFn: deleteAllAnalysis,
+    onSuccess: (data) => {
+      setConfirmAnalysis(false)
+      queryClient.invalidateQueries({ queryKey: ["analysis"] })
+      queryClient.invalidateQueries({ queryKey: ["jobs"] })
+      queryClient.invalidateQueries({ queryKey: ["uploadStatus"] })
+      toast(
+        `${data.snapshots_deleted} análisis y ${data.transactions_deleted} transacciones eliminados. Puedes volver a subir tus archivos.`,
+        "success"
+      )
+    },
+    onError: () => {
+      toast("Error al eliminar los análisis. Intenta de nuevo.", "error")
     },
   })
 
@@ -627,13 +645,14 @@ export default function AccountPage() {
         </div>
 
         <div className="space-y-3">
-          {/* Borrar estados de cuenta */}
+          {/* Borrar solo archivos Excel (deduplicación) */}
           <div className="flex items-start justify-between gap-4 rounded-lg border border-amber-200 bg-amber-50/60 p-4">
             <div className="space-y-1">
-              <p className="text-sm font-semibold text-amber-800">Borrar estados de cuenta subidos</p>
+              <p className="text-sm font-semibold text-amber-800">Borrar archivos Excel subidos</p>
               <p className="text-xs text-amber-700/80">
-                Elimina los archivos Excel que subiste. Tus análisis, transacciones y categorías se conservan intactos.
-                Podrás volver a subir los mismos archivos sin recibir error de duplicado.
+                Elimina únicamente los archivos Excel originales que subiste.
+                Tus <strong>análisis, transacciones y categorías se conservan intactos</strong> — el dashboard sigue funcionando igual.
+                Úsalo si quieres volver a subir los mismos archivos sin recibir el error de "archivo duplicado".
               </p>
             </div>
             <button
@@ -645,13 +664,33 @@ export default function AccountPage() {
             </button>
           </div>
 
+          {/* Eliminar análisis y transacciones */}
+          <div className="flex items-start justify-between gap-4 rounded-lg border border-orange-200 bg-orange-50/60 p-4">
+            <div className="space-y-1">
+              <p className="text-sm font-semibold text-orange-800">Eliminar todos mis análisis</p>
+              <p className="text-xs text-orange-700/80">
+                Borra permanentemente todos tus análisis, transacciones y snapshots financieros.
+                También elimina los archivos Excel para que puedas <strong>volver a subirlos desde cero</strong>.
+                Tu perfil, Knowledge Base y categorías aprendidas <strong>se conservan</strong>.
+                Útil si quieres empezar con datos limpios.
+              </p>
+            </div>
+            <button
+              onClick={() => setConfirmAnalysis(true)}
+              className="shrink-0 flex items-center gap-1.5 rounded-lg border border-orange-400 bg-white px-3 py-1.5 text-xs font-medium text-orange-700 hover:bg-orange-50 transition-colors"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Eliminar análisis
+            </button>
+          </div>
+
           {/* Eliminar cuenta */}
           <div className="flex items-start justify-between gap-4 rounded-lg border border-red-200 bg-red-50/60 p-4">
             <div className="space-y-1">
               <p className="text-sm font-semibold text-red-800">Eliminar mi cuenta</p>
               <p className="text-xs text-red-700/80">
-                Borra permanentemente tu cuenta y todos tus datos — análisis, transacciones,
-                perfil financiero y archivos. Esta acción es irreversible y no se puede deshacer.
+                Borra permanentemente tu cuenta y <strong>absolutamente todo</strong> — análisis, transacciones,
+                perfil, Knowledge Base y archivos. Esta acción es irreversible y no se puede deshacer.
               </p>
             </div>
             <button
@@ -705,6 +744,52 @@ export default function AccountPage() {
               </button>
             </div>
             {deleteUploadsMutation.isError && (
+              <p className="text-xs text-red-500">Ocurrió un error. Intenta de nuevo.</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ──────────────── MODAL: Confirmar eliminar análisis ────────────────── */}
+      {confirmAnalysis && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-6 space-y-4 animate-fade-up">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100">
+                <Trash2 className="h-5 w-5 text-orange-600" />
+              </div>
+              <div>
+                <p className="font-semibold text-sm">¿Eliminar todos los análisis?</p>
+                <p className="text-xs text-muted-foreground">Tu KB y perfil se conservan.</p>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Se borrarán permanentemente todos tus análisis, snapshots y transacciones.
+              Los archivos Excel también se eliminarán para que puedas volver a subirlos desde cero.
+              Tu Knowledge Base personal, perfil financiero y categorías aprendidas permanecen intactos.
+            </p>
+            <div className="flex gap-2 justify-end pt-1">
+              <button
+                onClick={() => setConfirmAnalysis(false)}
+                className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-muted transition-colors"
+                disabled={deleteAnalysisMutation.isPending}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => deleteAnalysisMutation.mutate()}
+                disabled={deleteAnalysisMutation.isPending}
+                className="flex items-center gap-2 rounded-lg bg-orange-500 px-4 py-2 text-sm font-medium text-white hover:bg-orange-600 transition-colors disabled:opacity-60"
+              >
+                {deleteAnalysisMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="h-4 w-4" />
+                )}
+                {deleteAnalysisMutation.isPending ? "Eliminando…" : "Sí, eliminar todo"}
+              </button>
+            </div>
+            {deleteAnalysisMutation.isError && (
               <p className="text-xs text-red-500">Ocurrió un error. Intenta de nuevo.</p>
             )}
           </div>

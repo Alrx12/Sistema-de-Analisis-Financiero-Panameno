@@ -33,6 +33,75 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+@router.delete(
+    "/all",
+    status_code=200,
+    summary="Eliminar todos los análisis del usuario",
+    description=(
+        "Borra permanentemente todos los snapshots y transacciones del usuario. "
+        "Los archivos Excel subidos (deduplicación) se eliminan también para permitir "
+        "volver a subirlos. El Knowledge Base personal y el perfil se conservan intactos."
+    ),
+)
+def delete_all_analysis(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> dict:
+    from app.models.uploaded_file import UploadedFile
+    from pathlib import Path
+
+    # 1. Borrar transacciones (CASCADE desde snapshots, pero lo hacemos explícito)
+    snapshots = (
+        db.query(AnalysisSnapshot)
+        .filter(AnalysisSnapshot.user_id == current_user.user_id)
+        .all()
+    )
+    snapshot_ids = [s.snapshot_id for s in snapshots]
+
+    transactions_deleted = 0
+    if snapshot_ids:
+        transactions_deleted = (
+            db.query(AnalysisTransaction)
+            .filter(AnalysisTransaction.snapshot_id.in_(snapshot_ids))
+            .delete(synchronize_session=False)
+        )
+        db.query(AnalysisSnapshot).filter(
+            AnalysisSnapshot.user_id == current_user.user_id
+        ).delete(synchronize_session=False)
+
+    # 2. Borrar registros de uploaded_files + archivos físicos
+    uploaded = (
+        db.query(UploadedFile)
+        .filter(UploadedFile.user_id == current_user.user_id)
+        .all()
+    )
+    files_deleted = 0
+    for uf in uploaded:
+        try:
+            if uf.storage_path:
+                p = Path(uf.storage_path)
+                if p.exists():
+                    p.unlink()
+                    files_deleted += 1
+        except Exception:
+            pass
+        db.delete(uf)
+
+    db.commit()
+
+    logging.getLogger(__name__).info(
+        "delete_all_analysis | user_id=%s snapshots=%d transactions=%d files=%d",
+        current_user.user_id, len(snapshot_ids), transactions_deleted, files_deleted,
+    )
+
+    return {
+        "message": "Todos los análisis eliminados correctamente.",
+        "snapshots_deleted": len(snapshot_ids),
+        "transactions_deleted": transactions_deleted,
+        "files_deleted": files_deleted,
+    }
+
+
 @router.get(
     "/",
     response_model=list[AnalysisSnapshotResponse],
