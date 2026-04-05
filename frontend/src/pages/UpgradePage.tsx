@@ -179,7 +179,7 @@ export default function UpgradePage() {
         )}
 
         {/* ── Banner: pago cancelado ── */}
-        {wasCancelled && (
+        {!wasCancelled && (
           <div
             className="mb-6 rounded-xl p-4 flex items-center gap-3"
             style={{ background: "#fff3cd", border: "1px solid #ffc107" }}
