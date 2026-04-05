@@ -127,6 +127,26 @@ _MerchantReplacement = str | Callable[[re.Match[str]], str]
 # Reglas con callable permiten reemplazos dinámicos (ej: preservar sufijo GOOGLE XXX).
 # ============================================================================
 SPECIFIC_MERCHANT_RULES: list[tuple[re.Pattern[str], _MerchantReplacement]] = [
+    # YAPPY A [persona/negocio]: extraer solo el nombre del destinatario.
+    # Fusiona "YAPPY BG A MANUEL SALVADOR" y "YAPPY A MANUEL SALVADOR" → "MANUEL SALVADOR".
+    # Cubre también "PAGO YAPPY BG A ..." (formato alternativo BG).
+    (
+        re.compile(r"(?:PAGO\s+)?YAPPY\s+(?:BG\s+)?A\s+(.+)", re.IGNORECASE),
+        lambda m: m.group(1).strip().upper(),
+    ),
+
+    # Transferencias ACH/XPRESS: "DEBITO TRANSFERENCIA DE CARLOS" → "CARLOS"
+    # Excluye "CC AH A CC AH" (cuentas propias — el "/" ya fue normalizado a espacio).
+    (
+        re.compile(r"(?:DEBITO|CREDITO)\s+TRANSF(?:ERENCIA)?\s+DE\s+(?!CC\s*AH)(.{3,})", re.IGNORECASE),
+        lambda m: m.group(1).strip().upper(),
+    ),
+    # "TRANSFERENCIA ENVIADA A [nombre]" (BG / otros bancos)
+    (
+        re.compile(r"TRANSFERENCIA\s+ENVI(?:ADA?)?\s+A\s+(.+)", re.IGNORECASE),
+        lambda m: m.group(1).strip().upper(),
+    ),
+
     # Casos explícitos de negocio
     (re.compile(r"\bGOOGLE\s+GRI\b", re.IGNORECASE), "GOOGLE GRI"),
     (re.compile(r"\bGRINDR\b", re.IGNORECASE), "GRINDR"),
@@ -176,6 +196,10 @@ GENERIC_MERCHANT_RULES: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"\bSTARBUCKS\b", re.IGNORECASE), "STARBUCKS"),
     (re.compile(r"\bSUBWAY\b", re.IGNORECASE), "SUBWAY"),
     (re.compile(r"\bDOMINOS?\b", re.IGNORECASE), "DOMINOS"),
+    (re.compile(r"\bMC\s+DON\b|\bMCDONALD", re.IGNORECASE), "MCDONALDS"),
+    (re.compile(r"\bAM\s+PM\b", re.IGNORECASE), "AM PM"),
+    # LOBBY MARKET: variantes "LOBBYMARKET", "LOBBY MARKET", "LOBBY Y MA[RKET]" (truncado por banco)
+    (re.compile(r"\bLOBBYMARKET\b|\bLOBBY\s+(?:MARKET|Y\s+MA)", re.IGNORECASE), "LOBBY MARKET"),
     (re.compile(r"\bSUPER\s+99\b", re.IGNORECASE), "SUPERMERCADO 99"),
     (re.compile(r"\bXTRA\b", re.IGNORECASE), "SUPERMERCADO XTRA"),
     (re.compile(r"\bTIM\s+HORTON\b", re.IGNORECASE), "TIM HORTONS"),

@@ -5,7 +5,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
-from sqlalchemy import or_, update
+from sqlalchemy import and_, or_, update
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
@@ -87,11 +87,19 @@ def get_review_groups(
         .filter(
             AnalysisTransaction.user_id == current_user.user_id,
             AnalysisTransaction.amount < 0,
-            AnalysisTransaction.method != "user_reclassified",
             or_(
-                AnalysisTransaction.confidence < 0.8,
-                AnalysisTransaction.budget_role == "revisar",
-                AnalysisTransaction.budget_category.ilike("%desconocido%"),
+                # Transacciones inciertas que no han sido corregidas manualmente
+                and_(
+                    AnalysisTransaction.method != "user_reclassified",
+                    or_(
+                        AnalysisTransaction.confidence < 0.8,
+                        AnalysisTransaction.budget_role == "revisar",
+                        AnalysisTransaction.budget_category.ilike("%desconocido%"),
+                    ),
+                ),
+                # "otros" siempre requiere atención, incluso si tiene confianza alta
+                # o fue clasificado manualmente como "otros" por error
+                AnalysisTransaction.budget_category == "otros",
             ),
         )
         .all()

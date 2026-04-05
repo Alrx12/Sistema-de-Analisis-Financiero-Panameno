@@ -902,14 +902,18 @@ export default function DashboardPage() {
               ? <p className="text-sm text-muted-foreground">{selectedCategory ? `Sin comercios en "${capitalize(selectedCategory)}"` : filtersActive ? "Sin datos" : "Activa un filtro para ver el desglose"}</p>
               : (
                 <ResponsiveContainer width="100%" height={280}>
-                  <BarChart data={merchantData} layout="vertical" margin={{ left: 4, right: 8 }}>
+                  <BarChart data={merchantData} layout="vertical" margin={{ left: 4, right: 64 }}>
                     <XAxis type="number" tickFormatter={v => `$${v}`} tick={{ fontSize: 11 }} />
                     <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={160} />
                     <Tooltip formatter={(v: number, _, props) => [
                       `${formatCurrency(v)} · ${props.payload.count} transacciones`,
                       props.payload.category ? capitalize(props.payload.category) : "Comercio"
                     ]} />
-                    <Bar dataKey="value" fill="#6366f1" radius={[0,4,4,0]} />
+                    <Bar dataKey="value" fill="#6366f1" radius={[0,4,4,0]}>
+                      <LabelList dataKey="value" position="right"
+                        formatter={(v: number) => `$${Math.round(v)}`}
+                        style={{ fontSize: 11, fill: "#6b7280", fontWeight: 500 }} />
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               )}
