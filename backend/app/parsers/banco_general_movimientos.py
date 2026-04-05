@@ -159,8 +159,9 @@ class BancoGeneralMovimientosParser(BaseStatementParser):
                 "descripcion": descripcion_str,
                 "monto": monto_val,
                 "referencia": str(referencia).strip() if pd.notna(referencia) else "",
-                # account_number = raw string de la cuenta; _find_last4 extraerá los últimos 4 dígitos
-                "account_number": account_number or "",
+                # Guardar solo dígitos para que _find_last4 haga el mismo match que BancoGeneralParser.
+                # "04-72-99-403715-8" → "0472994037158" → _find_last4 devuelve "3715" (igual que el otro parser).
+                "account_number": "".join(ch for ch in (account_number or "") if ch.isdigit()),
                 "saldo": self.limpiar_monto(saldo_raw) if saldo_raw is not None and pd.notna(saldo_raw) else None,
             })
 
