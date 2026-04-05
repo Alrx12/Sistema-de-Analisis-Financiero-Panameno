@@ -24,7 +24,7 @@ from datetime import datetime, timezone, timedelta
 # Permite correr el script desde el directorio backend/ sin instalar el paquete
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
