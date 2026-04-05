@@ -57,12 +57,26 @@ tar -czf "$BACKEND_TAR" \
     --exclude='storage/uploads/*' \
     --exclude='storage/processed/*' \
     --exclude='storage/temp/*' \
+    --exclude='backend/.env' \
     -C "$PROJECT_DIR" \
     backend/
 
 echo "    Subiendo $(du -sh "$BACKEND_TAR" | cut -f1) → servidor..."
 scp -q "$BACKEND_TAR" "$SERVER:/tmp/safpro_backend.tar.gz"
-ssh "$SERVER" "mkdir -p $REMOTE_DIR/backend && cd $REMOTE_DIR/backend && tar xzf /tmp/safpro_backend.tar.gz --strip-components=1 && rm /tmp/safpro_backend.tar.gz"
+ssh "$SERVER" "
+    # Backup explícito del .env antes de extraer
+    cp $REMOTE_DIR/backend/.env /tmp/safpro_env_backup 2>/dev/null || true
+    mkdir -p $REMOTE_DIR/backend
+    cd $REMOTE_DIR/backend
+    tar xzf /tmp/safpro_backend.tar.gz --strip-components=1
+    rm /tmp/safpro_backend.tar.gz
+    # Restaurar .env si existía (nunca sobreescribir producción con dev)
+    if [ -f /tmp/safpro_env_backup ]; then
+        cp /tmp/safpro_env_backup $REMOTE_DIR/backend/.env
+        rm /tmp/safpro_env_backup
+        echo '    .env de producción restaurado.'
+    fi
+"
 rm -f "$BACKEND_TAR"
 echo "    ✅ Backend subido."
 
