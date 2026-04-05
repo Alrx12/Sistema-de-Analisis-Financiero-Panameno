@@ -179,7 +179,7 @@ export default function UpgradePage() {
         )}
 
         {/* ── Banner: pago cancelado ── */}
-        {!wasCancelled && (
+        {wasCancelled && (
           <div
             className="mb-6 rounded-xl p-4 flex items-center gap-3"
             style={{ background: "#fff3cd", border: "1px solid #ffc107" }}
@@ -361,7 +361,7 @@ export default function UpgradePage() {
           {[
             {
               q: "¿Tienen política de reembolsos?",
-              a: "Sí. Plan mensual: reembolso completo si lo solicitas dentro de los 7 días calendario de tu primer pago — sin preguntas. Escríbenos a admin@safpro.us con el asunto "Reembolso". Plan anual: no reembolsable una vez procesado el pago.",
+              a: "Sí. Plan mensual: reembolso completo si lo solicitas dentro de los 7 días calendario de tu primer pago — sin preguntas. Escríbenos a admin@safpro.us con el asunto 'Reembolso'. Plan anual: no reembolsable una vez procesado el pago.",
             },
             {
               q: "¿Qué pasa con mis datos si cancelo?",
