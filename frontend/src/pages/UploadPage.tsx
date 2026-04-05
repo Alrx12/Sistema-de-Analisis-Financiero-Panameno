@@ -2,9 +2,11 @@ import { useState, useRef, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { Upload, FileSpreadsheet, CheckCircle2, XCircle, Loader2, PenLine, Lock, ShieldCheck, X } from "lucide-react"
 import { Link } from "react-router-dom"
+import { useQuery } from "@tanstack/react-query"
 import { uploadFile } from "@/api/files"
 import { getJob } from "@/api/jobs"
 import { getProfile } from "@/api/profile"
+import { getUploadStatus } from "@/api/users"
 import type { JobStatus } from "@/types"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -26,6 +28,12 @@ export default function UploadPage() {
   const [trustAccepted, setTrustAccepted] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const navigate = useNavigate()
+
+  const { data: uploadStatus, refetch: refetchStatus } = useQuery({
+    queryKey: ["uploadStatus"],
+    queryFn: getUploadStatus,
+    staleTime: 30_000,
+  })
 
   // Mostrar el Trust Layer automáticamente al entrar a la página (solo si aún no se ha aceptado)
   useEffect(() => {
@@ -136,6 +144,7 @@ export default function UploadPage() {
         if (job.status === "success") {
           clearInterval(interval)
           setState({ phase: "success" })
+          refetchStatus()
         } else if (job.status === "error") {
           clearInterval(interval)
           setState({ phase: "error", message: job.error_message ?? "Error procesando el archivo" })
@@ -156,11 +165,54 @@ export default function UploadPage() {
     <>
     <div className="mx-auto max-w-xl space-y-5">
       <div className="page-header">
-        <div>
+        <div className="flex-1">
           <h1 className="page-title">Subir estado de cuenta</h1>
           <p className="page-subtitle">Archivos .xlsx o .xls de Banco General, BAC, Banistmo, Banesco o Credicorp Bank</p>
         </div>
+        {uploadStatus && uploadStatus.is_free && (
+          <div
+            className="shrink-0 flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold"
+            style={{
+              background: uploadStatus.remaining === 0 ? "#fef2f2" : uploadStatus.remaining <= 1 ? "#fff7ed" : "#f0fdf4",
+              color:      uploadStatus.remaining === 0 ? "#b91c1c"  : uploadStatus.remaining <= 1 ? "#c2410c"  : "#166534",
+              border: `1px solid ${uploadStatus.remaining === 0 ? "#fecaca" : uploadStatus.remaining <= 1 ? "#fed7aa" : "#bbf7d0"}`,
+            }}
+          >
+            {uploadStatus.count}/{uploadStatus.limit} archivos usados
+          </div>
+        )}
       </div>
+
+      {uploadStatus && uploadStatus.is_free && uploadStatus.remaining === 0 && (
+        <div
+          className="rounded-xl px-4 py-3 flex items-start gap-3 text-sm"
+          style={{ background: "#fef2f2", border: "1px solid #fecaca", color: "#7f1d1d" }}
+        >
+          <span className="text-base">⚠️</span>
+          <div>
+            <strong>Alcanzaste el límite de 5 archivos del plan gratuito.</strong>{" "}
+            Elimina archivos anteriores desde{" "}
+            <Link to="/account" className="underline font-medium">Mi Cuenta</Link>{" "}
+            o{" "}
+            <Link to="/upgrade" className="underline font-medium">actualiza a Pro</Link>{" "}
+            para subidas ilimitadas.
+          </div>
+        </div>
+      )}
+
+      {uploadStatus && uploadStatus.is_free && uploadStatus.remaining === 1 && (
+        <div
+          className="rounded-xl px-4 py-3 flex items-start gap-3 text-sm"
+          style={{ background: "#fff7ed", border: "1px solid #fed7aa", color: "#7c2d12" }}
+        >
+          <span className="text-base">⚡</span>
+          <div>
+            <strong>Te queda 1 archivo disponible</strong> en el plan gratuito.{" "}
+            <Link to="/upgrade" className="underline font-medium">Actualiza a Pro</Link>{" "}
+            para subidas ilimitadas ($5/mes).
+          </div>
+        </div>
+      )}
 
       <Card className="zoho-card border-0">
         <CardHeader>

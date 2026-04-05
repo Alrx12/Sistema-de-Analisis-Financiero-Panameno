@@ -172,12 +172,29 @@ export default function TermsPage() {
             </p>
           </div>
           <div>
-            <p className="text-sm font-semibold mb-1" style={{ color: "#1c2b4b" }}>4.3 Cancelación y reembolsos</p>
+            <p className="text-sm font-semibold mb-1" style={{ color: "#1c2b4b" }}>4.3 Cancelación</p>
             <p className="text-sm leading-relaxed" style={{ color: "#374151" }}>
-              Puede cancelar su suscripción en cualquier momento desde la configuración de su cuenta.
-              La cancelación surte efecto al final del período de facturación en curso.
-              No se emiten reembolsos por períodos parciales, salvo que la ley aplicable
-              establezca lo contrario.
+              Puede cancelar su suscripción en cualquier momento desde la configuración de su cuenta
+              o escribiendo a <strong>admin@safpro.us</strong>.
+              La cancelación surte efecto al final del período de facturación en curso; el acceso
+              Pro se mantiene activo hasta esa fecha.
+            </p>
+          </div>
+          <div
+            className="rounded-lg p-4"
+            style={{ background: "#f0fdf4", border: "1px solid #bbf7d0" }}
+          >
+            <p className="text-sm font-semibold mb-1" style={{ color: "#166534" }}>4.4 Política de reembolsos</p>
+            <p className="text-sm leading-relaxed" style={{ color: "#166534" }}>
+              <strong>Plan mensual ($5/mes):</strong> Si no está satisfecho, puede solicitar un
+              reembolso completo dentro de los <strong>7 días calendario</strong> siguientes a su
+              primer pago, sin necesidad de justificación. Envíe un correo a{" "}
+              <strong>admin@safpro.us</strong> con el asunto "Reembolso" y su dirección de correo
+              registrada.{" "}
+              <strong>Plan anual ($45/año):</strong> No reembolsable una vez procesado el pago,
+              salvo que la ley aplicable en la República de Panamá establezca lo contrario.
+              Los reembolsos aprobados se procesan en un plazo de 5 a 10 días hábiles a través
+              del mismo método de pago original.
             </p>
           </div>
         </section>

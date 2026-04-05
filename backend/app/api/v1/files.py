@@ -73,6 +73,34 @@ def clear_uploaded_files(
     }
 
 
+@router.get(
+    "/uploads/status",
+    summary="Conteo de uploads del usuario y límite de su plan",
+)
+def get_upload_status(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> dict:
+    user_plan = getattr(current_user, "plan", "free") or "free"
+    upload_limit = (
+        settings.max_uploads_free
+        if user_plan == "free"
+        else settings.max_uploads_default
+    )
+    upload_count = (
+        db.query(UploadedFile)
+        .filter(UploadedFile.user_id == current_user.user_id)
+        .count()
+    )
+    return {
+        "count": upload_count,
+        "limit": upload_limit,
+        "remaining": max(0, upload_limit - upload_count),
+        "plan": user_plan,
+        "is_free": user_plan == "free",
+    }
+
+
 @router.post(
     "/upload",
     response_model=JobQueuedResponse,

@@ -11,6 +11,17 @@ export async function deleteMyAccount(): Promise<{ message: string }> {
   return res.data
 }
 
+export async function getUploadStatus(): Promise<{
+  count: number
+  limit: number
+  remaining: number
+  plan: string
+  is_free: boolean
+}> {
+  const res = await apiClient.get("/files/uploads/status")
+  return res.data
+}
+
 export async function deleteMyUploads(): Promise<{
   message: string
   records_deleted: number

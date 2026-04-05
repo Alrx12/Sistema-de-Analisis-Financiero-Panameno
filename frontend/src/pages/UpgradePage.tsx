@@ -360,6 +360,10 @@ export default function UpgradePage() {
         <div className="mt-8 max-w-2xl mx-auto space-y-3">
           {[
             {
+              q: "¿Tienen política de reembolsos?",
+              a: "Sí. Plan mensual: reembolso completo si lo solicitas dentro de los 7 días calendario de tu primer pago — sin preguntas. Escríbenos a admin@safpro.us con el asunto "Reembolso". Plan anual: no reembolsable una vez procesado el pago.",
+            },
+            {
               q: "¿Qué pasa con mis datos si cancelo?",
               a: "Tus análisis e historial se conservan. Pasas al plan Gratis con límite de 5 archivos.",
             },
