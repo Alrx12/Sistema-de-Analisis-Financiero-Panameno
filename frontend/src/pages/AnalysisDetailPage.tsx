@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import { useParams, Link } from "react-router-dom"
+import { useParams, Link, useNavigate } from "react-router-dom"
 import {
   ArrowLeft, Building2, CheckCircle2,
 } from "lucide-react"
@@ -14,6 +14,34 @@ const COLORS = [
   "#8b5cf6", "#06b6d4", "#ec4899", "#84cc16",
   "#3b82f6", "#14b8a6", "#f97316", "#a855f7",
 ]
+
+// ─── Emojis por categoría (igual que Dashboard) ───────────────────────────────
+const CAT_EMOJI: Record<string, string> = {
+  alimentacion: "🛒", comida: "🛒", supermercado: "🛒", mercado: "🛒",
+  restaurantes: "🍽️", restaurante: "🍽️", cafe: "☕",
+  transporte: "🚗", gasolina: "⛽",
+  servicios: "💡", servicios_basicos: "💡", agua: "💧", luz: "💡",
+  internet: "📶", telefono: "📱",
+  entretenimiento: "🎮", ocio: "🎭", streaming: "📺",
+  salud: "🏥", farmacia: "💊",
+  educacion: "📚",
+  vivienda: "🏠", alquiler: "🏠", hipoteca: "🏠",
+  tecnologia: "💻",
+  suscripciones: "🔔", suscripcion: "🔔",
+  mascotas: "🐾",
+  ropa: "👕",
+  deporte: "⚽", gym: "🏋️",
+  belleza: "💅",
+  viajes: "✈️", viaje: "✈️",
+  bares: "🍺",
+  ahorro: "🐖", inversion: "📈",
+  deuda: "💳", deudas: "💳",
+  cargo_financiero: "🏦", gasto_financiero: "🏦", financiero: "🏦",
+  comision: "💰", impuesto: "📋", comisiones: "💰", impuestos: "📋",
+  transferencias: "↔️",
+  consumo_desconocido: "⚠️",
+  otros: "📦",
+}
 
 const BANK_COLORS: Record<string, string> = {
   "Banco General":  "#4f7ef0",
@@ -64,6 +92,7 @@ function recStyle(type: string): { emoji: string; bg: string } {
 // ─── Página principal ─────────────────────────────────────────────────────────
 export default function AnalysisDetailPage() {
   const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
 
   const { data: snapshot, isLoading } = useQuery({
     queryKey: ["analysis", id],
@@ -91,8 +120,8 @@ export default function AnalysisDetailPage() {
   const rest = sorted.slice(10)
   const othersVal = rest.reduce((s, [, v]) => s + v, 0)
   const chartData = [
-    ...top.map(([name, value]) => ({ name: capitalize(name), value })),
-    ...(othersVal > 0 ? [{ name: "Otros", value: othersVal }] : []),
+    ...top.map(([name, value]) => ({ name: capitalize(name), rawKey: name, value })),
+    ...(othersVal > 0 ? [{ name: "Otros", rawKey: "otros", value: othersVal }] : []),
   ]
   const total = chartData.reduce((s, d) => s + d.value, 0)
 
@@ -334,45 +363,65 @@ export default function AnalysisDetailPage() {
                 </ResponsiveContainer>
               </div>
 
-              {/* Lista de categorías */}
+              {/* Lista de categorías — estilo Parker */}
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 {chartData.map((d, i) => {
+                  const color = COLORS[i % COLORS.length]
+                  const emoji = CAT_EMOJI[d.rawKey] ?? "📦"
                   const pct = total > 0 ? (d.value / total) * 100 : 0
+                  const isUnknown = d.rawKey === "otros" || d.rawKey === "consumo_desconocido"
                   return (
                     <div
-                      key={d.name}
-                      style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}
+                      key={d.rawKey}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 10,
+                        borderRadius: 10,
+                        border: "1px solid rgba(255,255,255,0.08)",
+                        borderLeftWidth: 4,
+                        borderLeftColor: color,
+                        padding: "8px 10px",
+                        background: "rgba(255,255,255,0.03)",
+                      }}
                     >
-                      <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0, flex: 1 }}>
-                        <span
-                          style={{
-                            width: 7, height: 7,
-                            borderRadius: "50%",
-                            background: COLORS[i % COLORS.length],
-                            flexShrink: 0,
-                          }}
-                        />
-                        <span
-                          style={{
-                            fontSize: 12,
-                            color: "rgba(255,255,255,0.5)",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          }}
-                          title={d.name}
-                        >
+                      {/* Emoji */}
+                      <span style={{
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        width: 32, height: 32, borderRadius: "50%", flexShrink: 0, fontSize: 15,
+                        background: `${color}22`,
+                      }}>
+                        {emoji}
+                      </span>
+                      {/* Nombre + sublabel */}
+                      <span style={{ flex: 1, minWidth: 0 }}>
+                        <span style={{ fontSize: 12, fontWeight: 600, color: "#f1f5f9", display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           {d.name}
                         </span>
-                      </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-                        <span style={{ fontSize: 12, fontWeight: 600, color: "#f1f5f9" }}>
-                          {formatCurrency(d.value)}
-                        </span>
-                        <span style={{ fontSize: 11, color: "rgba(255,255,255,0.28)", width: 32, textAlign: "right" }}>
-                          {pct.toFixed(0)}%
-                        </span>
-                      </div>
+                        {isUnknown && (
+                          <span style={{ fontSize: 10, color: "#d97706" }}>Sin categoría — afecta tu presupuesto</span>
+                        )}
+                      </span>
+                      {/* Monto + % */}
+                      <span style={{ fontSize: 12, fontWeight: 700, color, flexShrink: 0 }}>
+                        {formatCurrency(d.value)}
+                      </span>
+                      <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", width: 28, textAlign: "right", flexShrink: 0 }}>
+                        {pct.toFixed(0)}%
+                      </span>
+                      {/* Botón corregir para desconocidos */}
+                      {isUnknown && (
+                        <button
+                          onClick={() => navigate("/retrain")}
+                          style={{
+                            flexShrink: 0, borderRadius: 6, padding: "3px 8px",
+                            fontSize: 10, fontWeight: 700, color: "#fff",
+                            background: "#d97706", border: "none", cursor: "pointer",
+                          }}
+                        >
+                          Corregir
+                        </button>
+                      )}
                     </div>
                   )
                 })}

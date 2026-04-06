@@ -91,6 +91,7 @@ STRICT_VALUE_MAPS = {
         "gasolina": "gasolina",
         "salud": "salud",
         "supermercado": "supermercado",
+        "mercado": "supermercado",       # fusionar mercado → supermercado canónico
         "restaurantes": "restaurantes",
         "restaurante": "restaurantes",   # singular → plural canónico
         "servicios": "servicios",

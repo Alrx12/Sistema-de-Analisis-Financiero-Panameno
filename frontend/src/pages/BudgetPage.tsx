@@ -31,6 +31,7 @@ const CATEGORY_ALIASES: Record<string, string> = {
   "comision":            "comisiones",   // unificar con el plural
   "impuesto":            "impuestos",
   "impuestos y comisiones": "impuestos", // categoría compuesta → canónica
+  "mercado":             "supermercado", // fusionar con supermercado
 }
 
 const NEEDS_CATEGORIES = new Set([
