@@ -984,6 +984,129 @@ export default function BudgetPage() {
         )}
       </div>
 
+      {/* ── Diagnóstico del mes ── */}
+      {incomeBase > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              🔍 Diagnóstico del mes
+            </CardTitle>
+            <p className="text-xs text-muted-foreground">
+              Análisis automático basado en tus datos reales — qué está bien y qué ajustar para el próximo mes.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {[needsBucket, wantsBucket, savingsBucket].map((bucket) => {
+              const actualPct  = (bucket.actual / incomeBase) * 100
+              const over       = bucket.target_pct > 0 && actualPct > bucket.target_pct
+              const under      = bucket.target_pct > 0 && actualPct < bucket.target_pct * 0.85
+              const overAmount = bucket.actual - (incomeBase * bucket.target_pct / 100)
+              const margin     = (incomeBase * bucket.target_pct / 100) - bucket.actual
+              const diffPts    = actualPct - bucket.target_pct
+              const topCat     = bucket.categories[0]
+
+              // Detectar si savings incluye cargo_financiero grande (posible doble conteo TDC)
+              const finCat = bucket.key === "savings"
+                ? bucket.categories.find((c) =>
+                    c.name.toLowerCase().includes("financiero") ||
+                    c.name.toLowerCase().includes("cargo") ||
+                    c.name.toLowerCase().includes("comisi")
+                  )
+                : undefined
+              const hasFinDobleConteo = !!(finCat && finCat.amount > bucket.actual * 0.25)
+
+              let icon     = "🟡"
+              let colorCls = "border-amber-200 bg-amber-50/60"
+              let textCls  = "text-amber-800"
+              if (over)        { icon = "🔴"; colorCls = "border-red-200 bg-red-50/60";       textCls = "text-red-800" }
+              else if (under)  { icon = "✅"; colorCls = "border-emerald-200 bg-emerald-50/60"; textCls = "text-emerald-800" }
+
+              // Titular
+              let headline = ""
+              if (under) {
+                headline = `${bucket.emoji} ${bucket.label} — ${actualPct.toFixed(1)}% de meta ${bucket.target_pct}% ✅ Tienes margen`
+              } else if (over) {
+                headline = `${bucket.emoji} ${bucket.label} — ${actualPct.toFixed(1)}% vs meta ${bucket.target_pct}% (+${diffPts.toFixed(1)} pts, ${formatCurrency(overAmount)} de más)${hasFinDobleConteo ? " ⚠️ posible doble conteo" : ""}`
+              } else {
+                headline = `${bucket.emoji} ${bucket.label} — ${actualPct.toFixed(1)}% · dentro del rango 🟡`
+              }
+
+              // Cuerpo del análisis
+              let body = ""
+              let ctaText = ""
+              let ctaHref = ""
+
+              if (under) {
+                body = `Estás por debajo de tu meta. Tienes ${formatCurrency(margin)} disponibles antes de llegar al límite. Si aparece un gasto inesperado en ${bucket.label.toLowerCase()}, tienes cobertura. No necesitas cambiar nada aquí.`
+              } else if (!over) {
+                body = `Estás dentro de tu meta del ${bucket.target_pct}%. Buen control — sigue así.`
+              } else if (bucket.key === "wants") {
+                if (topCat) {
+                  const topPct = bucket.actual > 0 ? ((topCat.amount / bucket.actual) * 100).toFixed(0) : 0
+                  body = `El ítem dominante es ${capitalize(topCat.name)} con ${formatCurrency(topCat.amount)} (${topPct}% de tus Deseos). Reducir su frecuencia a la mitad puede recuperar ~${formatCurrency(topCat.amount * 0.4)} al mes.`
+                  if (topCat.name.toLowerCase().includes("restaurante")) {
+                    body += ` Regla práctica: cuando restaurantes supere $150 en el mes, el resto del mes comes en casa.`
+                  } else if (topCat.name.toLowerCase().includes("suscripci")) {
+                    body += ` Revisa cada suscripción activa — los servicios pequeños suman sin que te des cuenta.`
+                  } else if (topCat.name.toLowerCase().includes("compra") || topCat.name.toLowerCase().includes("ropa")) {
+                    body += ` Prueba la regla de las 48 horas: espera 2 días antes de cualquier compra no urgente.`
+                  }
+                } else {
+                  body = `Estás ${formatCurrency(overAmount)} sobre tu meta de Deseos. Identifica los 2-3 ítems más altos y reduce su frecuencia el próximo mes.`
+                }
+                ctaText = "Revisar en Entrenamiento"
+                ctaHref = "/retrain"
+              } else if (bucket.key === "savings") {
+                if (hasFinDobleConteo && finCat) {
+                  body = `${formatCurrency(finCat.amount)} en "${capitalize(finCat.name)}" podría incluir pagos de tarjeta de crédito (TDC). Si es así, estás contando esos gastos dos veces: una cuando compraste y otra cuando pagaste la tarjeta. Reclasifica los pagos de TDC como "solo_balance" en Entrenamiento masivo para limpiar el número — el porcentaje real debería caer bastante.`
+                  ctaText = "Ir a Entrenamiento"
+                  ctaHref = "/retrain"
+                } else if (topCat) {
+                  body = `El ítem principal es ${capitalize(topCat.name)} con ${formatCurrency(topCat.amount)}. Estás ${formatCurrency(overAmount)} sobre la meta — revisa si alguna categoría de aquí incluye transferencias entre tus propias cuentas (eso sería doble conteo y habría que reclasificar como "solo_balance").`
+                  ctaText = "Revisar en Entrenamiento"
+                  ctaHref = "/retrain"
+                }
+              } else if (bucket.key === "needs") {
+                if (topCat) {
+                  body = `El ítem principal en Necesidades es ${capitalize(topCat.name)} con ${formatCurrency(topCat.amount)}. Las necesidades son difíciles de reducir. Si superan la meta, revisa si hay gastos clasificados aquí que realmente son Deseos (ej. salidas, entretenimiento) — reclasificarlos baja este número automáticamente.`
+                } else {
+                  body = `Necesidades está ${formatCurrency(overAmount)} sobre la meta. Revisa si hay categorías clasificadas aquí que en realidad son Deseos.`
+                }
+                ctaText = "Reclasificar"
+                ctaHref = "/retrain"
+              }
+
+              return (
+                <div key={bucket.key} className={`rounded-xl border p-4 ${colorCls}`}>
+                  <div className="flex items-start gap-3">
+                    <span className="text-lg leading-none mt-0.5 shrink-0">{icon}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm font-bold mb-1.5 ${textCls}`}>{headline}</p>
+                      <p className="text-xs leading-relaxed text-gray-700">{body}</p>
+                      {ctaText && (
+                        <button
+                          onClick={() => navigate(ctaHref)}
+                          className="mt-2 text-xs font-bold text-white rounded-md px-3 py-1.5 transition-opacity hover:opacity-90"
+                          style={{ background: "#e05c19" }}
+                        >
+                          {ctaText} →
+                        </button>
+                      )}
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <span className={`text-xl font-extrabold ${over ? "text-red-600" : under ? "text-emerald-600" : "text-amber-600"}`}>
+                        {actualPct.toFixed(1)}%
+                      </span>
+                      <span className="block text-xs text-muted-foreground mt-0.5">meta {bucket.target_pct}%</span>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Recomendaciones específicas de metas */}
       {profile?.financial_goals && profile.financial_goals.length > 0 && (
         <Card>
