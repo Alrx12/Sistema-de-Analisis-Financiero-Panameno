@@ -801,22 +801,18 @@ export default function BudgetPage() {
             const targetPct = bucket.target_pct
             const over = targetPct > 0 && actualPct > targetPct
             const under = targetPct > 0 && actualPct < targetPct * 0.8
+            const isExpanded = expandedBuckets.has(bucket.key)
+            const VISIBLE = 5
+            const visibleCats = isExpanded ? bucket.categories : bucket.categories.slice(0, VISIBLE)
+            const hidden = bucket.categories.length - VISIBLE
+            const overAmount = incomeBase > 0 ? bucket.actual - (incomeBase * targetPct / 100) : 0
+            const alertMsg = over
+              ? `Llevas ${actualPct.toFixed(1)}% en ${bucket.label} — tu meta es ${targetPct}%. Eso es ${(actualPct - targetPct).toFixed(1)} puntos de más (${formatCurrency(overAmount)} sobre lo planeado). Revisa las categorías de abajo para recortar.`
+              : under
+              ? `Vas bien con ${bucket.label}: solo llevas ${actualPct.toFixed(1)}% de tu meta del ${targetPct}%. Tienes margen disponible.`
+              : ""
 
-            {
-              const isExpanded = expandedBuckets.has(bucket.key)
-              const VISIBLE = 5
-              const visibleCats = isExpanded ? bucket.categories : bucket.categories.slice(0, VISIBLE)
-              const hidden = bucket.categories.length - VISIBLE
-
-              // Texto del tooltip según situación
-              const overAmount  = incomeBase > 0 ? bucket.actual - (incomeBase * targetPct / 100) : 0
-              const alertMsg = over
-                ? `Llevas ${actualPct.toFixed(1)}% en ${bucket.label} — tu meta es ${targetPct}%. Eso es ${(actualPct - targetPct).toFixed(1)} puntos de más (${formatCurrency(overAmount)} sobre lo planeado). Revisa las categorías de abajo para recortar.`
-                : under
-                ? `Vas bien con ${bucket.label}: solo llevas ${actualPct.toFixed(1)}% de tu meta del ${targetPct}%. Tienes margen disponible.`
-                : ""
-
-              return (
+            return (
               <div key={bucket.key} className="space-y-1.5">
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-medium">
