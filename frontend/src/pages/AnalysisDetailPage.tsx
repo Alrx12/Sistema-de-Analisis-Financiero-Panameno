@@ -258,8 +258,8 @@ export default function AnalysisDetailPage() {
         </div>
       </div>
 
-      {/* ── Main content: recommendations (left) + donut (right) ── */}
-      <div className="grid-2-1 animate-fade-up anim-d2">
+      {/* ── Main content: recommendations (left, narrow) + donut+categories (right, wide) ── */}
+      <div className="grid-1-2 animate-fade-up anim-d2">
 
         {/* Recomendaciones */}
         <div>

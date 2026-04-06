@@ -401,6 +401,17 @@
   }
 }
 
+.grid-1-2 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+@media (min-width: 900px) {
+  .grid-1-2 {
+    grid-template-columns: 1fr 2fr;
+  }
+}
+
 /* ── Auth pages ─────────────────────────────────────────────────────────────── */
 .auth-page {
   width: 100%;

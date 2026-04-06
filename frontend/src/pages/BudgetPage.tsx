@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend,
-  BarChart, Bar, XAxis, YAxis, CartesianGrid,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, LabelList,
 } from "recharts"
 import {
   Shield, TrendingDown, Sparkles, Target, BookOpen,
@@ -967,8 +967,16 @@ export default function BudgetPage() {
                   <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
                   <Tooltip formatter={(v: number) => formatCurrency(v)} />
                   <Legend iconType="circle" iconSize={8} />
-                  <Bar dataKey="Real" fill="#6366f1" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="Objetivo" fill="#e2e8f0" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="Real" fill="#6366f1" radius={[4, 4, 0, 0]}>
+                    <LabelList dataKey="Real" position="top"
+                      formatter={(v: number) => v > 0 ? `$${Math.round(v)}` : ""}
+                      style={{ fontSize: 10, fill: "#6366f1", fontWeight: 700 }} />
+                  </Bar>
+                  <Bar dataKey="Objetivo" fill="#e2e8f0" radius={[4, 4, 0, 0]}>
+                    <LabelList dataKey="Objetivo" position="top"
+                      formatter={(v: number) => v > 0 ? `$${Math.round(v)}` : ""}
+                      style={{ fontSize: 10, fill: "#94a3b8", fontWeight: 600 }} />
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>

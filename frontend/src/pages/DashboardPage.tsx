@@ -935,7 +935,15 @@ export default function DashboardPage() {
                 <ResponsiveContainer width="100%" height={260}>
                   <PieChart>
                     <Pie data={budgetRoleData} dataKey="value" nameKey="name"
-                      cx="50%" cy="50%" innerRadius={55} outerRadius={90}>
+                      cx="50%" cy="50%" innerRadius={55} outerRadius={90}
+                      labelLine={false}
+                      label={({ cx: lx, cy: ly, midAngle, innerRadius: ir, outerRadius: or, percent }) => {
+                        if (percent < 0.07) return null
+                        const r = ir + (or - ir) * 0.55
+                        const x = lx + r * Math.cos(-midAngle * Math.PI / 180)
+                        const y = ly + r * Math.sin(-midAngle * Math.PI / 180)
+                        return <text x={x} y={y} fill="#fff" textAnchor="middle" dominantBaseline="central" fontSize={11} fontWeight={700}>{`${(percent * 100).toFixed(0)}%`}</text>
+                      }}>
                       {budgetRoleData.map((e, i) => <Cell key={i} fill={e.fill} />)}
                     </Pie>
                     <Tooltip formatter={(v: number, _, props) => [
@@ -960,7 +968,15 @@ export default function DashboardPage() {
                 <ResponsiveContainer width="100%" height={260}>
                   <PieChart>
                     <Pie data={etypeData} dataKey="value" nameKey="name"
-                      cx="50%" cy="50%" innerRadius={55} outerRadius={90}>
+                      cx="50%" cy="50%" innerRadius={55} outerRadius={90}
+                      labelLine={false}
+                      label={({ cx: lx, cy: ly, midAngle, innerRadius: ir, outerRadius: or, percent }) => {
+                        if (percent < 0.07) return null
+                        const r = ir + (or - ir) * 0.55
+                        const x = lx + r * Math.cos(-midAngle * Math.PI / 180)
+                        const y = ly + r * Math.sin(-midAngle * Math.PI / 180)
+                        return <text x={x} y={y} fill="#fff" textAnchor="middle" dominantBaseline="central" fontSize={11} fontWeight={700}>{`${(percent * 100).toFixed(0)}%`}</text>
+                      }}>
                       {etypeData.map((e, i) => <Cell key={i} fill={e.fill} />)}
                     </Pie>
                     <Tooltip formatter={(v: number, _, props) => [
