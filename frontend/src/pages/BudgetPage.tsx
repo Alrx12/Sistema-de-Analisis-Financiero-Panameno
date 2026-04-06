@@ -303,6 +303,11 @@ export default function BudgetPage() {
   const monthOptions = recentMonths(18)
   const autoSelectedRef = useRef(false)  // evita ciclos al auto-seleccionar mes
 
+  // Buckets expandidos (para ver todas las categorías)
+  const [expandedBuckets, setExpandedBuckets] = useState<Set<string>>(new Set())
+  const toggleBucket = (key: string) =>
+    setExpandedBuckets(prev => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n })
+
   // Modal de gastos adicionales
   const [showModal, setShowModal] = useState(false)
   const [draftExpenses, setDraftExpenses] = useState<ManualExpense[]>([])
@@ -797,7 +802,21 @@ export default function BudgetPage() {
             const over = targetPct > 0 && actualPct > targetPct
             const under = targetPct > 0 && actualPct < targetPct * 0.8
 
-            return (
+            {
+              const isExpanded = expandedBuckets.has(bucket.key)
+              const VISIBLE = 5
+              const visibleCats = isExpanded ? bucket.categories : bucket.categories.slice(0, VISIBLE)
+              const hidden = bucket.categories.length - VISIBLE
+
+              // Texto del tooltip según situación
+              const overAmount  = incomeBase > 0 ? bucket.actual - (incomeBase * targetPct / 100) : 0
+              const alertMsg = over
+                ? `Llevas ${actualPct.toFixed(1)}% en ${bucket.label} — tu meta es ${targetPct}%. Eso es ${(actualPct - targetPct).toFixed(1)} puntos de más (${formatCurrency(overAmount)} sobre lo planeado). Revisa las categorías de abajo para recortar.`
+                : under
+                ? `Vas bien con ${bucket.label}: solo llevas ${actualPct.toFixed(1)}% de tu meta del ${targetPct}%. Tienes margen disponible.`
+                : ""
+
+              return (
               <div key={bucket.key} className="space-y-1.5">
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-medium">
@@ -813,8 +832,20 @@ export default function BudgetPage() {
                       {actualPct.toFixed(1)}%
                     </span>
                     <span className="text-muted-foreground text-xs">{formatCurrency(bucket.actual)}</span>
-                    {over && <AlertCircle className="h-3.5 w-3.5 text-destructive" />}
-                    {under && targetPct > 0 && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />}
+                    {(over || under) && alertMsg && (
+                      <span className="relative group cursor-help" style={{ lineHeight: 0 }}>
+                        {over
+                          ? <AlertCircle className="h-3.5 w-3.5 text-destructive" />
+                          : <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />}
+                        {/* Tooltip */}
+                        <span
+                          className="pointer-events-none absolute right-0 top-full z-50 mt-1.5 w-64 rounded-lg px-3 py-2 text-xs leading-relaxed text-white shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+                          style={{ background: "#1c2b4b", minWidth: "220px" }}
+                        >
+                          {alertMsg}
+                        </span>
+                      </span>
+                    )}
                   </div>
                 </div>
                 {/* Barra de progreso */}
@@ -835,17 +866,22 @@ export default function BudgetPage() {
                     />
                   )}
                 </div>
-                {/* Detalle de categorías */}
+                {/* Detalle de categorías — expandible */}
                 {bucket.categories.length > 0 && (
-                  <div className="flex flex-wrap gap-1 pl-1">
-                    {bucket.categories.slice(0, 5).map((c) => (
+                  <div className="flex flex-wrap items-center gap-1 pl-1">
+                    {visibleCats.map((c, i) => (
                       <span key={c.name} className="text-xs text-muted-foreground">
                         {c.name} ({formatCurrency(c.amount)})
-                        {bucket.categories.indexOf(c) < Math.min(4, bucket.categories.length - 1) ? " ·" : ""}
+                        {i < visibleCats.length - 1 || (hidden > 0 && !isExpanded) ? " ·" : ""}
                       </span>
                     ))}
-                    {bucket.categories.length > 5 && (
-                      <span className="text-xs text-muted-foreground">+{bucket.categories.length - 5} más</span>
+                    {hidden > 0 && (
+                      <button
+                        className="text-xs font-medium text-primary hover:underline focus:outline-none"
+                        onClick={() => toggleBucket(bucket.key)}
+                      >
+                        {isExpanded ? "ver menos ↑" : `+${hidden} más ↓`}
+                      </button>
                     )}
                   </div>
                 )}
@@ -883,7 +919,32 @@ export default function BudgetPage() {
           <CardContent>
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>
-                <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} paddingAngle={2}>
+                <Pie
+                  data={pieData}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={80}
+                  paddingAngle={2}
+                  labelLine={false}
+                  label={({ cx: lx, cy: ly, midAngle, innerRadius, outerRadius: or, percent }: {
+                    cx: number; cy: number; midAngle: number
+                    innerRadius: number; outerRadius: number; percent: number
+                  }) => {
+                    if (percent < 0.07) return null   // omite slices muy pequeños
+                    const RADIAN = Math.PI / 180
+                    const r = innerRadius + (or - innerRadius) * 0.55
+                    const x = lx + r * Math.cos(-midAngle * RADIAN)
+                    const y = ly + r * Math.sin(-midAngle * RADIAN)
+                    return (
+                      <text x={x} y={y} fill="#fff" textAnchor="middle" dominantBaseline="central"
+                        fontSize={12} fontWeight={700} style={{ pointerEvents: "none" }}>
+                        {`${(percent * 100).toFixed(0)}%`}
+                      </text>
+                    )
+                  }}
+                >
                   {pieData.map((entry) => (
                     <Cell key={entry.name} fill={entry.color} />
                   ))}
