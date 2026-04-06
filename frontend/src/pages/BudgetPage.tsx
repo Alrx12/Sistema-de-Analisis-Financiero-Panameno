@@ -21,6 +21,18 @@ import { formatCurrency } from "@/lib/utils"
 
 // ─── Mapeo de categorías a cubetas 50/30/20 ───────────────────────────────────
 
+// Aliases: normaliza categorías duplicadas o con variantes antes de clasificar.
+// Clave: nombre en minúsculas tal como viene de la DB. Valor: nombre canónico.
+const CATEGORY_ALIASES: Record<string, string> = {
+  "deuda":               "deudas",       // singular → plural canónico
+  "restaurante":         "restaurantes",
+  "suscripcion":         "suscripciones",
+  "viaje":               "viajes",
+  "comision":            "comisiones",   // unificar con el plural
+  "impuesto":            "impuestos",
+  "impuestos y comisiones": "impuestos", // categoría compuesta → canónica
+}
+
 const NEEDS_CATEGORIES = new Set([
   "alimentacion", "comida", "mercado", "vivienda", "alquiler", "hipoteca",
   "servicios", "servicios_basicos", "agua", "luz", "internet", "telefono",
@@ -32,12 +44,15 @@ const WANTS_CATEGORIES = new Set([
   "restaurantes", "restaurante", "entretenimiento", "compras", "viajes", "viaje",
   "suscripciones", "suscripcion", "ocio", "belleza", "mascotas", "ropa",
   "tecnologia", "deporte", "gym", "streaming", "cafe", "bares", "cine",
+  // Transferencias a terceros son gastos reales, no ahorro
+  "transferencias",
 ])
 
 const SAVINGS_CATEGORIES = new Set([
-  "ahorro", "inversion", "cargo_financiero", "deuda", "deudas", "pension",
-  "gasto_financiero", "comision", "financiero", "prestamo", "credito",
-  "transferencias",
+  "ahorro", "inversion", "cargo_financiero", "deudas", "pension",
+  "gasto_financiero", "comisiones", "financiero", "prestamo", "credito",
+  // Impuestos y comisiones bancarias: obligaciones financieras inevitables
+  "impuestos", "impuesto", "comision",
 ])
 
 type BucketKey = "needs" | "wants" | "savings" | "other"
@@ -62,15 +77,22 @@ function classifyCategories(
     other:   { actual: 0, categories: [] },
   }
 
+  // Paso 1: fusionar aliases (ej. "deuda" + "deudas" → "deudas" con monto sumado)
+  const merged: Record<string, number> = {}
   for (const [cat, amount] of Object.entries(categories)) {
-    const normalized = cat.toLowerCase()
-    let key: BucketKey = "other"
-    if (NEEDS_CATEGORIES.has(normalized)) key = "needs"
-    else if (WANTS_CATEGORIES.has(normalized)) key = "wants"
-    else if (SAVINGS_CATEGORIES.has(normalized)) key = "savings"
+    const key = CATEGORY_ALIASES[cat.toLowerCase()] ?? cat.toLowerCase()
+    merged[key] = (merged[key] ?? 0) + amount
+  }
 
-    buckets[key].actual += amount
-    buckets[key].categories.push({ name: cat, amount })
+  // Paso 2: clasificar en cubetas
+  for (const [cat, amount] of Object.entries(merged)) {
+    let bucket: BucketKey = "other"
+    if (NEEDS_CATEGORIES.has(cat))   bucket = "needs"
+    else if (WANTS_CATEGORIES.has(cat))   bucket = "wants"
+    else if (SAVINGS_CATEGORIES.has(cat)) bucket = "savings"
+
+    buckets[bucket].actual += amount
+    buckets[bucket].categories.push({ name: cat, amount })
   }
 
   // Ordenar categorías por monto desc dentro de cada cubeta

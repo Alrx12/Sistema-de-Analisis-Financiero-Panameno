@@ -92,15 +92,22 @@ STRICT_VALUE_MAPS = {
         "salud": "salud",
         "supermercado": "supermercado",
         "restaurantes": "restaurantes",
+        "restaurante": "restaurantes",   # singular → plural canónico
         "servicios": "servicios",
         "otros": "otros",
-        "comision": "comision",
-        "comisión": "comision",
-        "impuesto": "impuesto",
+        "comision": "comisiones",        # canónico plural
+        "comisión": "comisiones",
+        "comisiones": "comisiones",
+        "impuesto": "impuestos",         # canónico plural
+        "impuestos": "impuestos",
+        "deuda": "deudas",               # canónico plural
+        "deudas": "deudas",
+        "transferencias": "transferencias",
         "ahorro": "ahorro",
         "educacion": "educacion",
         "educación": "educacion",
         "suscripciones": "suscripciones",
+        "suscripcion": "suscripciones",  # singular → plural
         "tecnologia": "tecnologia",
         "tecnología": "tecnologia",
         "consumo_desconocido": "consumo_desconocido",
