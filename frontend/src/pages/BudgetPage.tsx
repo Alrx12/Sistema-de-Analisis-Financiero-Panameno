@@ -17,7 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { formatCurrency } from "@/lib/utils"
+import { formatCurrency, capitalize } from "@/lib/utils"
 
 // ─── Mapeo de categorías a cubetas 50/30/20 ───────────────────────────────────
 
