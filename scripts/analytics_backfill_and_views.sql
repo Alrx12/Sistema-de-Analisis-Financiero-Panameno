@@ -38,7 +38,7 @@ SELECT
     NULL,                   -- job_id no está en uploaded_files
     jsonb_build_object(
         'original_filename', uf.original_filename,
-        'detected_bank',     uf.detected_bank,
+        'detected_bank',     uf.detected_bank_name,
         'backfill',          true
     ),
     uf.uploaded_at,

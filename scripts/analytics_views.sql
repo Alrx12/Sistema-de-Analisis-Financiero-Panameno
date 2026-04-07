@@ -243,7 +243,7 @@ BEGIN
     REFRESH MATERIALIZED VIEW CONCURRENTLY analytics.mv_quality_snapshot;
     REFRESH MATERIALIZED VIEW CONCURRENTLY analytics.mv_activation_funnel_daily;
     REFRESH MATERIALIZED VIEW CONCURRENTLY analytics.mv_plan_metrics;
-    REFRESH MATERIALIZED VIEW CONCURRENTLY analytics.mv_merchants_to_review;
+    REFRESH MATERIALIZED VIEW analytics.mv_merchants_to_review;  -- sin CONCURRENTLY: no tiene índice único
 END;
 $$;
 
