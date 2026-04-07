@@ -142,6 +142,121 @@ def send_reset_email(to_email: str, reset_token: str) -> None:
     )
 
 
+def send_admin_job_failed_alert(
+    user_email: str,
+    user_id: str,
+    job_id: str,
+    filename: str,
+    error_message: str,
+    consecutive_count: int,
+) -> None:
+    """
+    Envía alerta a admin@safpro.us cuando un usuario tiene 2+ jobs fallidos consecutivos.
+
+    Args:
+        user_email       : Email del usuario afectado.
+        user_id          : UUID del usuario como string.
+        job_id           : UUID del job que falló.
+        filename         : Nombre del archivo que falló.
+        error_message    : Mensaje de error del último job.
+        consecutive_count: Número de errores consecutivos detectados.
+    """
+    ADMIN_EMAIL = "admin@safpro.us"
+
+    resend = _get_resend()
+
+    alert_color = "#dc2626" if consecutive_count >= 3 else "#d97706"
+    level_label = "🔴 CRÍTICO" if consecutive_count >= 3 else "🟡 ADVERTENCIA"
+
+    html_body = f"""
+    <div style="font-family: sans-serif; max-width: 560px; margin: auto; color: #1a1a2e;">
+      <!-- Header -->
+      <div style="background: linear-gradient(135deg, #1c2b4b, #2d4878); padding: 24px; border-radius: 12px 12px 0 0;">
+        <div style="display: inline-block; background: linear-gradient(135deg, #6366f1, #8b5cf6);
+                    border-radius: 8px; padding: 6px 12px; margin-bottom: 12px;">
+          <span style="color: #fff; font-size: 16px; font-weight: 800;">SAFPRO</span>
+        </div>
+        <h2 style="color: #ffffff; margin: 0; font-size: 18px;">
+          {level_label} — Jobs fallidos consecutivos
+        </h2>
+      </div>
+
+      <!-- Body -->
+      <div style="background: #ffffff; padding: 24px; border: 1px solid #e5e7eb;
+                  border-top: none; border-radius: 0 0 12px 12px;">
+
+        <!-- Alert banner -->
+        <div style="background: {alert_color}1a; border-left: 4px solid {alert_color};
+                    padding: 12px 16px; border-radius: 4px; margin-bottom: 20px;">
+          <p style="margin: 0; font-weight: 700; color: {alert_color};">
+            {consecutive_count} errores consecutivos detectados para este usuario.
+          </p>
+        </div>
+
+        <!-- User info -->
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+          <tr style="border-bottom: 1px solid #f3f4f6;">
+            <td style="padding: 8px 4px; color: #6b7280; width: 140px;">Usuario</td>
+            <td style="padding: 8px 4px; font-weight: 600;">{user_email}</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #f3f4f6;">
+            <td style="padding: 8px 4px; color: #6b7280;">User ID</td>
+            <td style="padding: 8px 4px; font-family: monospace; font-size: 12px;">{user_id}</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #f3f4f6;">
+            <td style="padding: 8px 4px; color: #6b7280;">Job ID</td>
+            <td style="padding: 8px 4px; font-family: monospace; font-size: 12px;">{job_id}</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #f3f4f6;">
+            <td style="padding: 8px 4px; color: #6b7280;">Archivo</td>
+            <td style="padding: 8px 4px;">{filename}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 4px; color: #6b7280;">Errores consec.</td>
+            <td style="padding: 8px 4px; font-weight: 700; color: {alert_color};">{consecutive_count}</td>
+          </tr>
+        </table>
+
+        <!-- Error message -->
+        <div style="margin-top: 20px;">
+          <p style="font-size: 13px; color: #6b7280; margin-bottom: 6px;">Último mensaje de error:</p>
+          <div style="background: #1f2937; color: #f9fafb; padding: 12px 16px; border-radius: 6px;
+                      font-family: monospace; font-size: 12px; word-break: break-all;
+                      white-space: pre-wrap;">{error_message}</div>
+        </div>
+
+        <!-- Actions -->
+        <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #e5e7eb;">
+          <p style="font-size: 13px; color: #6b7280; margin: 0 0 12px 0;">
+            Revisa el panel de admin para ver el historial completo de jobs de este usuario.
+          </p>
+        </div>
+
+        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
+        <p style="font-size: 11px; color: #9ca3af; text-align: center; margin: 0;">
+          SAFPRO Monitoring — Este es un email automático generado por el sistema.
+        </p>
+      </div>
+    </div>
+    """
+
+    params: resend.Emails.SendParams = {
+        "from": "SAFPRO Monitoring <noreply@safpro.us>",
+        "to": [ADMIN_EMAIL],
+        "subject": f"[SAFPRO] {level_label} — {consecutive_count} jobs fallidos: {user_email}",
+        "html": html_body,
+    }
+
+    response = resend.Emails.send(params)
+    logger.warning(
+        "Alerta admin enviada — user=%s consecutive=%d job_id=%s resend_id=%s",
+        user_email,
+        consecutive_count,
+        job_id,
+        response.get("id") if isinstance(response, dict) else response,
+    )
+
+
 def send_upgrade_confirmation_email(
     to_email: str,
     full_name: str,

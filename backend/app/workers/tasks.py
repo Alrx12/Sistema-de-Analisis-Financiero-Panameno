@@ -14,6 +14,7 @@ Política de reintentos:
 from __future__ import annotations
 
 import logging
+import threading
 from uuid import UUID
 
 from celery import Task
@@ -22,6 +23,69 @@ from sqlalchemy.exc import OperationalError
 from app.workers.celery_app import celery_app
 
 logger = logging.getLogger(__name__)
+
+
+def _maybe_alert_admin_on_failure(db, user, job, original_filename: str) -> None:
+    """
+    Comprueba si el usuario tiene 2+ jobs fallidos consecutivos y, si es así,
+    envía un email de alerta a admin@safpro.us de forma asíncrona (fire-and-forget).
+
+    Solo se considera el historial de jobs con status 'success' o 'error' para
+    calcular la racha de errores — los jobs en 'queued' / 'processing' no interrumpen
+    el conteo pero tampoco se incluyen en la ventana de comparación.
+    """
+    from app.models.processing_job import ProcessingJob as _PJ
+
+    # Últimos 5 jobs terminados de este usuario (más reciente primero)
+    recent = (
+        db.query(_PJ)
+        .filter(
+            _PJ.user_id == user.user_id,
+            _PJ.status.in_(["success", "error"]),
+        )
+        .order_by(_PJ.created_at.desc())
+        .limit(5)
+        .all()
+    )
+
+    consecutive = 0
+    for j in recent:
+        if j.status == "error":
+            consecutive += 1
+        else:
+            break  # racha cortada — el job más reciente no-fallido detiene el conteo
+
+    if consecutive < 2:
+        return  # sin alerta necesaria
+
+    # Capturar todos los datos antes de lanzar el thread (la sesión DB se cerrará)
+    user_email = user.email
+    user_id_str = str(user.user_id)
+    job_id_str = str(job.job_id)
+    error_msg = (job.error_message or "Sin detalle")[:500]
+
+    logger.warning(
+        "ALERT — %d jobs fallidos consecutivos: user_id=%s job_id=%s",
+        consecutive,
+        user_id_str,
+        job_id_str,
+    )
+
+    def _send() -> None:
+        try:
+            from app.services.email_service import send_admin_job_failed_alert
+            send_admin_job_failed_alert(
+                user_email=user_email,
+                user_id=user_id_str,
+                job_id=job_id_str,
+                filename=original_filename,
+                error_message=error_msg,
+                consecutive_count=consecutive,
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("No se pudo enviar alerta de job fallido: %s", exc)
+
+    threading.Thread(target=_send, daemon=True).start()
 
 
 @celery_app.task(
@@ -91,6 +155,10 @@ def process_file_task(
             plan=getattr(user, "plan", None),
             metadata={"job_id": job_id, "filename": original_filename},
         )
+
+        # Alerta admin si hay 2+ errores consecutivos para este usuario
+        if pipeline_status == "error":
+            _maybe_alert_admin_on_failure(db, user, job, original_filename)
 
         return {"job_id": job_id, "status": pipeline_status}
 
