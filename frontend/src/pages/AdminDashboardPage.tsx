@@ -32,14 +32,26 @@ import {
   RotateCcw,
   Trash2,
   FileX,
+  UserX,
+  UserCheck,
+  ChevronLeft,
+  ChevronRight,
+  Search,
 } from "lucide-react"
+import { useState } from "react"
 import { getAnalytics } from "@/api/analytics"
 import {
   getAdminJobs,
   retryFailedJob,
   discardFailedFile,
   getFailedFileDownloadUrl,
+  getAdminUsers,
+  suspendUser,
+  unsuspendUser,
+  patchUserPlan,
+  deleteAdminUser,
   type AdminFailedJob,
+  type AdminUserItem,
 } from "@/api/admin"
 import { useAuthStore } from "@/stores/authStore"
 import { toast } from "@/components/ui/toast"
@@ -111,6 +123,349 @@ function Section({ title, icon, children }: { title: string; icon: React.ReactNo
       </div>
       {children}
     </div>
+  )
+}
+
+// ── Plan badge ────────────────────────────────────────────────────────────────
+function PlanBadge({ plan }: { plan: string }) {
+  const styles: Record<string, string> = {
+    pro: "bg-amber-50 text-amber-700 border-amber-200",
+    friends_and_family: "bg-indigo-50 text-indigo-700 border-indigo-200",
+    free: "bg-slate-50 text-slate-600 border-slate-200",
+  }
+  return (
+    <span className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold border ${styles[plan] ?? styles.free}`}>
+      {PLAN_LABELS[plan] ?? plan}
+    </span>
+  )
+}
+
+// ── User manager ──────────────────────────────────────────────────────────────
+function UserManager() {
+  const qc = useQueryClient()
+  const [page, setPage] = useState(1)
+  const [search, setSearch] = useState("")
+  const [planFilter, setPlanFilter] = useState<string>("all")
+  // track which user's plan select is open / pending
+  const [pendingPlan, setPendingPlan] = useState<Record<string, string>>({})
+
+  const PAGE_SIZE = 50
+
+  const { data, isLoading, isFetching, refetch } = useQuery({
+    queryKey: ["admin-users", page],
+    queryFn: () => getAdminUsers(page, PAGE_SIZE),
+    staleTime: 1000 * 60, // 1 min
+  })
+
+  const suspendMutation = useMutation({
+    mutationFn: (userId: string) => suspendUser(userId),
+    onSuccess: (_, userId) => {
+      toast("Usuario suspendido", "success")
+      qc.invalidateQueries({ queryKey: ["admin-users", page] })
+      // also update overview
+      qc.invalidateQueries({ queryKey: ["admin-analytics"] })
+    },
+    onError: () => toast("No se pudo suspender el usuario", "error"),
+  })
+
+  const unsuspendMutation = useMutation({
+    mutationFn: (userId: string) => unsuspendUser(userId),
+    onSuccess: () => {
+      toast("Usuario reactivado", "success")
+      qc.invalidateQueries({ queryKey: ["admin-users", page] })
+      qc.invalidateQueries({ queryKey: ["admin-analytics"] })
+    },
+    onError: () => toast("No se pudo reactivar el usuario", "error"),
+  })
+
+  const planMutation = useMutation({
+    mutationFn: ({ userId, plan }: { userId: string; plan: string }) =>
+      patchUserPlan(userId, plan),
+    onSuccess: (res) => {
+      toast(`Plan actualizado: ${res.plan}`, "success")
+      setPendingPlan((prev) => {
+        const next = { ...prev }
+        delete next[res.user_id]
+        return next
+      })
+      qc.invalidateQueries({ queryKey: ["admin-users", page] })
+      qc.invalidateQueries({ queryKey: ["admin-analytics"] })
+    },
+    onError: (_err, vars) => {
+      toast("No se pudo cambiar el plan", "error")
+      setPendingPlan((prev) => {
+        const next = { ...prev }
+        delete next[vars.userId]
+        return next
+      })
+    },
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: (userId: string) => deleteAdminUser(userId),
+    onSuccess: () => {
+      toast("Usuario eliminado", "success")
+      qc.invalidateQueries({ queryKey: ["admin-users", page] })
+      qc.invalidateQueries({ queryKey: ["admin-analytics"] })
+    },
+    onError: () => toast("No se pudo eliminar el usuario", "error"),
+  })
+
+  // Client-side filter (name/email search + plan filter) on current page
+  const allItems: AdminUserItem[] = data?.items ?? []
+  const filtered = allItems.filter((u) => {
+    const matchSearch =
+      search.trim() === "" ||
+      u.email.toLowerCase().includes(search.toLowerCase()) ||
+      (u.full_name ?? "").toLowerCase().includes(search.toLowerCase())
+    const matchPlan = planFilter === "all" || u.plan === planFilter
+    return matchSearch && matchPlan
+  })
+
+  const totalPages = data ? Math.ceil(data.total / PAGE_SIZE) : 1
+
+  function handlePlanChange(userId: string, newPlan: string) {
+    setPendingPlan((prev) => ({ ...prev, [userId]: newPlan }))
+    planMutation.mutate({ userId, plan: newPlan })
+  }
+
+  function handleDelete(user: AdminUserItem) {
+    if (
+      !confirm(
+        `¿Eliminar permanentemente a ${user.email}?\n\nEsto borrará TODOS sus análisis, transacciones, KB personal y archivos subidos. IRREVERSIBLE.`
+      )
+    )
+      return
+    deleteMutation.mutate(user.user_id)
+  }
+
+  return (
+    <Section title="Gestión de usuarios" icon={<Users className="h-4 w-4" />}>
+      {/* Toolbar */}
+      <div className="flex flex-wrap items-center gap-2 mb-1">
+        {/* Search */}
+        <div className="relative flex-1 min-w-[180px] max-w-xs">
+          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+          <input
+            type="text"
+            placeholder="Buscar por email o nombre…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{ color: "#111827", background: "#ffffff" }}
+            className="w-full rounded border border-border pl-7 pr-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+          />
+        </div>
+
+        {/* Plan filter */}
+        <select
+          value={planFilter}
+          onChange={(e) => setPlanFilter(e.target.value)}
+          style={{ color: "#111827", background: "#ffffff" }}
+          className="rounded border border-border px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+        >
+          <option value="all">Todos los planes</option>
+          <option value="free">Gratis</option>
+          <option value="pro">Pro</option>
+          <option value="friends_and_family">F&amp;F Beta</option>
+        </select>
+
+        <span className="ml-auto text-xs text-muted-foreground">
+          {data ? `${data.total} usuarios en total` : ""}
+        </span>
+
+        <button
+          onClick={() => refetch()}
+          disabled={isFetching}
+          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <RefreshCw className={`h-3 w-3 ${isFetching ? "animate-spin" : ""}`} />
+          Actualizar
+        </button>
+      </div>
+
+      {isLoading ? (
+        <div className="zoho-card p-6 text-center text-xs text-muted-foreground">Cargando usuarios…</div>
+      ) : filtered.length === 0 ? (
+        <div className="zoho-card p-6 text-center text-xs text-muted-foreground">
+          {search || planFilter !== "all" ? "Sin resultados para ese filtro." : "Sin usuarios registrados."}
+        </div>
+      ) : (
+        <div className="zoho-card overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="zoho-table w-full text-xs">
+              <thead>
+                <tr>
+                  <th className="whitespace-nowrap">Registro</th>
+                  <th>Usuario</th>
+                  <th className="text-center">Plan</th>
+                  <th className="text-center">Estado</th>
+                  <th className="text-center">Uploads</th>
+                  <th className="text-center">Cambiar plan</th>
+                  <th className="text-center">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((user) => {
+                  const isSuspending =
+                    suspendMutation.isPending && suspendMutation.variables === user.user_id
+                  const isUnsuspending =
+                    unsuspendMutation.isPending && unsuspendMutation.variables === user.user_id
+                  const isDeleting =
+                    deleteMutation.isPending && deleteMutation.variables === user.user_id
+                  const isPlanPending = planMutation.isPending && pendingPlan[user.user_id] !== undefined
+                  const displayPlan = pendingPlan[user.user_id] ?? user.plan
+
+                  return (
+                    <tr key={user.user_id} className={user.is_suspended ? "opacity-60" : ""}>
+                      {/* Fecha registro */}
+                      <td className="whitespace-nowrap text-muted-foreground">
+                        {new Date(user.created_at).toLocaleDateString("es-PA", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </td>
+
+                      {/* Usuario */}
+                      <td>
+                        <div className="max-w-[200px]">
+                          <p className="truncate font-medium">
+                            {user.full_name || <span className="text-muted-foreground italic">Sin nombre</span>}
+                          </p>
+                          <p className="truncate text-[10px] text-muted-foreground">{user.email}</p>
+                          <div className="flex items-center gap-1 mt-0.5">
+                            {user.is_admin && (
+                              <span className="text-[9px] bg-red-50 text-red-600 border border-red-200 rounded px-1 font-bold">ADMIN</span>
+                            )}
+                            {!user.is_verified && (
+                              <span className="text-[9px] bg-yellow-50 text-yellow-700 border border-yellow-200 rounded px-1">no verificado</span>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Plan badge */}
+                      <td className="text-center">
+                        <PlanBadge plan={displayPlan} />
+                      </td>
+
+                      {/* Estado */}
+                      <td className="text-center">
+                        {user.is_suspended ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-medium text-red-700 bg-red-50 border border-red-200 rounded px-1.5 py-0.5">
+                            <UserX className="h-3 w-3" />
+                            Suspendido
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-medium text-green-700 bg-green-50 border border-green-200 rounded px-1.5 py-0.5">
+                            <UserCheck className="h-3 w-3" />
+                            Activo
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Uploads */}
+                      <td className="text-center font-mono font-semibold">{user.upload_count}</td>
+
+                      {/* Cambiar plan */}
+                      <td className="text-center">
+                        {user.is_admin ? (
+                          <span className="text-[10px] text-muted-foreground italic">—</span>
+                        ) : (
+                          <select
+                            value={displayPlan}
+                            disabled={isPlanPending}
+                            onChange={(e) => handlePlanChange(user.user_id, e.target.value)}
+                            style={{ color: "#111827", background: "#ffffff" }}
+                            className="rounded border border-border px-1.5 py-1 text-[11px] focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
+                          >
+                            <option value="free">Gratis</option>
+                            <option value="pro">Pro</option>
+                            <option value="friends_and_family">F&amp;F Beta</option>
+                          </select>
+                        )}
+                      </td>
+
+                      {/* Acciones */}
+                      <td>
+                        <div className="flex items-center gap-1 justify-center">
+                          {/* Suspender / Reactivar — no aplica a admins */}
+                          {!user.is_admin && (
+                            user.is_suspended ? (
+                              <button
+                                onClick={() => unsuspendMutation.mutate(user.user_id)}
+                                disabled={isUnsuspending || isSuspending}
+                                title="Reactivar usuario"
+                                className="inline-flex items-center gap-1 rounded px-2 py-1 text-[11px] font-medium bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 transition-colors disabled:opacity-50"
+                              >
+                                <UserCheck className={`h-3 w-3 ${isUnsuspending ? "animate-pulse" : ""}`} />
+                                {isUnsuspending ? "…" : "Reactivar"}
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => suspendMutation.mutate(user.user_id)}
+                                disabled={isSuspending || isUnsuspending}
+                                title="Suspender usuario (bloquea acceso)"
+                                className="inline-flex items-center gap-1 rounded px-2 py-1 text-[11px] font-medium bg-yellow-50 text-yellow-700 hover:bg-yellow-100 border border-yellow-200 transition-colors disabled:opacity-50"
+                              >
+                                <UserX className={`h-3 w-3 ${isSuspending ? "animate-pulse" : ""}`} />
+                                {isSuspending ? "…" : "Suspender"}
+                              </button>
+                            )
+                          )}
+
+                          {/* Eliminar — no aplica a admins */}
+                          {!user.is_admin && (
+                            <button
+                              onClick={() => handleDelete(user)}
+                              disabled={isDeleting}
+                              title="Eliminar usuario y todos sus datos"
+                              className="inline-flex items-center gap-1 rounded px-2 py-1 text-[11px] font-medium bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 transition-colors disabled:opacity-50"
+                            >
+                              <Trash2 className={`h-3 w-3 ${isDeleting ? "animate-pulse" : ""}`} />
+                              {isDeleting ? "…" : "Eliminar"}
+                            </button>
+                          )}
+
+                          {user.is_admin && (
+                            <span className="text-[10px] text-muted-foreground italic">protegido</span>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-4 py-2 border-t border-border bg-muted/30">
+              <span className="text-xs text-muted-foreground">
+                Página {page} de {totalPages}
+              </span>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1 || isFetching}
+                  className="p-1 rounded hover:bg-muted disabled:opacity-40 transition-colors"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages || isFetching}
+                  className="p-1 rounded hover:bg-muted disabled:opacity-40 transition-colors"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </Section>
   )
 }
 
@@ -679,7 +1034,10 @@ export default function AdminDashboardPage() {
         </div>
       </Section>
 
-      {/* ══════════════ SECCIÓN 5: JOBS FALLIDOS — GESTIÓN ══════════════════════ */}
+      {/* ══════════════ SECCIÓN 5: GESTIÓN DE USUARIOS ══════════════════════════ */}
+      <UserManager />
+
+      {/* ══════════════ SECCIÓN 6: JOBS FALLIDOS — GESTIÓN ══════════════════════ */}
       <FailedJobsManager />
 
       {/* Footer */}
