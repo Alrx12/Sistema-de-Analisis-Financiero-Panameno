@@ -9,10 +9,12 @@ Admin actual: alexis12pineda@gmail.com
 from __future__ import annotations
 
 import logging
+import shutil
 from pathlib import Path
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -308,7 +310,7 @@ def delete_user(
 @router.get("/jobs", summary="Jobs filtrados (por defecto, fallidos recientes)")
 def list_jobs(
     job_status: str = Query(default="error", alias="status"),
-    limit: int = Query(default=50, ge=1, le=500),
+    limit: int = Query(default=100, ge=1, le=500),
     db: Session = Depends(get_db),
     _admin: User = Depends(require_admin),
 ) -> dict:
@@ -320,6 +322,16 @@ def list_jobs(
             .limit(limit)
         ).all()
     )
+
+    # Batch-query emails para evitar N+1
+    user_ids = list({j.user_id for j in jobs})
+    user_emails: dict = {}
+    if user_ids:
+        rows = db.scalars(select(User).where(User.user_id.in_(user_ids))).all()
+        user_emails = {u.user_id: u.email for u in rows}
+
+    failed_dir = Path(settings.failed_dir)
+
     return {
         "status_filter": job_status,
         "count": len(jobs),
@@ -327,15 +339,146 @@ def list_jobs(
             {
                 "job_id": str(j.job_id),
                 "user_id": str(j.user_id),
+                "user_email": user_emails.get(j.user_id, "—"),
                 "original_filename": j.original_filename,
                 "status": j.status,
                 "error_message": j.error_message,
+                "failed_file_exists": (failed_dir / str(j.job_id)).exists(),
                 "created_at": j.created_at.isoformat() if j.created_at else None,
                 "updated_at": j.updated_at.isoformat() if j.updated_at else None,
             }
             for j in jobs
         ],
     }
+
+
+# ── GET /admin/jobs/{job_id}/download ─────────────────────────────────────────
+
+@router.get("/jobs/{job_id}/download", summary="Descargar archivo fallido para diagnóstico")
+def download_failed_file(
+    job_id: UUID,
+    db: Session = Depends(get_db),
+    _admin: User = Depends(require_admin),
+) -> FileResponse:
+    """Descarga el archivo que falló al procesarse. Solo disponible si el archivo fue preservado."""
+    job = db.get(ProcessingJob, job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job no encontrado")
+
+    failed_path = Path(settings.failed_dir) / str(job_id)
+    if not failed_path.exists():
+        raise HTTPException(
+            status_code=404,
+            detail="Archivo no encontrado. Fue descartado o procesado exitosamente.",
+        )
+
+    filename = job.original_filename or f"failed_{job_id}.xlsx"
+    return FileResponse(
+        path=str(failed_path),
+        filename=filename,
+        media_type="application/octet-stream",
+    )
+
+
+# ── POST /admin/jobs/{job_id}/retry ───────────────────────────────────────────
+
+@router.post("/jobs/{job_id}/retry", summary="Re-encolar un job fallido para re-procesamiento")
+def retry_failed_job(
+    job_id: UUID,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin),
+) -> dict:
+    """
+    Mueve el archivo preservado de storage/failed/ a storage/temp/ y crea un nuevo job en Celery.
+    El job original queda como 'error' en el historial — se crea uno nuevo.
+    """
+    job = db.get(ProcessingJob, job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job no encontrado")
+    if job.status != "error":
+        raise HTTPException(status_code=400, detail="Solo se pueden re-procesar jobs con status='error'")
+
+    failed_path = Path(settings.failed_dir) / str(job_id)
+    if not failed_path.exists():
+        raise HTTPException(
+            status_code=404,
+            detail="Archivo fallido no encontrado. No se puede re-procesar sin el archivo original.",
+        )
+
+    # Cargar el usuario dueño del job
+    user = db.get(User, job.user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    # Mover de failed/ → temp/ con nombre temporal único
+    temp_dir = Path(settings.temp_dir)
+    temp_dir.mkdir(parents=True, exist_ok=True)
+    new_temp_path = temp_dir / str(job_id)  # mismo nombre = job_id, sin extensión
+
+    try:
+        shutil.move(str(failed_path), str(new_temp_path))
+    except OSError as exc:
+        raise HTTPException(status_code=500, detail=f"No se pudo mover el archivo: {exc}")
+
+    # Crear un nuevo ProcessingJob para el retry
+    from app.services.processing_service import ProcessingService
+    from app.workers.tasks import process_file_task
+
+    svc = ProcessingService(db)
+    new_job = svc.create_job(
+        current_user=user,
+        original_filename=job.original_filename,
+        file_type=job.file_type,
+    )
+
+    # Encolar en Celery (sin content_hash para que no haya 409 por deduplicación)
+    process_file_task.delay(
+        file_path=str(new_temp_path),
+        original_filename=job.original_filename or "",
+        user_id=str(user.user_id),
+        job_id=str(new_job.job_id),
+    )
+
+    logger.info(
+        "admin_action=retry_job admin=%s original_job=%s new_job=%s user=%s",
+        admin.email, job_id, new_job.job_id, user.email,
+    )
+
+    return {
+        "message": "Re-procesamiento iniciado correctamente.",
+        "original_job_id": str(job_id),
+        "new_job_id": str(new_job.job_id),
+        "user_email": user.email,
+    }
+
+
+# ── DELETE /admin/jobs/{job_id}/failed-file ───────────────────────────────────
+
+@router.delete("/jobs/{job_id}/failed-file", summary="Descartar archivo fallido (sin re-procesar)")
+def discard_failed_file(
+    job_id: UUID,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin),
+) -> dict:
+    """Elimina el archivo fallido de storage/failed/. El job queda en el historial como 'error'."""
+    job = db.get(ProcessingJob, job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job no encontrado")
+
+    failed_path = Path(settings.failed_dir) / str(job_id)
+    if not failed_path.exists():
+        raise HTTPException(status_code=404, detail="Archivo no encontrado")
+
+    try:
+        failed_path.unlink()
+    except OSError as exc:
+        raise HTTPException(status_code=500, detail=f"No se pudo eliminar el archivo: {exc}")
+
+    logger.info(
+        "admin_action=discard_failed_file admin=%s job_id=%s user_id=%s",
+        admin.email, job_id, job.user_id,
+    )
+    return {"message": "Archivo fallido descartado.", "job_id": str(job_id)}
 
 
 # ── GET /admin/stats ──────────────────────────────────────────────────────────

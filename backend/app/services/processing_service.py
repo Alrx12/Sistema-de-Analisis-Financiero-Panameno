@@ -2,11 +2,14 @@ from __future__ import annotations
 
 import logging
 import os
+import shutil
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.models.processing_job import ProcessingJob
 from app.models.uploaded_file import UploadedFile
 from app.models.user import User
@@ -195,6 +198,16 @@ class ProcessingService:
         finally:
             if os.path.exists(file_path):
                 try:
-                    os.remove(file_path)
+                    if job.status == "error":
+                        # Preservar archivo para que el admin pueda descargarlo y diagnosticar
+                        failed_dir = Path(settings.failed_dir)
+                        failed_dir.mkdir(parents=True, exist_ok=True)
+                        dest = failed_dir / str(job.job_id)
+                        shutil.move(file_path, str(dest))
+                        logger.info(
+                            "Archivo fallido preservado — job_id=%s dest=%s", job.job_id, dest
+                        )
+                    else:
+                        os.remove(file_path)
                 except OSError:
-                    logger.warning("No se pudo eliminar archivo temporal: %s", file_path)
+                    logger.warning("No se pudo mover/eliminar archivo temporal: %s", file_path)

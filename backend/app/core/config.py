@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     processed_dir: str = "storage/processed"
     temp_dir: str = "storage/temp"
     knowledge_bases_dir: str = "storage/knowledge_bases"
+    failed_dir: str = "storage/failed"   # Archivos que fallaron — preservados para diagnóstico admin
 
     # Límites de upload por usuario (anti-abuso)
     max_uploads_free: int = 5        # plan "free" — alineado con el límite de 3 análisis

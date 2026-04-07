@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import {
   BarChart,
   Bar,
@@ -28,9 +28,21 @@ import {
   Crown,
   RefreshCw,
   Lock,
+  Download,
+  RotateCcw,
+  Trash2,
+  FileX,
 } from "lucide-react"
 import { getAnalytics } from "@/api/analytics"
+import {
+  getAdminJobs,
+  retryFailedJob,
+  discardFailedFile,
+  getFailedFileDownloadUrl,
+  type AdminFailedJob,
+} from "@/api/admin"
 import { useAuthStore } from "@/stores/authStore"
+import { toast } from "@/components/ui/toast"
 
 // ── Paleta ────────────────────────────────────────────────────────────────────
 const PLAN_COLORS: Record<string, string> = {
@@ -102,6 +114,200 @@ function Section({ title, icon, children }: { title: string; icon: React.ReactNo
   )
 }
 
+// ── Failed jobs manager ───────────────────────────────────────────────────────
+function FailedJobsManager() {
+  const qc = useQueryClient()
+
+  const { data, isLoading, refetch, isFetching } = useQuery({
+    queryKey: ["admin-failed-jobs"],
+    queryFn: () => getAdminJobs("error", 100),
+    staleTime: 1000 * 30, // 30 s — más fresco que el dashboard general
+  })
+
+  const retryMutation = useMutation({
+    mutationFn: (jobId: string) => retryFailedJob(jobId),
+    onSuccess: (res) => {
+      toast(`Re-procesamiento iniciado. Nuevo job: ${res.new_job_id.slice(0, 8)}…`, "success")
+      qc.invalidateQueries({ queryKey: ["admin-failed-jobs"] })
+    },
+    onError: () => toast("No se pudo iniciar el re-procesamiento", "error"),
+  })
+
+  const discardMutation = useMutation({
+    mutationFn: (jobId: string) => discardFailedFile(jobId),
+    onSuccess: () => {
+      toast("Archivo fallido descartado", "success")
+      qc.invalidateQueries({ queryKey: ["admin-failed-jobs"] })
+    },
+    onError: () => toast("No se pudo descartar el archivo", "error"),
+  })
+
+  const jobs: AdminFailedJob[] = data?.jobs ?? []
+
+  return (
+    <Section title="Jobs fallidos — gestión" icon={<ShieldAlert className="h-4 w-4" />}>
+      <div className="flex items-center justify-between mb-1">
+        <p className="text-xs text-muted-foreground">
+          {data ? `${data.count} job${data.count !== 1 ? "s" : ""} con error` : "Cargando…"}
+          {" · "}
+          Archivos preservados en <code className="bg-muted px-1 rounded text-[10px]">storage/failed/</code>
+        </p>
+        <button
+          onClick={() => refetch()}
+          disabled={isFetching}
+          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <RefreshCw className={`h-3 w-3 ${isFetching ? "animate-spin" : ""}`} />
+          Actualizar
+        </button>
+      </div>
+
+      {isLoading ? (
+        <div className="zoho-card p-6 text-center text-xs text-muted-foreground">Cargando jobs…</div>
+      ) : jobs.length === 0 ? (
+        <div className="zoho-card p-6 text-center">
+          <CheckCircle2 className="h-8 w-8 text-green-400 mx-auto mb-2" />
+          <p className="text-sm font-medium text-green-700">Sin jobs fallidos</p>
+          <p className="text-xs text-muted-foreground mt-1">Todo el procesamiento está operando correctamente.</p>
+        </div>
+      ) : (
+        <div className="zoho-card overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="zoho-table w-full text-xs">
+              <thead>
+                <tr>
+                  <th className="whitespace-nowrap">Fecha</th>
+                  <th>Usuario</th>
+                  <th>Archivo</th>
+                  <th>Error</th>
+                  <th className="text-center">Archivo</th>
+                  <th className="text-center">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {jobs.map((job) => {
+                  const isPending =
+                    retryMutation.isPending && retryMutation.variables === job.job_id
+                  const isDiscarding =
+                    discardMutation.isPending && discardMutation.variables === job.job_id
+
+                  return (
+                    <tr key={job.job_id}>
+                      {/* Fecha */}
+                      <td className="whitespace-nowrap text-muted-foreground">
+                        {job.created_at
+                          ? new Date(job.created_at).toLocaleString("es-PA", {
+                              dateStyle: "short",
+                              timeStyle: "short",
+                            })
+                          : "—"}
+                      </td>
+
+                      {/* Usuario */}
+                      <td>
+                        <div className="max-w-[160px]">
+                          <p className="truncate font-medium">{job.user_email}</p>
+                          <p className="text-[10px] text-muted-foreground font-mono">
+                            {job.user_id.slice(0, 8)}…
+                          </p>
+                        </div>
+                      </td>
+
+                      {/* Archivo */}
+                      <td className="max-w-[140px] truncate text-muted-foreground">
+                        {job.original_filename ?? "—"}
+                      </td>
+
+                      {/* Error */}
+                      <td>
+                        <p
+                          className="max-w-[220px] truncate text-red-600"
+                          title={job.error_message ?? ""}
+                        >
+                          {job.error_message ?? "Sin mensaje"}
+                        </p>
+                      </td>
+
+                      {/* Archivo guardado */}
+                      <td className="text-center">
+                        {job.failed_file_exists ? (
+                          <span className="inline-flex items-center gap-1 text-green-700 bg-green-50 border border-green-200 rounded px-1.5 py-0.5 text-[10px] font-medium">
+                            ✓ guardado
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-muted-foreground bg-muted rounded px-1.5 py-0.5 text-[10px]">
+                            <FileX className="h-3 w-3" />
+                            n/a
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Acciones */}
+                      <td>
+                        <div className="flex items-center gap-1 justify-center">
+                          {/* Descargar */}
+                          {job.failed_file_exists && (
+                            <a
+                              href={getFailedFileDownloadUrl(job.job_id)}
+                              download={job.original_filename ?? true}
+                              title="Descargar archivo para diagnóstico"
+                              className="inline-flex items-center gap-1 rounded px-2 py-1 text-[11px] font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 transition-colors"
+                            >
+                              <Download className="h-3 w-3" />
+                              Descargar
+                            </a>
+                          )}
+
+                          {/* Re-procesar */}
+                          {job.failed_file_exists && (
+                            <button
+                              onClick={() => retryMutation.mutate(job.job_id)}
+                              disabled={isPending || isDiscarding}
+                              title="Re-encolar este archivo en Celery"
+                              className="inline-flex items-center gap-1 rounded px-2 py-1 text-[11px] font-medium bg-orange-50 text-orange-700 hover:bg-orange-100 border border-orange-200 transition-colors disabled:opacity-50"
+                            >
+                              <RotateCcw className={`h-3 w-3 ${isPending ? "animate-spin" : ""}`} />
+                              {isPending ? "…" : "Re-procesar"}
+                            </button>
+                          )}
+
+                          {/* Descartar */}
+                          {job.failed_file_exists && (
+                            <button
+                              onClick={() => {
+                                if (confirm(`¿Eliminar el archivo guardado de ${job.user_email}?\nEsto no se puede deshacer.`)) {
+                                  discardMutation.mutate(job.job_id)
+                                }
+                              }}
+                              disabled={isPending || isDiscarding}
+                              title="Eliminar archivo fallido sin re-procesar"
+                              className="inline-flex items-center gap-1 rounded px-2 py-1 text-[11px] font-medium bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 transition-colors disabled:opacity-50"
+                            >
+                              <Trash2 className={`h-3 w-3 ${isDiscarding ? "animate-pulse" : ""}`} />
+                              {isDiscarding ? "…" : "Descartar"}
+                            </button>
+                          )}
+
+                          {/* Sin archivo — solo histórico */}
+                          {!job.failed_file_exists && (
+                            <span className="text-[10px] text-muted-foreground italic">
+                              solo historial
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </Section>
+  )
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function AdminDashboardPage() {
   const user = useAuthStore((s) => s.user)
@@ -151,7 +357,7 @@ export default function AdminDashboardPage() {
     )
   }
 
-  const { overview, retention, quality, trends, top_banks, failed_jobs_recent } = data
+  const { overview, retention, quality, trends, top_banks } = data
 
   // Datos para charts
   const planData = Object.entries(overview.users_by_plan).map(([plan, count]) => ({
@@ -473,35 +679,8 @@ export default function AdminDashboardPage() {
         </div>
       </Section>
 
-      {/* ══════════════ SECCIÓN 5: JOBS FALLIDOS ═════════════════════════════════ */}
-      {failed_jobs_recent.length > 0 && (
-        <Section title="Jobs fallidos recientes" icon={<ShieldAlert className="h-4 w-4" />}>
-          <div className="zoho-card overflow-hidden">
-            <table className="zoho-table w-full text-xs">
-              <thead>
-                <tr>
-                  <th>Fecha</th>
-                  <th>User ID</th>
-                  <th>Error</th>
-                </tr>
-              </thead>
-              <tbody>
-                {failed_jobs_recent.map((job) => (
-                  <tr key={job.job_id}>
-                    <td className="whitespace-nowrap text-muted-foreground">
-                      {job.created_at
-                        ? new Date(job.created_at).toLocaleString("es-PA", { dateStyle: "short", timeStyle: "short" })
-                        : "—"}
-                    </td>
-                    <td className="font-mono text-muted-foreground">{job.user_id.slice(0, 8)}…</td>
-                    <td className="text-red-600 max-w-xs truncate">{job.error_message ?? "Sin mensaje"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Section>
-      )}
+      {/* ══════════════ SECCIÓN 5: JOBS FALLIDOS — GESTIÓN ══════════════════════ */}
+      <FailedJobsManager />
 
       {/* Footer */}
       <div className="text-center text-xs text-muted-foreground pb-4">
