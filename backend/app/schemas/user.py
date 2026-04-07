@@ -11,6 +11,9 @@ class UserResponse(BaseModel):
     full_name: str | None
     is_active: bool
     plan: str
+    is_admin: bool
+    is_verified: bool
+    totp_enabled: bool
     created_at: datetime
 
     model_config = {"from_attributes": True}

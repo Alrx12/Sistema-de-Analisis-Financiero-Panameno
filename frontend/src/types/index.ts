@@ -8,6 +8,8 @@ export interface User {
   is_active: boolean
   is_admin: boolean
   is_suspended: boolean
+  is_verified: boolean
+  totp_enabled: boolean
   plan: string   // 'friends_and_family' | 'free' | 'pro'
   created_at: string
 }

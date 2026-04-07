@@ -181,6 +181,18 @@ export default function UploadPage() {
             {uploadStatus.count}/{uploadStatus.limit} archivos usados
           </div>
         )}
+        {uploadStatus && !uploadStatus.is_free && (
+          <div
+            className="shrink-0 flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold"
+            style={{
+              background: "linear-gradient(135deg, rgba(99,102,241,0.08), rgba(139,92,246,0.05))",
+              color: "#6366f1",
+              border: "1px solid rgba(99,102,241,0.2)",
+            }}
+          >
+            ✦ Uploads ilimitados
+          </div>
+        )}
       </div>
 
       {uploadStatus && uploadStatus.is_free && uploadStatus.remaining === 0 && (
