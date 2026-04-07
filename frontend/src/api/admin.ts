@@ -2,7 +2,7 @@
  * API client para endpoints exclusivos del panel admin de SAFPRO.
  * Todos los endpoints requieren is_admin=true en el JWT.
  */
-import { apiClient } from "./client"
+import apiClient from "./client"
 
 // ── Tipos ────────────────────────────────────────────────────────────────────
 
