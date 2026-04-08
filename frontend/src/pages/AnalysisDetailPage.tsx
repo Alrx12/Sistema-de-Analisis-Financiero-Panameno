@@ -130,9 +130,10 @@ export default function AnalysisDetailPage() {
     ? ((snapshot.balance / snapshot.total_income) * 100).toFixed(1)
     : "0.0"
 
-  const requiresReview = stats?.requires_review ?? 0
+  const requiresReview = stats?.requires_review_count ?? 0
+  // avg_confidence viene en 0.0–1.0, lo convertimos a porcentaje
   const confidencePct  = stats
-    ? (((stats.high_confidence + stats.medium_confidence) / Math.max(stats.total, 1)) * 100).toFixed(0)
+    ? (stats.avg_confidence * 100).toFixed(0)
     : null
 
   const bankColor = snapshot.bank_account
@@ -430,6 +431,191 @@ export default function AnalysisDetailPage() {
           )}
         </div>
       </div>
+
+      {/* ── Calidad del análisis — bloque de confianza completo ── */}
+      {stats && stats.total > 0 && (
+        <div className="zoho-card animate-fade-up anim-d3" style={{ padding: "20px 20px 18px" }}>
+          <div className="section-title" style={{ marginBottom: 16 }}>
+            <div className="section-title-dot" style={{ background: "#8b5cf6" }} />
+            Calidad del análisis
+            <span style={{
+              marginLeft: "auto",
+              fontSize: 11,
+              color: "rgba(255,255,255,0.25)",
+              fontWeight: 500,
+              textTransform: "none",
+              letterSpacing: 0,
+            }}>
+              {stats.total} transacciones analizadas
+            </span>
+          </div>
+
+          {/* Fila de métricas de calidad */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 20 }}>
+            {/* Confianza promedio */}
+            <div style={{
+              borderRadius: 10,
+              border: "1px solid rgba(255,255,255,0.08)",
+              padding: "12px 14px",
+              background: "rgba(255,255,255,0.03)",
+            }}>
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>
+                Confianza promedio
+              </div>
+              <div style={{
+                fontSize: 22,
+                fontWeight: 700,
+                color: stats.avg_confidence >= 0.8 ? "#34d399"
+                  : stats.avg_confidence >= 0.6 ? "#fbbf24"
+                  : "#fb7185",
+                lineHeight: 1,
+                marginBottom: 8,
+              }}>
+                {(stats.avg_confidence * 100).toFixed(0)}%
+              </div>
+              {/* barra de progreso */}
+              <div style={{ height: 4, borderRadius: 2, background: "rgba(255,255,255,0.1)", overflow: "hidden" }}>
+                <div style={{
+                  height: "100%",
+                  width: `${(stats.avg_confidence * 100).toFixed(0)}%`,
+                  borderRadius: 2,
+                  background: stats.avg_confidence >= 0.8 ? "#34d399"
+                    : stats.avg_confidence >= 0.6 ? "#fbbf24"
+                    : "#fb7185",
+                  transition: "width 0.5s ease",
+                }} />
+              </div>
+            </div>
+
+            {/* Requieren revisión */}
+            <div style={{
+              borderRadius: 10,
+              border: "1px solid rgba(255,255,255,0.08)",
+              padding: "12px 14px",
+              background: "rgba(255,255,255,0.03)",
+            }}>
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>
+                Requieren revisión
+              </div>
+              <div style={{
+                fontSize: 22,
+                fontWeight: 700,
+                color: stats.requires_review_count === 0 ? "#34d399"
+                  : stats.requires_review_pct < 20 ? "#fbbf24"
+                  : "#fb7185",
+                lineHeight: 1,
+                marginBottom: 4,
+              }}>
+                {stats.requires_review_count}
+              </div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>
+                {stats.requires_review_pct.toFixed(1)}% del total
+              </div>
+            </div>
+
+            {/* Fallback (sin KB) */}
+            <div style={{
+              borderRadius: 10,
+              border: "1px solid rgba(255,255,255,0.08)",
+              padding: "12px 14px",
+              background: "rgba(255,255,255,0.03)",
+            }}>
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>
+                Sin categorizar (fallback)
+              </div>
+              <div style={{
+                fontSize: 22,
+                fontWeight: 700,
+                color: stats.fallback_count === 0 ? "#34d399"
+                  : stats.fallback_pct < 15 ? "#fbbf24"
+                  : "#fb7185",
+                lineHeight: 1,
+                marginBottom: 4,
+              }}>
+                {stats.fallback_count}
+              </div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>
+                {stats.fallback_pct.toFixed(1)}% del total
+              </div>
+            </div>
+          </div>
+
+          {/* Desglose por método de clasificación */}
+          {Object.keys(stats.by_method).length > 0 && (
+            <div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 10 }}>
+                Fuente de clasificación
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {(
+                  [
+                    { key: "kb_personal",       label: "KB personal",   color: "#6366f1", emoji: "👤" },
+                    { key: "kb_global",          label: "KB global",     color: "#10b981", emoji: "🌐" },
+                    { key: "builtin",            label: "Builtin",       color: "#06b6d4", emoji: "⚡" },
+                    { key: "user_reclassified",  label: "Entrenado",     color: "#8b5cf6", emoji: "🎯" },
+                    { key: "fallback",           label: "Fallback",      color: "#f59e0b", emoji: "⚠️" },
+                    { key: "other",              label: "Otro",          color: "#6b7280", emoji: "📦" },
+                  ] as { key: string; label: string; color: string; emoji: string }[]
+                )
+                  .filter(({ key }) => (stats.by_method[key] ?? 0) > 0)
+                  .map(({ key, label, color, emoji }) => {
+                    const count = stats.by_method[key] ?? 0
+                    const pct   = (count / stats.total) * 100
+                    return (
+                      <div key={key} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        {/* emoji */}
+                        <span style={{ width: 22, fontSize: 13, flexShrink: 0, textAlign: "center" }}>{emoji}</span>
+                        {/* label */}
+                        <span style={{ width: 110, fontSize: 12, color: "#e2e8f0", flexShrink: 0 }}>{label}</span>
+                        {/* barra */}
+                        <div style={{ flex: 1, height: 6, borderRadius: 3, background: "rgba(255,255,255,0.07)", overflow: "hidden" }}>
+                          <div style={{
+                            height: "100%",
+                            width: `${pct.toFixed(1)}%`,
+                            borderRadius: 3,
+                            background: color,
+                            transition: "width 0.4s ease",
+                          }} />
+                        </div>
+                        {/* conteo + % */}
+                        <span style={{ width: 60, fontSize: 11, color: "rgba(255,255,255,0.4)", textAlign: "right", flexShrink: 0 }}>
+                          {count} · {pct.toFixed(0)}%
+                        </span>
+                      </div>
+                    )
+                  })}
+              </div>
+
+              {/* Hint educativo si hay fallback */}
+              {(stats.by_method["fallback"] ?? 0) > 0 && (
+                <div style={{
+                  marginTop: 14,
+                  padding: "8px 12px",
+                  borderRadius: 8,
+                  background: "rgba(245,158,11,0.08)",
+                  border: "1px solid rgba(245,158,11,0.2)",
+                  fontSize: 11,
+                  color: "#fbbf24",
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: 8,
+                }}>
+                  <span style={{ flexShrink: 0 }}>💡</span>
+                  <span>
+                    {stats.by_method["fallback"]} transacción{stats.by_method["fallback"] !== 1 ? "es" : ""} sin categoría conocida.{" "}
+                    <button
+                      onClick={() => navigate("/retrain")}
+                      style={{ color: "#fbbf24", textDecoration: "underline", textUnderlineOffset: 2, background: "none", border: "none", cursor: "pointer", fontSize: 11, padding: 0 }}
+                    >
+                      Entrénalas en Entrenamiento →
+                    </button>
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
     </div>
   )

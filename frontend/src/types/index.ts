@@ -144,14 +144,17 @@ export interface LearnRequest {
 }
 
 // ─── Confidence Stats ─────────────────────────────────────────────────────────
+// Coincide con ConfidenceStatsResponse del backend (app/schemas/analysis.py)
 
 export interface ConfidenceStats {
+  snapshot_id: string
   total: number
-  high_confidence: number   // >= 0.8
-  medium_confidence: number // 0.5 – 0.8
-  low_confidence: number    // < 0.5
-  requires_review: number
-  avg_confidence: number
+  requires_review_count: number   // transacciones con confidence < 0.8
+  requires_review_pct: number     // porcentaje con confidence < 0.8
+  fallback_count: number          // transacciones por fallback puro (confidence <= 0.35)
+  fallback_pct: number            // porcentaje fallback
+  avg_confidence: number          // confianza promedio 0.0–1.0
+  by_method: Record<string, number> // {'kb_personal', 'kb_global', 'builtin', 'user_reclassified', 'fallback', 'other'}
 }
 
 // ─── Knowledge Base ───────────────────────────────────────────────────────────
