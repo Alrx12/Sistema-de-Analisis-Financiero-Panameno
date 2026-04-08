@@ -424,7 +424,7 @@ export default function BudgetPage() {
   if (!aggregated || totalExpenses === 0) {
     const selectedMonthLabel = monthOptions.find(o => o.year === selectedYear && o.month === selectedMonth)?.label ?? ""
     return (
-      <div className="mx-auto max-w-5xl space-y-6">
+      <div className="space-y-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold">Mi Presupuesto</h1>
@@ -478,7 +478,7 @@ export default function BudgetPage() {
   }))
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8">
+    <div className="space-y-8">
 
       {/* ── Modal de gastos adicionales ── */}
       {showModal && (

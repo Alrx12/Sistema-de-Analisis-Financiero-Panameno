@@ -533,7 +533,7 @@ export default function CuentasPage() {
   // ─── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="mx-auto max-w-3xl space-y-5">
+    <div className="space-y-5">
 
       {/* Header */}
       <div className="page-header">

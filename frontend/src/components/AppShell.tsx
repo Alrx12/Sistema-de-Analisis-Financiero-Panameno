@@ -303,7 +303,7 @@ export default function AppShell() {
 
         {/* Área de contenido */}
         <main className="flex-1 overflow-y-auto">
-          <div className="mx-auto w-full max-w-[90rem] px-4 py-6 sm:px-6">
+          <div className="w-full px-4 py-6 sm:px-8">
             <Outlet />
           </div>
         </main>

@@ -220,7 +220,7 @@ export default function RetrainPage() {
       feature="Entrenamiento masivo"
       description="Revisa y corrige grupos de transacciones de un mismo comercio en bloque. El sistema aprende de todas tus correcciones y mejora su precisión con el tiempo."
     >
-    <div className="mx-auto max-w-5xl space-y-5">
+    <div className="space-y-5">
 
       {/* Header */}
       <div className="page-header">
