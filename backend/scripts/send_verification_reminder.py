@@ -47,11 +47,12 @@ log = logging.getLogger(__name__)
 def build_email_html(full_name: str, verify_url: str) -> str:
     first_name = full_name.split()[0] if full_name else "hola"
 
-    # URLs de respuesta para la encuesta (mailto pre-llenado a admin@safpro.us)
+    # URLs de respuesta para la encuesta (mailto pre-llenado — temporal: alexis12pineda@gmail.com)
+    REPLY_TO_EMAIL = "alexis12pineda@gmail.com"
     import urllib.parse
-    opt_a = "mailto:admin@safpro.us?subject=" + urllib.parse.quote("No tuve tiempo de probarlo")
-    opt_b = "mailto:admin@safpro.us?subject=" + urllib.parse.quote("No confío en subir mi estado de cuenta")
-    opt_c = "mailto:admin@safpro.us?subject=" + urllib.parse.quote("Vi la app y no me pareció útil")
+    opt_a = "mailto:" + REPLY_TO_EMAIL + "?subject=" + urllib.parse.quote("No tuve tiempo de probarlo")
+    opt_b = "mailto:" + REPLY_TO_EMAIL + "?subject=" + urllib.parse.quote("No confío en subir mi estado de cuenta")
+    opt_c = "mailto:" + REPLY_TO_EMAIL + "?subject=" + urllib.parse.quote("Vi la app y no me pareció útil")
 
     return f"""<!DOCTYPE html>
 <html lang="es">
@@ -298,6 +299,7 @@ def main():
             params: resend.Emails.SendParams = {
                 "from": settings.email_from,
                 "to": [row.email],
+                "reply_to": ["alexis12pineda@gmail.com"],  # temporal — cambiar a admin@safpro.us cuando esté listo
                 "subject": "Tu cuenta de SAFPRO te espera 👋",
                 "html": html,
             }
