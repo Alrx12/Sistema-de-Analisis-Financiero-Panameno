@@ -81,9 +81,9 @@ if ! command -v pg_restore &>/dev/null; then
     exit 1
 fi
 
-if ! rclone lsd "${R2_REMOTE}:" &>/dev/null; then
-    echo "ERROR: rclone remote '${R2_REMOTE}' no está configurado o no tiene acceso."
-    echo "  Verifica con: rclone lsd ${R2_REMOTE}:"
+if ! rclone lsd "${R2_REMOTE}:${R2_BUCKET}" &>/dev/null; then
+    echo "ERROR: No se puede acceder a ${R2_REMOTE}:${R2_BUCKET}"
+    echo "  Verifica con: rclone lsd ${R2_REMOTE}:${R2_BUCKET}"
     exit 1
 fi
 
