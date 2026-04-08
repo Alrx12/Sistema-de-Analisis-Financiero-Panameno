@@ -70,8 +70,10 @@ SELECT
     u.created_at                                        AS s1_at,
 
     -- ── Paso 2: Email verificado ─────────────────────────────────────────────
-    -- Fallback: si no hay evento, usar u.is_verified (dato histórico)
-    COALESCE(ep.verified_event_at IS NOT NULL, u.is_verified)  AS s2_verified,
+    -- Fallback: si no hay evento, usar u.is_verified (dato histórico).
+    -- Nota: COALESCE no sirve aquí porque IS NOT NULL devuelve FALSE (no NULL)
+    -- cuando no hay evento. Usar OR directamente.
+    (ep.verified_event_at IS NOT NULL OR u.is_verified)        AS s2_verified,
     ep.verified_event_at                                        AS s2_at,  -- NULL para históricos
 
     -- ── Paso 3: Primer login ─────────────────────────────────────────────────
@@ -95,8 +97,8 @@ SELECT
     ep.onboarded_at                                     AS s7_at,
 
     -- ── Paso 8: Upgrade a Pro ────────────────────────────────────────────────
-    -- Fallback: si no hay evento, usar plan='pro' (dato histórico)
-    COALESCE(ep.upgraded_at IS NOT NULL, u.plan = 'pro') AS s8_upgraded,
+    -- Fallback: si no hay evento, usar plan='pro' (dato histórico).
+    (ep.upgraded_at IS NOT NULL OR u.plan = 'pro')       AS s8_upgraded,
     ep.upgraded_at                                        AS s8_at,  -- NULL para históricos
 
     -- ── Tiempos entre pasos (en horas) ───────────────────────────────────────
