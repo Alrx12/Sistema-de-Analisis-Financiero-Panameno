@@ -98,6 +98,13 @@ def register(request: Request, payload: RegisterRequest, db: Session = Depends(g
             user.user_id,
         )
 
+    track_event(
+        user_id=user.user_id,
+        event_type="user_registered",
+        plan=getattr(user, "plan", None),
+        metadata={"method": "email"},
+    )
+
     return UserResponse.model_validate(user)
 
 
@@ -174,6 +181,13 @@ def verify_email(payload: VerifyEmailRequest, db: Session = Depends(get_db)) -> 
     db.add(user)
     db.commit()
     logger.info("Email verificado para user_id=%s", user_id)
+
+    track_event(
+        user_id=user.user_id,
+        event_type="email_verified",
+        plan=getattr(user, "plan", None),
+        metadata={},
+    )
 
     return {"message": "Email verificado correctamente."}
 
@@ -506,6 +520,7 @@ def google_callback(code: str | None = None, state: str | None = None, error: st
     user = db.scalar(select(User).where(
         (User.social_provider == "google") & (User.social_id == str(google_id))
     ))
+    is_new_user = False
     if not user:
         user = db.scalar(select(User).where(User.email == email))
         if user:
@@ -515,6 +530,7 @@ def google_callback(code: str | None = None, state: str | None = None, error: st
             user.is_verified = True
         else:
             # Crear nuevo usuario
+            is_new_user = True
             user = User(
                 username=email,
                 email=email,
@@ -528,6 +544,14 @@ def google_callback(code: str | None = None, state: str | None = None, error: st
 
         db.commit()
         db.refresh(user)
+
+        if is_new_user:
+            track_event(
+                user_id=user.user_id,
+                event_type="user_registered",
+                plan=getattr(user, "plan", None),
+                metadata={"method": "oauth_google"},
+            )
 
     token = create_access_token(subject=str(user.user_id))
     track_event(
@@ -631,6 +655,7 @@ def github_callback(code: str | None = None, state: str | None = None, error: st
     user = db.scalar(select(User).where(
         (User.social_provider == "github") & (User.social_id == github_id)
     ))
+    is_new_user = False
     if not user:
         user = db.scalar(select(User).where(User.email == email))
         if user:
@@ -638,6 +663,7 @@ def github_callback(code: str | None = None, state: str | None = None, error: st
             user.social_id = github_id
             user.is_verified = True
         else:
+            is_new_user = True
             user = User(
                 username=email,
                 email=email,
@@ -651,6 +677,14 @@ def github_callback(code: str | None = None, state: str | None = None, error: st
 
         db.commit()
         db.refresh(user)
+
+        if is_new_user:
+            track_event(
+                user_id=user.user_id,
+                event_type="user_registered",
+                plan=getattr(user, "plan", None),
+                metadata={"method": "oauth_github"},
+            )
 
     token = create_access_token(subject=str(user.user_id))
     track_event(

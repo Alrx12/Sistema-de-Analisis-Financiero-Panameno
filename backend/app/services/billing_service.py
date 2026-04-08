@@ -24,6 +24,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.models.user import User
+from app.services.analytics_service import track_event
 
 logger = logging.getLogger(__name__)
 
@@ -234,6 +235,16 @@ def _on_checkout_completed(session_obj: dict, db: Session) -> None:
     logger.info(
         "Usuario actualizado a plan=pro — user_id=%s expires_at=%s",
         user.user_id, expires_at,
+    )
+
+    track_event(
+        user_id=user.user_id,
+        event_type="plan_upgraded",
+        plan="pro",
+        metadata={
+            "subscription_id": subscription_id,
+            "expires_at": expires_at.isoformat() if expires_at else None,
+        },
     )
 
     # Enviar email de confirmación (fire-and-forget)

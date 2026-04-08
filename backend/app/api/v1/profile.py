@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_user, get_db
 from app.models.user import User
 from app.schemas.user_profile import UserProfileResponse, UserProfileUpdate
+from app.services.analytics_service import track_event
 from app.services.profile_service import ProfileService
 
 router = APIRouter()
@@ -44,5 +45,25 @@ def update_profile(
     current_user: User = Depends(get_current_user),
 ) -> UserProfileResponse:
     service = ProfileService(db)
+
+    # Detectar si el usuario está completando el onboarding por primera vez
+    was_onboarded = False
+    if body.onboarding_completed is True:
+        current = service.get_or_create(current_user.user_id)
+        was_onboarded = bool(current.onboarding_completed)
+
     profile = service.update(current_user.user_id, body)
+
+    # Disparar evento solo en la primera vez (no en llamadas repetidas)
+    if body.onboarding_completed is True and not was_onboarded:
+        track_event(
+            user_id=current_user.user_id,
+            event_type="onboarding_completed",
+            plan=getattr(current_user, "plan", None),
+            metadata={
+                "industry": profile.industry,
+                "has_income": profile.expected_monthly_income is not None,
+            },
+        )
+
     return UserProfileResponse.model_validate(profile)
