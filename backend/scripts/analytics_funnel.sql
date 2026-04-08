@@ -300,7 +300,7 @@ COMMENT ON FUNCTION analytics.refresh_all_materialized_views() IS
 -- 6. PRIMER REFRESH + VERIFICACIÓN
 -- =============================================================================
 
-REFRESH MATERIALIZED VIEW analytics.mv_user_funnel;
+REFRESH MATERIALIZED VIEW CONCURRENTLY analytics.mv_user_funnel;
 
 -- Resumen del funnel con los datos actuales
 SELECT
