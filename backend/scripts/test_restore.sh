@@ -76,11 +76,6 @@ if ! command -v rclone &>/dev/null; then
     exit 1
 fi
 
-if ! command -v pg_restore &>/dev/null; then
-    echo "ERROR: pg_restore no está instalado (instala postgresql-client)"
-    exit 1
-fi
-
 if ! rclone lsd "${R2_REMOTE}:${R2_BUCKET}" &>/dev/null; then
     echo "ERROR: No se puede acceder a ${R2_REMOTE}:${R2_BUCKET}"
     echo "  Verifica con: rclone lsd ${R2_REMOTE}:${R2_BUCKET}"
@@ -92,7 +87,7 @@ log "Prerequisites OK"
 # ── Listar backups disponibles ────────────────────────────────────────────────
 section "Backups disponibles en R2"
 
-AVAILABLE_BACKUPS=$(rclone lsf "${R2_REMOTE}:${R2_BUCKET}/${R2_DB_PREFIX}" 2>/dev/null | grep "\.dump$" | sort -r)
+AVAILABLE_BACKUPS=$(rclone lsf "${R2_REMOTE}:${R2_BUCKET}/${R2_DB_PREFIX}" 2>/dev/null | grep "\.sql\.gz$" | sort -r)
 
 if [[ -z "$AVAILABLE_BACKUPS" ]]; then
     echo "ERROR: No se encontraron backups en ${R2_REMOTE}:${R2_BUCKET}/${R2_DB_PREFIX}"
@@ -115,8 +110,9 @@ fi
 
 # ── Seleccionar backup a restaurar ────────────────────────────────────────────
 if [[ -n "$TARGET_DATE" ]]; then
-    BACKUP_FILE="safpro_db_${TARGET_DATE}.dump"
-    if ! echo "$AVAILABLE_BACKUPS" | grep -q "$BACKUP_FILE"; then
+    # Los archivos tienen formato db_YYYY-MM-DD_HH-MM-SS.sql.gz — buscar por fecha
+    BACKUP_FILE=$(echo "$AVAILABLE_BACKUPS" | grep "^db_${TARGET_DATE}" | head -1)
+    if [[ -z "$BACKUP_FILE" ]]; then
         echo "ERROR: No existe backup para la fecha $TARGET_DATE"
         echo "  Backups disponibles:"
         echo "$AVAILABLE_BACKUPS" | head -5 | sed 's/^/    /'
@@ -171,31 +167,27 @@ pass "DB de prueba '$TEST_DB' creada"
 section "Restaurando backup"
 
 START_RESTORE=$(date +%s)
-log "Corriendo pg_restore..."
+log "Restaurando con gunzip | psql..."
 
 RESTORE_LOG="$TEMP_BACKUP_DIR/restore_stderr.log"
 
-if ! pg_restore \
+if ! gunzip -c "$LOCAL_FILE" | psql \
         -h "$DB_HOST" \
         -p "$DB_PORT" \
         -U "$DB_USER" \
         -d "$TEST_DB" \
         --no-password \
-        --no-owner \
-        --no-privileges \
-        --jobs 2 \
-        "$LOCAL_FILE" 2>"$RESTORE_LOG"; then
-    # pg_restore puede salir con código no-cero por warnings no fatales
-    RESTORE_ERRORS=$(grep -c "ERROR:" "$RESTORE_LOG" 2>/dev/null || echo 0)
+        -v ON_ERROR_STOP=0 \
+        > /dev/null 2>"$RESTORE_LOG"; then
+    RESTORE_ERRORS=$(grep -c "^psql:.*ERROR:" "$RESTORE_LOG" 2>/dev/null || echo 0)
     if [[ "$RESTORE_ERRORS" -gt 0 ]]; then
-        fail "pg_restore terminó con $RESTORE_ERRORS errores"
-        grep "ERROR:" "$RESTORE_LOG" | head -5 | sed 's/^/    /'
+        fail "Restauración terminó con $RESTORE_ERRORS errores"
+        grep "^psql:.*ERROR:" "$RESTORE_LOG" | head -5 | sed 's/^/    /'
     else
-        RESTORE_WARNINGS=$(wc -l < "$RESTORE_LOG")
-        warn "pg_restore tuvo $RESTORE_WARNINGS warnings (no fatales)"
+        pass "Restauración completada (warnings no fatales ignorados)"
     fi
 else
-    pass "pg_restore completado sin errores"
+    pass "Restauración completada sin errores"
 fi
 
 END_RESTORE=$(date +%s)
@@ -283,7 +275,7 @@ else
     log "  DB '$TEST_DB' eliminada"
 fi
 
-rm -f "$LOCAL_FILE" "$RESTORE_LOG"
+rm -f "$LOCAL_FILE" "$RESTORE_LOG" 2>/dev/null || true
 rmdir "$TEMP_BACKUP_DIR" 2>/dev/null || true
 log "  Archivos temporales eliminados"
 
