@@ -59,10 +59,10 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 7px 10px;
+  padding: 8px 10px;
   border-radius: 7px;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   color: rgba(255,255,255,0.55);
   transition: background 0.12s, color 0.12s, border-color 0.12s;
@@ -80,7 +80,7 @@
   border-color: rgba(99, 102, 241, 0.25);
 }
 .sidebar-section-label {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: .1em;
   text-transform: uppercase;
@@ -102,8 +102,8 @@
 }
 .zoho-table th {
   text-align: left;
-  padding: 10px 16px;
-  font-size: 11px;
+  padding: 11px 18px;
+  font-size: 12px;
   font-weight: 600;
   color: rgba(255,255,255,0.28);
   text-transform: uppercase;
@@ -112,8 +112,8 @@
   white-space: nowrap;
 }
 .zoho-table td {
-  padding: 11px 16px;
-  font-size: 13px;
+  padding: 13px 18px;
+  font-size: 14px;
   color: #cbd5e1;
   border-bottom: 1px solid rgba(255,255,255,0.05);
   vertical-align: middle;
@@ -134,14 +134,14 @@
   margin-bottom: 24px;
 }
 .page-title {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 700;
   color: #f1f5f9;
   line-height: 1.2;
   letter-spacing: -.025em;
 }
 .page-subtitle {
-  font-size: 13px;
+  font-size: 14px;
   color: rgba(255,255,255,0.38);
   margin-top: 3px;
 }
@@ -151,9 +151,9 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 5px 12px;
+  padding: 6px 14px;
   border-radius: 99px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   border: 1px solid rgba(255,255,255,0.1);
   background: transparent;
@@ -292,7 +292,7 @@
 }
 .metric-icon { font-size: 22px; flex-shrink: 0; }
 .metric-label {
-  font-size: 11px;
+  font-size: 12px;
   color: rgba(255,255,255,0.38);
   font-weight: 600;
   text-transform: uppercase;
@@ -300,7 +300,7 @@
   margin-bottom: 3px;
 }
 .metric-value {
-  font-size: 21px;
+  font-size: 23px;
   font-weight: 700;
   letter-spacing: -.02em;
   line-height: 1;
@@ -331,13 +331,13 @@
   margin-top: 1px;
 }
 .rec-title {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   color: #f1f5f9;
   margin-bottom: 3px;
 }
 .rec-desc {
-  font-size: 12px;
+  font-size: 13px;
   color: rgba(255,255,255,0.45);
   line-height: 1.5;
 }
@@ -347,7 +347,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   color: rgba(255,255,255,0.35);
   text-transform: uppercase;
@@ -367,9 +367,9 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 3px 9px;
+  padding: 4px 10px;
   border-radius: 5px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   background: rgba(99,102,241,0.15);
   color: #a5b4fc;
@@ -379,9 +379,9 @@
 .analysis-badge-muted {
   display: inline-flex;
   align-items: center;
-  padding: 3px 9px;
+  padding: 4px 10px;
   border-radius: 5px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   background: rgba(255,255,255,0.06);
   color: rgba(255,255,255,0.45);

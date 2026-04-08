@@ -1076,11 +1076,11 @@ function KpiCard({ title, value, icon, iconClass, valueClass, sub }: {
     <Card className="zoho-card border-0">
       <CardContent className="pt-5 pb-5">
         <div className="flex items-start justify-between mb-3">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{title}</p>
+          <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">{title}</p>
           <div className={iconClass ?? "kpi-icon-blue"}>{icon}</div>
         </div>
-        <p className={`text-2xl font-bold ${valueClass ?? ""}`}>{value}</p>
-        {sub && <p className="mt-1.5 text-xs text-muted-foreground">{sub}</p>}
+        <p className={`text-3xl font-bold ${valueClass ?? ""}`}>{value}</p>
+        {sub && <p className="mt-1.5 text-sm text-muted-foreground">{sub}</p>}
       </CardContent>
     </Card>
   )

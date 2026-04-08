@@ -105,9 +105,9 @@ function KpiCard({
     <div className="zoho-card p-4 flex items-start gap-3">
       <div className={`kpi-icon-${color} shrink-0`}>{icon}</div>
       <div className="min-w-0">
-        <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">{label}</p>
-        <p className="text-2xl font-bold leading-tight">{value}</p>
-        {sub && <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>}
+        <p className="text-sm text-muted-foreground uppercase tracking-wide font-medium">{label}</p>
+        <p className="text-3xl font-bold leading-tight">{value}</p>
+        {sub && <p className="text-sm text-muted-foreground mt-0.5">{sub}</p>}
       </div>
     </div>
   )
@@ -119,7 +119,7 @@ function Section({ title, icon, children }: { title: string; icon: React.ReactNo
     <div className="space-y-3">
       <div className="flex items-center gap-2">
         <span className="text-muted-foreground">{icon}</span>
-        <h2 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">{title}</h2>
+        <h2 className="font-semibold text-base uppercase tracking-wide text-muted-foreground">{title}</h2>
       </div>
       {children}
     </div>
