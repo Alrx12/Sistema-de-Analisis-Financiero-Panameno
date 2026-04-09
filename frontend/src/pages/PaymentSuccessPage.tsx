@@ -1,13 +1,18 @@
 /**
- * PaymentSuccessPage.tsx — Pantalla de confirmación post-Stripe Checkout.
+ * PaymentSuccessPage.tsx — Pantalla de confirmación post-pago dLocal Go.
  *
- * Stripe redirige aquí después de un pago exitoso:
- *   /upgrade/success?session_id=cs_...
+ * dLocal Go redirige aquí después de una suscripción exitosa:
+ *   /upgrade/success
+ *
+ * NOTA: el plan puede no estar actualizado inmediatamente porque dLocal Go
+ * procesa el webhook de forma asíncrona. La invalidación de queries forzará
+ * una recarga. Si el plan aún no es 'pro' después de 5 segundos, es normal —
+ * el webhook puede tardar unos segundos más.
  *
  * Esta página:
- *   1. Invalida el query de billing-status para que el store refleje plan=pro
- *   2. Muestra un mensaje de éxito con animación
- *   3. Redirige al Dashboard después de 4 segundos
+ *   1. Invalida el query de billing-status y user para reflejar plan=pro
+ *   2. Muestra un mensaje de éxito
+ *   3. Redirige al Dashboard después de 5 segundos
  */
 import { useEffect } from "react"
 import { useNavigate } from "react-router-dom"

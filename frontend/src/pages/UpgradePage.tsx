@@ -1,16 +1,17 @@
 /**
  * UpgradePage.tsx — Página de precios y upgrade a Plan Pro.
  *
- * Flujo:
+ * Flujo con dLocal Go:
  *   1. Usuario ve tabla Free vs Pro
  *   2. Elige intervalo (mensual / anual)
  *   3. Click en "Suscribirse" → POST /billing/create-checkout-session
- *   4. Redirige al Stripe Checkout externo
- *   5. Al completar, Stripe redirige a /upgrade/success
+ *   4. Redirige al hosted checkout de dLocal Go
+ *   5. Al completar, dLocal Go notifica al backend via webhook
+ *   6. El plan se actualiza automáticamente a 'pro'
  */
 import { useState } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
-import { useQuery, useMutation } from "@tanstack/react-query"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import {
   Check,
   Zap,
@@ -18,11 +19,13 @@ import {
   ArrowLeft,
   Loader2,
   AlertCircle,
-  Settings,
+  X,
+  AlertTriangle,
 } from "lucide-react"
-import { getBillingStatus, createCheckoutSession, getPortalUrl } from "@/api/billing"
+import { getBillingStatus, createCheckoutSession, cancelSubscription } from "@/api/billing"
 import type { BillingInterval } from "@/api/billing"
 import { useAuthStore } from "@/stores/authStore"
+import { toast } from "@/components/ui/toast"
 
 // ── Feature list ──────────────────────────────────────────────────────────────
 const FREE_FEATURES = [
@@ -43,60 +46,112 @@ const PRO_FEATURES = [
   "Soporte prioritario",
 ]
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-function planLabel(plan: string) {
-  if (plan === "pro") return "Plan Pro"
-  if (plan === "friends_and_family") return "Friends & Family"
-  return "Plan Gratis"
-}
-
 export default function UpgradePage() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const [searchParams] = useSearchParams()
   const wasCancelled = searchParams.get("cancelled") === "1"
   const user = useAuthStore((s) => s.user)
 
   const [interval, setInterval] = useState<BillingInterval>("monthly")
-  const [portalLoading, setPortalLoading] = useState(false)
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false)
 
   // Estado de la suscripción
   const { data: billing, isLoading: billingLoading } = useQuery({
     queryKey: ["billing-status"],
     queryFn: getBillingStatus,
-    staleTime: 1000 * 60,   // 1 minuto
+    staleTime: 1000 * 60,
   })
 
-  // Crear checkout session
+  // Crear checkout session → redirigir a dLocal Go
   const checkoutMutation = useMutation({
     mutationFn: (iv: BillingInterval) => createCheckoutSession(iv),
     onSuccess: (data) => {
-      // Redirigir al Stripe Checkout (fuera de la SPA)
       window.location.href = data.checkout_url
+    },
+    onError: () => {
+      toast("No se pudo iniciar el pago. Intenta de nuevo.", "error")
     },
   })
 
-  // Abrir Customer Portal
-  async function openPortal() {
-    setPortalLoading(true)
-    try {
-      const data = await getPortalUrl()
-      window.location.href = data.portal_url
-    } catch {
-      // Si falla silenciosamente, el usuario verá que nada pasa
-    } finally {
-      setPortalLoading(false)
-    }
-  }
+  // Cancelar suscripción activa
+  const cancelMutation = useMutation({
+    mutationFn: cancelSubscription,
+    onSuccess: () => {
+      toast("Suscripción cancelada. Tu plan ha bajado a Gratis.", "info")
+      setShowCancelConfirm(false)
+      queryClient.invalidateQueries({ queryKey: ["billing-status"] })
+      queryClient.invalidateQueries({ queryKey: ["user"] })
+    },
+    onError: (err: Error) => {
+      toast(err.message || "No se pudo cancelar la suscripción.", "error")
+      setShowCancelConfirm(false)
+    },
+  })
 
   const isPro = billing?.plan === "pro"
   const isFF = billing?.plan === "friends_and_family"
+  const hasActiveSub = billing?.has_active_subscription ?? false
 
   const monthlyPrice = 5
   const annualPrice = 45
-  const annualMonthly = (annualPrice / 12).toFixed(2)   // $3.75
+  const annualMonthly = (annualPrice / 12).toFixed(2)
 
   return (
     <div style={{ minHeight: "100vh", background: "#f4f5f7", color: "#111827" }}>
+
+      {/* ── Modal de confirmación de cancelación ── */}
+      {showCancelConfirm && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+          style={{ background: "rgba(0,0,0,0.5)" }}
+        >
+          <div
+            className="w-full max-w-md rounded-2xl p-6"
+            style={{ background: "#ffffff", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-full" style={{ background: "#fef2f2" }}>
+                <AlertTriangle className="h-5 w-5" style={{ color: "#dc2626" }} />
+              </div>
+              <h3 className="font-bold text-lg" style={{ color: "#111827" }}>
+                ¿Cancelar el Plan Pro?
+              </h3>
+            </div>
+            <p className="text-sm mb-1" style={{ color: "#4b5563" }}>
+              Tu plan bajará a <strong>Gratis</strong> de inmediato. Conservarás todos
+              tus análisis e historial, pero perderás acceso a:
+            </p>
+            <ul className="text-sm mt-2 mb-5 space-y-1 pl-4" style={{ color: "#6b7280" }}>
+              <li>• Archivos ilimitados (límite de 5)</li>
+              <li>• Simulaciones y planificador de quincena</li>
+              <li>• Presupuesto personalizado</li>
+            </ul>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowCancelConfirm(false)}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors"
+                style={{ background: "#f3f4f6", color: "#374151" }}
+              >
+                No, mantener Pro
+              </button>
+              <button
+                onClick={() => cancelMutation.mutate()}
+                disabled={cancelMutation.isPending}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-colors"
+                style={{ background: "#dc2626", color: "#fff" }}
+              >
+                {cancelMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  "Sí, cancelar"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Header ── */}
       <div style={{ background: "var(--sidebar-bg)" }} className="px-6 py-4">
         <div style={{ maxWidth: "1024px", margin: "0 auto" }} className="flex items-center gap-4">
@@ -115,6 +170,7 @@ export default function UpgradePage() {
       </div>
 
       <div style={{ maxWidth: "1024px", margin: "0 auto", padding: "2.5rem 1rem" }}>
+
         {/* ── Título ── */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold mb-2" style={{ color: "#111827" }}>
@@ -137,26 +193,21 @@ export default function UpgradePage() {
               <p className="text-white font-semibold">Tienes el Plan Pro activo</p>
               {billing?.subscription_expires_at && (
                 <p className="text-white/60 text-sm">
-                  Se renueva el{" "}
+                  Próximo cobro el{" "}
                   {new Date(billing.subscription_expires_at).toLocaleDateString("es-PA", {
                     day: "numeric", month: "long", year: "numeric",
                   })}
                 </p>
               )}
             </div>
-            {billing?.has_stripe_customer && (
+            {hasActiveSub && (
               <button
-                onClick={openPortal}
-                disabled={portalLoading}
+                onClick={() => setShowCancelConfirm(true)}
                 className="flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg transition-colors"
-                style={{ background: "rgba(255,255,255,0.12)", color: "#fff" }}
+                style={{ background: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.75)" }}
               >
-                {portalLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Settings className="h-4 w-4" />
-                )}
-                Gestionar suscripción
+                <X className="h-4 w-4" />
+                Cancelar suscripción
               </button>
             )}
           </div>
@@ -227,6 +278,7 @@ export default function UpgradePage() {
 
         {/* ── Tarjetas de plan ── */}
         <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+
           {/* Plan Gratis */}
           <div className="rounded-2xl p-6 flex flex-col" style={{ background: "#ffffff", boxShadow: "0 1px 6px rgba(0,0,0,0.08)" }}>
             <div className="mb-4">
@@ -237,7 +289,6 @@ export default function UpgradePage() {
               </div>
               <p className="text-sm mt-1" style={{ color: "#6b7280" }}>Para empezar y probar el sistema.</p>
             </div>
-
             <ul className="space-y-2.5 flex-1 mb-6">
               {FREE_FEATURES.map((f) => (
                 <li key={f} className="flex items-start gap-2.5">
@@ -246,7 +297,6 @@ export default function UpgradePage() {
                 </li>
               ))}
             </ul>
-
             {!isPro && (
               <div
                 className="text-center text-sm font-semibold py-3 rounded-xl"
@@ -265,7 +315,6 @@ export default function UpgradePage() {
               boxShadow: "0 8px 32px rgba(28,43,75,0.25)",
             }}
           >
-            {/* Badge "Recomendado" */}
             <div
               className="absolute top-4 right-4 text-xs font-bold px-2.5 py-1 rounded-full"
               style={{ background: "#e05c19", color: "#fff" }}
@@ -322,7 +371,7 @@ export default function UpgradePage() {
                 {checkoutMutation.isPending ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Redirigiendo a pago…
+                    Redirigiendo al pago…
                   </>
                 ) : (
                   <>
@@ -346,7 +395,7 @@ export default function UpgradePage() {
           {[
             { emoji: "🔒", title: "Sin credenciales bancarias", desc: "Solo subes tu Excel exportado." },
             { emoji: "🚫", title: "Cancela cuando quieras", desc: "Sin permanencia ni penalizaciones." },
-            { emoji: "📱", title: "Pagos seguros con Stripe", desc: "TLS, 3D Secure, PCI DSS." },
+            { emoji: "💳", title: "Pagos seguros con dLocal Go", desc: "Merchant oficial en Panamá. Visa y Mastercard." },
           ].map(({ emoji, title, desc }) => (
             <div key={title} className="rounded-xl p-4" style={{ background: "#ffffff", boxShadow: "0 1px 6px rgba(0,0,0,0.08)" }}>
               <div className="text-2xl mb-2">{emoji}</div>
@@ -368,12 +417,16 @@ export default function UpgradePage() {
               a: "Tus análisis e historial se conservan. Pasas al plan Gratis con límite de 5 archivos.",
             },
             {
+              q: "¿Cómo cancelo mi suscripción?",
+              a: 'Desde esta página, si tienes el Plan Pro activo, verás el botón "Cancelar suscripción" en el banner superior. Tu plan baja a Gratis de inmediato.',
+            },
+            {
               q: "¿Puedo cambiar de mensual a anual?",
-              a: 'Sí, desde el portal de suscripción ("Gestionar suscripción") puedes cambiar el plan en cualquier momento.',
+              a: "Cancela el plan actual y suscríbete al plan anual. Si estás dentro del período de reembolso de 7 días, puedes solicitar el reembolso del mes ya pagado.",
             },
             {
               q: "¿Emiten factura?",
-              a: "Stripe genera una factura automática en cada cobro. La recibirás en tu email.",
+              a: "dLocal Go genera una confirmación de pago por email en cada cobro. Para factura fiscal contáctanos a admin@safpro.us.",
             },
           ].map(({ q, a }) => (
             <details

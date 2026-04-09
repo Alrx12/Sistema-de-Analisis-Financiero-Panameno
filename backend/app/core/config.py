@@ -51,11 +51,20 @@ class Settings(BaseSettings):
     github_client_id: str = ""
     github_client_secret: str = ""
 
-    # Stripe — pagos y suscripciones
-    stripe_secret_key: str = ""               # sk_live_... o sk_test_...
-    stripe_webhook_secret: str = ""           # whsec_... (del Stripe Dashboard)
-    stripe_price_id_monthly: str = ""         # price_... Plan Pro mensual $5
-    stripe_price_id_annual: str = ""          # price_... Plan Pro anual $45
+    # ── dLocal Go — pagos y suscripciones ──────────────────────────────────────
+    # Obtén las keys en: https://merchant.dlocalgo.com → Developers → API Keys
+    dlocalgo_api_key: str = ""               # API key del merchant
+    dlocalgo_secret_key: str = ""            # Secret key del merchant
+    dlocalgo_sandbox: bool = True            # True = usa api-sbx.dlocalgo.com
+    dlocalgo_plan_id_monthly: str = ""       # ID del plan mensual ($5 USD/mes)
+    dlocalgo_plan_id_annual: str = ""        # ID del plan anual  ($45 USD/año)
+
+    # ── Stripe — LEGACY (no usar para nuevos pagos) ─────────────────────────
+    # Mantener en .env para no romper users existentes con stripe_customer_id en DB
+    stripe_secret_key: str = ""
+    stripe_webhook_secret: str = ""
+    stripe_price_id_monthly: str = ""
+    stripe_price_id_annual: str = ""
 
     model_config = SettingsConfigDict(
         env_file=".env",

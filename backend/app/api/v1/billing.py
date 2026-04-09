@@ -1,11 +1,11 @@
 """
-billing.py — Endpoints de Stripe para SAFPRO.
+billing.py — Endpoints de dLocal Go para SAFPRO.
 
 Endpoints:
-  POST /billing/create-checkout-session   → URL de Stripe Checkout
-  POST /billing/webhook                   → Recibe eventos de Stripe (sin auth)
-  GET  /billing/portal                    → URL del Customer Portal
-  GET  /billing/status                    → Plan actual + fecha de expiración
+  POST /billing/create-checkout-session → URL del hosted checkout de dLocal Go
+  POST /billing/webhook                 → Recibe notificaciones de dLocal Go (sin auth JWT)
+  DELETE /billing/cancel                → Cancela la suscripción activa del usuario
+  GET  /billing/status                  → Plan actual + fecha de expiración
 """
 from __future__ import annotations
 
@@ -17,7 +17,6 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
-from app.core.config import settings
 from app.models.user import User
 from app.services import billing_service
 
@@ -36,14 +35,10 @@ class CheckoutResponse(BaseModel):
     checkout_url: str
 
 
-class PortalResponse(BaseModel):
-    portal_url: str
-
-
 class BillingStatusResponse(BaseModel):
     plan: str
     subscription_expires_at: str | None   # ISO-8601 o null
-    has_stripe_customer: bool
+    has_active_subscription: bool         # True si dlocalgo_subscription_id no es null
 
 
 # ── Endpoints ────────────────────────────────────────────────────────────────
@@ -51,7 +46,7 @@ class BillingStatusResponse(BaseModel):
 @router.post(
     "/create-checkout-session",
     response_model=CheckoutResponse,
-    summary="Crea una sesión de Stripe Checkout",
+    summary="Genera la URL de checkout de dLocal Go para suscribirse",
 )
 def create_checkout_session(
     payload: CheckoutRequest,
@@ -59,12 +54,13 @@ def create_checkout_session(
     current_user: User = Depends(get_current_user),
 ) -> CheckoutResponse:
     """
-    Crea una sesión de Stripe Checkout y devuelve la URL de redirección.
+    Devuelve la URL del hosted checkout de dLocal Go con el external_id del usuario.
+
+    El frontend redirige al usuario a `checkout_url` para completar el pago.
+    Tras el pago, dLocal Go notifica a /billing/webhook y el plan se actualiza.
 
     - `interval` = "monthly"  → Plan Pro $5/mes
     - `interval` = "annual"   → Plan Pro $45/año
-
-    El frontend redirige al usuario a `checkout_url` para completar el pago.
     """
     if current_user.plan == "pro":
         raise HTTPException(
@@ -72,26 +68,16 @@ def create_checkout_session(
             detail="Ya tienes el plan Pro activo.",
         )
 
-    if payload.interval == "monthly":
-        price_id = settings.stripe_price_id_monthly
-    elif payload.interval == "annual":
-        price_id = settings.stripe_price_id_annual
-    else:
+    if payload.interval not in ("monthly", "annual"):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="interval debe ser 'monthly' o 'annual'.",
         )
 
-    if not price_id:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Pagos no configurados en este servidor.",
-        )
-
     try:
-        url = billing_service.create_checkout_session(current_user, price_id, db)
-    except RuntimeError as exc:
-        logger.error("Error creando checkout session: %s", exc)
+        url = billing_service.create_checkout_url(current_user, payload.interval)
+    except (RuntimeError, ValueError) as exc:
+        logger.error("Error generando checkout URL: %s", exc)
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=str(exc),
@@ -102,86 +88,84 @@ def create_checkout_session(
 
 @router.post(
     "/webhook",
-    summary="Webhook de Stripe (sin autenticación JWT)",
+    summary="Webhook de dLocal Go (sin autenticación JWT)",
     include_in_schema=False,   # no exponer en Swagger
 )
-async def stripe_webhook(
+async def dlocalgo_webhook(
     request: Request,
-    stripe_signature: str | None = Header(default=None, alias="stripe-signature"),
+    authorization: str | None = Header(default=None),
     db: Session = Depends(get_db),
 ) -> JSONResponse:
     """
-    Recibe eventos de Stripe y los procesa.
+    Recibe notificaciones de dLocal Go y las procesa.
 
-    - El body debe leerse como bytes crudos para que la verificación de firma funcione.
-    - Este endpoint NO usa autenticación JWT — Stripe llama directamente.
-    - Siempre devuelve HTTP 200 para que Stripe no reintente eventos ya procesados.
+    dLocal Go envía: POST {"payment_id": "DP-xxx"}
+    El handler verifica la firma HMAC-SHA256 y luego hace GET al pago
+    para obtener el estado y el external_id del usuario.
+
+    Este endpoint NO usa autenticación JWT — dLocal Go llama directamente.
+    Siempre devuelve HTTP 200 para que dLocal Go no reintente.
     """
     body = await request.body()
 
-    if not stripe_signature:
-        logger.warning("Webhook recibido sin Stripe-Signature header")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Falta el header Stripe-Signature.",
+    # Verificar firma HMAC antes de procesar nada
+    if not billing_service.verify_webhook_signature(body, authorization):
+        logger.warning("Webhook con firma inválida — rechazado")
+        # Devolvemos 200 igualmente para que dLocal Go no reintente indefinidamente
+        # (una firma inválida es un problema de configuración, no de disponibilidad)
+        return JSONResponse(
+            status_code=200,
+            content={"status": "invalid_signature"},
         )
 
     try:
-        result = billing_service.handle_webhook_event(body, stripe_signature, db)
-    except ValueError as exc:
-        # Firma inválida
-        logger.warning("Webhook firma inválida: %s", exc)
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(exc),
-        ) from exc
-    except RuntimeError as exc:
-        logger.error("Webhook error de configuración: %s", exc)
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=str(exc),
-        ) from exc
+        import json
+        payload = json.loads(body)
+    except Exception:
+        logger.warning("Webhook con body no-JSON: %s", body[:200])
+        return JSONResponse(status_code=200, content={"status": "invalid_payload"})
+
+    try:
+        result = billing_service.handle_webhook_event(payload, db)
     except Exception as exc:
-        # No propagar errores internos — Stripe reintentaría indefinidamente
-        logger.exception("Error interno procesando webhook: %s", exc)
+        # No propagar errores — dLocal Go reintentaría cada 10 minutos
+        logger.exception("Error interno procesando webhook dLocal Go: %s", exc)
         return JSONResponse(status_code=200, content={"status": "error_logged"})
 
     return JSONResponse(status_code=200, content=result)
 
 
-@router.get(
-    "/portal",
-    response_model=PortalResponse,
-    summary="Genera URL del Customer Portal de Stripe",
+@router.delete(
+    "/cancel",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Cancela la suscripción Pro activa",
 )
-def customer_portal(
+def cancel_subscription(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> PortalResponse:
+) -> None:
     """
-    Devuelve una URL única y de corta duración del Customer Portal de Stripe
-    donde el usuario puede:
-    - Ver y cancelar su suscripción
-    - Actualizar método de pago
-    - Descargar facturas
+    Cancela la suscripción activa del usuario en dLocal Go.
 
-    Requiere que el usuario tenga ya un `stripe_customer_id` (haber pagado antes).
+    El plan se baja inmediatamente a 'free' en la DB.
+    dLocal Go también enviará un webhook de confirmación.
+
+    Lanza 404 si el usuario no tiene suscripción activa.
+    Lanza 503 si hay un error al comunicarse con dLocal Go.
     """
     try:
-        url = billing_service.create_portal_session(current_user, db)
+        billing_service.cancel_subscription(current_user, db)
     except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(exc),
         ) from exc
     except RuntimeError as exc:
-        logger.error("Error creando portal session: %s", exc)
+        logger.error("Error cancelando suscripción: %s", exc)
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=str(exc),
         ) from exc
-
-    return PortalResponse(portal_url=url)
 
 
 @router.get(
@@ -193,8 +177,8 @@ def billing_status(
     current_user: User = Depends(get_current_user),
 ) -> BillingStatusResponse:
     """
-    Devuelve el plan activo, la fecha de expiración de la suscripción (si aplica)
-    y si el usuario tiene ya un Stripe Customer asociado.
+    Devuelve el plan activo, la fecha de expiración y si tiene suscripción
+    activa en dLocal Go.
     """
     expires_str: str | None = None
     if current_user.subscription_expires_at:
@@ -203,5 +187,5 @@ def billing_status(
     return BillingStatusResponse(
         plan=current_user.plan,
         subscription_expires_at=expires_str,
-        has_stripe_customer=bool(current_user.stripe_customer_id),
+        has_active_subscription=bool(current_user.dlocalgo_subscription_id),
     )

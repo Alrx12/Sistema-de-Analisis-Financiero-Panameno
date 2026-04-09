@@ -1,25 +1,49 @@
 """
-billing_service.py — Lógica de negocio para Stripe.
+billing_service.py — Lógica de negocio para dLocal Go.
 
 Responsabilidades:
-  - Crear o recuperar el Stripe Customer para un usuario
-  - Crear sesiones de Stripe Checkout
-  - Generar links del Customer Portal (gestión de suscripción)
-  - Procesar eventos del webhook: checkout.session.completed,
-    customer.subscription.deleted / updated, invoice.payment_failed
+  - Construir la URL de checkout de suscripción (subscribe_url + external_id)
+  - Verificar la firma HMAC-SHA256 de los webhooks entrantes
+  - Obtener el detalle de un pago vía GET /v1/payments/:payment_id
+  - Procesar el evento de webhook y actualizar el plan del usuario
+  - Cancelar la suscripción activa del usuario
 
-Nota sobre la librería stripe:
-  pip install stripe
-  La librería usa stripe.api_key como singleton global. Aquí siempre
-  lo configuramos al inicio de cada función pública para evitar
-  problemas en entornos multi-threaded.
+Flujo de suscripción (dLocal Go nativo):
+  1. Admin crea planes monthly/anual con setup_dlocalgo_plans.py
+     → Guarda DLOCALGO_PLAN_ID_MONTHLY y DLOCALGO_PLAN_ID_ANNUAL en .env
+  2. Usuario hace clic en "Suscribirse"
+     → Frontend llama POST /billing/create-checkout-session
+     → Backend devuelve subscribe_url?external_id={user_id}&email={email}
+     → Frontend redirige al usuario al checkout de dLocal Go
+  3. Usuario completa el pago en dLocal Go
+     → dLocal Go llama POST /billing/webhook con {"payment_id": "DP-xxx"}
+     → Backend verifica firma HMAC-SHA256
+     → Backend hace GET /v1/payments/{payment_id} para obtener detalles
+     → Backend identifica al usuario por external_id
+     → Backend actualiza user.plan = "pro" + guarda subscription_id
+  4. dLocal Go cobra automáticamente en cada ciclo (mensual/anual)
+     → Mismo flujo de webhook por cada renovación
+  5. Usuario cancela
+     → Frontend llama DELETE /billing/cancel
+     → Backend llama DELETE /v1/subscription/plan/{plan_id}/subscription/{sub_id}
+     → Webhook confirma cancelación → plan → "free"
+
+Autenticación dLocal Go:
+  Authorization: Bearer {api_key}:{secret_key}
+
+Verificación de webhook:
+  Header: "V2-HMAC-SHA256, Signature: {hex}"
+  Cálculo: HMAC-SHA256(api_key + json_payload, secret_key).hexdigest()
 """
 from __future__ import annotations
 
+import hashlib
+import hmac
 import logging
 from datetime import datetime, timezone
-from uuid import UUID as _UUID
+from urllib.parse import quote, urlencode
 
+import httpx
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -29,212 +53,285 @@ from app.services.analytics_service import track_event
 logger = logging.getLogger(__name__)
 
 
-def _stripe():
-    """Devuelve el módulo stripe configurado. Lanza RuntimeError si falta config."""
-    if not settings.stripe_secret_key:
+# ── Helpers de configuración ─────────────────────────────────────────────────
+
+def _require_config() -> None:
+    """Lanza RuntimeError si faltan las credenciales de dLocal Go."""
+    if not settings.dlocalgo_api_key or not settings.dlocalgo_secret_key:
         raise RuntimeError(
-            "STRIPE_SECRET_KEY no configurado. "
-            "Agrega la variable al .env para habilitar pagos."
+            "DLOCALGO_API_KEY y DLOCALGO_SECRET_KEY no configurados. "
+            "Obtén tus keys en merchant.dlocalgo.com → Developers → API Keys "
+            "y agrégalos al .env."
         )
-    try:
-        import stripe as _s
-    except ImportError as exc:
-        raise RuntimeError(
-            "Librería 'stripe' no instalada. Ejecuta: pip install stripe"
-        ) from exc
-
-    _s.api_key = settings.stripe_secret_key
-    return _s
 
 
-# ── Customer ────────────────────────────────────────────────────────────────
-
-def get_or_create_customer(user: User, db: Session) -> str:
-    """
-    Devuelve el stripe_customer_id del usuario, creándolo en Stripe si no existe.
-    Persiste el ID en la DB en el mismo call (no requiere commit externo — usa flush).
-    """
-    stripe = _stripe()
-
-    if user.stripe_customer_id:
-        return user.stripe_customer_id
-
-    customer = stripe.Customer.create(
-        email=user.email,
-        name=user.full_name or user.username,
-        metadata={"safpro_user_id": str(user.user_id)},
-    )
-    user.stripe_customer_id = customer["id"]
-    db.add(user)
-    db.flush()
-    logger.info("Stripe Customer creado — user_id=%s customer_id=%s", user.user_id, customer["id"])
-    return customer["id"]
+def _api_base() -> str:
+    """URL base según el entorno (sandbox o live)."""
+    if settings.dlocalgo_sandbox:
+        return "https://api-sbx.dlocalgo.com"
+    return "https://api.dlocalgo.com"
 
 
-# ── Checkout Session ─────────────────────────────────────────────────────────
-
-def create_checkout_session(user: User, price_id: str, db: Session) -> str:
-    """
-    Crea una Stripe Checkout Session para el usuario y el price_id indicado.
-    Devuelve la URL de redirección a Stripe.
-
-    Args:
-        user        : Usuario autenticado.
-        price_id    : ID del precio en Stripe (monthly o annual).
-        db          : Sesión SQLAlchemy.
-
-    Returns:
-        URL de la sesión de Checkout (https://checkout.stripe.com/...).
-    """
-    stripe = _stripe()
-    customer_id = get_or_create_customer(user, db)
-    db.commit()   # persistir stripe_customer_id antes de redirigir
-
-    session = stripe.checkout.Session.create(
-        customer=customer_id,
-        payment_method_types=["card"],
-        line_items=[{"price": price_id, "quantity": 1}],
-        mode="subscription",
-        success_url=f"{settings.frontend_base}/upgrade/success?session_id={{CHECKOUT_SESSION_ID}}",
-        cancel_url=f"{settings.frontend_base}/upgrade?cancelled=1",
-        subscription_data={
-            "metadata": {"safpro_user_id": str(user.user_id)},
-        },
-        metadata={"safpro_user_id": str(user.user_id)},
-        allow_promotion_codes=True,
-        locale="es-419",   # español latinoamericano en el checkout
-    )
-    logger.info(
-        "Checkout session creada — user_id=%s session_id=%s price_id=%s",
-        user.user_id, session["id"], price_id,
-    )
-    return session["url"]
-
-
-# ── Customer Portal ──────────────────────────────────────────────────────────
-
-def create_portal_session(user: User, db: Session) -> str:
-    """
-    Genera una URL del Customer Portal de Stripe para que el usuario
-    gestione su suscripción (cancelar, cambiar método de pago, ver facturas).
-
-    El usuario debe tener ya un stripe_customer_id; si no, lanza ValueError.
-    """
-    stripe = _stripe()
-
-    if not user.stripe_customer_id:
-        raise ValueError("El usuario no tiene una suscripción activa en Stripe.")
-
-    portal_session = stripe.billing_portal.Session.create(
-        customer=user.stripe_customer_id,
-        return_url=f"{settings.frontend_base}/cuenta",
-    )
-    return portal_session["url"]
-
-
-# ── Webhook handlers ─────────────────────────────────────────────────────────
-
-def handle_webhook_event(payload: bytes, sig_header: str, db: Session) -> dict:
-    """
-    Verifica la firma del webhook y despacha el evento al handler correcto.
-
-    Args:
-        payload    : Cuerpo crudo del request (bytes) — requerido para verificación.
-        sig_header : Valor del header Stripe-Signature.
-        db         : Sesión SQLAlchemy.
-
-    Returns:
-        dict con {"status": "ok", "event_type": ...} para logging.
-
-    Raises:
-        ValueError  : Firma inválida o payload malformado.
-        RuntimeError: Falta webhook_secret en config.
-    """
-    stripe = _stripe()
-
-    if not settings.stripe_webhook_secret:
-        raise RuntimeError("STRIPE_WEBHOOK_SECRET no configurado.")
-
-    try:
-        event = stripe.Webhook.construct_event(
-            payload, sig_header, settings.stripe_webhook_secret
-        )
-    except stripe.error.SignatureVerificationError as exc:
-        raise ValueError(f"Firma de webhook inválida: {exc}") from exc
-
-    event_type = event["type"]
-    logger.info("Webhook recibido — type=%s id=%s", event_type, event["id"])
-
-    handlers = {
-        "checkout.session.completed":        _on_checkout_completed,
-        "customer.subscription.updated":     _on_subscription_updated,
-        "customer.subscription.deleted":     _on_subscription_deleted,
-        "invoice.payment_failed":            _on_payment_failed,
+def _headers() -> dict[str, str]:
+    """Headers de autenticación para la API de dLocal Go."""
+    return {
+        "Authorization": f"Bearer {settings.dlocalgo_api_key}:{settings.dlocalgo_secret_key}",
+        "Content-Type": "application/json",
     }
 
-    handler = handlers.get(event_type)
-    if handler:
-        handler(event["data"]["object"], db)
+
+# ── Checkout — construir URL de suscripción ──────────────────────────────────
+
+def create_checkout_url(user: User, interval: str) -> str:
+    """
+    Devuelve la URL del checkout de dLocal Go para que el usuario se suscriba.
+
+    Recupera el subscribe_url del plan almacenado en config y le agrega:
+      - external_id = user.user_id  (para identificar al usuario en el webhook)
+      - email       = user.email    (pre-rellena el campo en el checkout)
+
+    Args:
+        user     : Usuario autenticado que quiere suscribirse.
+        interval : "monthly" | "annual"
+
+    Returns:
+        URL completa al hosted checkout de dLocal Go.
+
+    Raises:
+        RuntimeError : Falta config, o el plan no existe en dLocal Go.
+        ValueError   : interval inválido.
+    """
+    _require_config()
+
+    if interval == "monthly":
+        plan_id = settings.dlocalgo_plan_id_monthly
+    elif interval == "annual":
+        plan_id = settings.dlocalgo_plan_id_annual
     else:
-        logger.debug("Evento Stripe no manejado: %s", event_type)
+        raise ValueError(f"interval debe ser 'monthly' o 'annual', recibido: {interval!r}")
 
-    return {"status": "ok", "event_type": event_type}
+    if not plan_id:
+        raise RuntimeError(
+            f"DLOCALGO_PLAN_ID_{interval.upper()} no configurado. "
+            "Ejecuta scripts/setup_dlocalgo_plans.py para crear los planes "
+            "y agrega los IDs al .env."
+        )
+
+    # Obtener el subscribe_url del plan desde la API
+    url = f"{_api_base()}/v1/subscription/plan/{plan_id}"
+    try:
+        resp = httpx.get(url, headers=_headers(), timeout=15.0)
+        resp.raise_for_status()
+    except httpx.HTTPStatusError as exc:
+        logger.error(
+            "Error obteniendo plan dLocal Go — plan_id=%s status=%s body=%s",
+            plan_id, exc.response.status_code, exc.response.text[:500],
+        )
+        raise RuntimeError(
+            f"No se pudo obtener el plan {plan_id} desde dLocal Go: "
+            f"HTTP {exc.response.status_code}"
+        ) from exc
+    except httpx.RequestError as exc:
+        logger.error("Error de red al obtener plan dLocal Go: %s", exc)
+        raise RuntimeError(f"Error de conexión con dLocal Go: {exc}") from exc
+
+    plan_data = resp.json()
+    subscribe_url: str | None = plan_data.get("subscribe_url")
+    if not subscribe_url:
+        raise RuntimeError(
+            f"El plan {plan_id} no devolvió subscribe_url. "
+            f"Respuesta: {plan_data}"
+        )
+
+    # Agregar external_id, email y redirect_url para identificar al usuario
+    # y redirigirlo de vuelta a SAFPRO tras completar el pago.
+    # dLocal Go permite estos query params en el subscribe_url.
+    success_url = f"{settings.frontend_base}/upgrade/success"
+    cancel_url = f"{settings.frontend_base}/upgrade?cancelled=1"
+    params = urlencode({
+        "external_id": str(user.user_id),
+        "email": user.email,
+        "redirect_url": success_url,
+        "cancel_url": cancel_url,
+    }, quote_via=quote)
+    separator = "&" if "?" in subscribe_url else "?"
+    full_url = f"{subscribe_url}{separator}{params}"
+
+    logger.info(
+        "Checkout URL generada — user_id=%s interval=%s plan_id=%s",
+        user.user_id, interval, plan_id,
+    )
+    return full_url
 
 
-# ── Handlers internos ────────────────────────────────────────────────────────
+# ── Webhook — verificación de firma ─────────────────────────────────────────
 
-def _find_user_by_customer(customer_id: str, db: Session) -> User | None:
-    return db.query(User).filter(User.stripe_customer_id == customer_id).first()
-
-
-def _on_checkout_completed(session_obj: dict, db: Session) -> None:
+def verify_webhook_signature(payload_bytes: bytes, auth_header: str | None) -> bool:
     """
-    checkout.session.completed
-    La suscripción fue creada exitosamente. Actualizamos plan → 'pro'
-    y calculamos subscription_expires_at desde el período actual.
-    """
-    stripe = _stripe()
-    customer_id = session_obj.get("customer")
-    subscription_id = session_obj.get("subscription")
+    Verifica la firma HMAC-SHA256 del webhook de dLocal Go.
 
-    user = _find_user_by_customer(customer_id, db)
+    Formato del header:
+        Authorization: V2-HMAC-SHA256, Signature: {hex_signature}
+
+    Cálculo:
+        message   = api_key + json_payload (string)
+        signature = HMAC-SHA256(message, secret_key).hexdigest()
+
+    Returns:
+        True si la firma es válida, False en caso contrario.
+    """
+    if not auth_header:
+        logger.warning("Webhook recibido sin header Authorization")
+        return False
+
+    # Extraer el hex de la firma: "V2-HMAC-SHA256, Signature: abc123..."
+    try:
+        sig_value = auth_header.split("Signature:")[-1].strip()
+    except Exception:
+        logger.warning("Header Authorization de webhook malformado: %s", auth_header)
+        return False
+
+    if not sig_value:
+        logger.warning("Firma vacía en webhook Authorization header")
+        return False
+
+    message = settings.dlocalgo_api_key + payload_bytes.decode("utf-8")
+    expected = hmac.new(
+        settings.dlocalgo_secret_key.encode("utf-8"),
+        message.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+
+    valid = hmac.compare_digest(expected, sig_value)
+    if not valid:
+        logger.warning("Firma de webhook inválida — esperado=%s recibido=%s", expected[:16] + "…", sig_value[:16] + "…")
+    return valid
+
+
+# ── Webhook — procesamiento del evento ──────────────────────────────────────
+
+def handle_webhook_event(payload: dict, db: Session) -> dict:
+    """
+    Procesa un evento de webhook de dLocal Go ya verificado.
+
+    dLocal Go envía: {"payment_id": "DP-xxx"}
+
+    El handler:
+      1. Obtiene el detalle del pago via GET /v1/payments/{payment_id}
+      2. Extrae external_id (= user_id) y subscription_id
+      3. Actualiza user.plan y user.dlocalgo_subscription_id según el status
+
+    Statuses posibles del pago: PAID | PENDING | REJECTED | CANCELLED
+
+    Returns:
+        dict con {"status": "ok", "action": ...} para logging.
+    """
+    payment_id: str | None = payload.get("payment_id")
+    if not payment_id:
+        logger.warning("Webhook sin payment_id: %s", payload)
+        return {"status": "ignored", "reason": "no payment_id"}
+
+    # Obtener detalle del pago
+    payment = _get_payment(payment_id)
+    if payment is None:
+        return {"status": "error", "reason": f"no se pudo obtener {payment_id}"}
+
+    logger.info(
+        "Webhook procesando — payment_id=%s status=%s order_id=%s",
+        payment_id,
+        payment.get("status"),
+        payment.get("order_id", ""),
+    )
+
+    status = (payment.get("status") or "").upper()
+    external_id: str | None = payment.get("external_id") or payment.get("order_id")
+    subscription_id: str | None = payment.get("subscription_id")
+
+    # Intentar encontrar usuario por external_id (UUID del user)
+    user = _find_user_by_external_id(external_id, db)
     if not user:
-        # Intentar por metadata si por algún motivo el customer_id no matchea
-        safpro_user_id = (session_obj.get("metadata") or {}).get("safpro_user_id")
-        if safpro_user_id:
-            try:
-                user = db.query(User).filter(
-                    User.user_id == _UUID(safpro_user_id)
-                ).first()
-            except (ValueError, AttributeError):
-                logger.warning("safpro_user_id inválido en metadata: %s", safpro_user_id)
-                user = None
-        if not user:
-            logger.warning("checkout.session.completed: usuario no encontrado — customer=%s", customer_id)
-            return
+        logger.warning(
+            "Webhook: usuario no encontrado — external_id=%s payment_id=%s",
+            external_id, payment_id,
+        )
+        return {"status": "ignored", "reason": "usuario no encontrado"}
 
-    # Obtener la fecha de fin del período actual desde la suscripción
-    expires_at: datetime | None = None
-    if subscription_id:
-        try:
-            sub = stripe.Subscription.retrieve(subscription_id)
-            ts = sub.get("current_period_end")
-            if ts:
-                expires_at = datetime.fromtimestamp(ts, tz=timezone.utc)
-        except Exception as exc:
-            logger.warning("No se pudo recuperar la suscripción %s: %s", subscription_id, exc)
+    if status == "PAID":
+        _on_payment_successful(user, payment, subscription_id, db)
+        return {"status": "ok", "action": "plan_activated", "user_id": str(user.user_id)}
 
+    elif status in ("CANCELLED", "REJECTED"):
+        _on_payment_failed_or_cancelled(user, status, db)
+        return {"status": "ok", "action": "plan_downgraded", "user_id": str(user.user_id)}
+
+    else:
+        # PENDING u otros — no accionable todavía
+        logger.info("Webhook status no accionable: %s — payment_id=%s", status, payment_id)
+        return {"status": "ok", "action": "ignored", "payment_status": status}
+
+
+def _get_payment(payment_id: str) -> dict | None:
+    """GET /v1/payments/{payment_id} — devuelve el objeto o None si falla."""
+    url = f"{_api_base()}/v1/payments/{payment_id}"
+    try:
+        resp = httpx.get(url, headers=_headers(), timeout=15.0)
+        resp.raise_for_status()
+        return resp.json()
+    except httpx.HTTPStatusError as exc:
+        logger.error(
+            "Error obteniendo pago %s — HTTP %s: %s",
+            payment_id, exc.response.status_code, exc.response.text[:300],
+        )
+        return None
+    except httpx.RequestError as exc:
+        logger.error("Error de red obteniendo pago %s: %s", payment_id, exc)
+        return None
+
+
+def _find_user_by_external_id(external_id: str | None, db: Session) -> User | None:
+    """Busca un usuario por su UUID (pasado como external_id al checkout)."""
+    if not external_id:
+        return None
+    try:
+        import uuid
+        uid = uuid.UUID(external_id)
+        return db.query(User).filter(User.user_id == uid).first()
+    except (ValueError, AttributeError):
+        logger.warning("external_id no es un UUID válido: %s", external_id)
+        return None
+
+
+def _on_payment_successful(
+    user: User,
+    payment: dict,
+    subscription_id: str | None,
+    db: Session,
+) -> None:
+    """Activa el plan Pro tras un pago exitoso."""
     user.plan = "pro"
-    user.subscription_expires_at = expires_at
-    if customer_id and not user.stripe_customer_id:
-        user.stripe_customer_id = customer_id
+
+    # Guardar subscription_id para poder cancelar después
+    if subscription_id:
+        user.dlocalgo_subscription_id = subscription_id
+
+    # subscription_expires_at: dLocal Go gestiona la renovación automáticamente,
+    # pero guardamos la fecha del próximo cobro si viene en el payload
+    next_charge_at: datetime | None = None
+    if payment.get("next_charge_at"):
+        try:
+            next_charge_at = datetime.fromisoformat(payment["next_charge_at"])
+            if next_charge_at.tzinfo is None:
+                next_charge_at = next_charge_at.replace(tzinfo=timezone.utc)
+        except (ValueError, TypeError):
+            pass
+    user.subscription_expires_at = next_charge_at
 
     db.add(user)
     db.commit()
 
     logger.info(
-        "Usuario actualizado a plan=pro — user_id=%s expires_at=%s",
-        user.user_id, expires_at,
+        "Usuario actualizado a plan=pro — user_id=%s sub_id=%s",
+        user.user_id, subscription_id,
     )
 
     track_event(
@@ -242,123 +339,95 @@ def _on_checkout_completed(session_obj: dict, db: Session) -> None:
         event_type="plan_upgraded",
         plan="pro",
         metadata={
+            "processor": "dlocalgo",
             "subscription_id": subscription_id,
-            "expires_at": expires_at.isoformat() if expires_at else None,
+            "payment_id": payment.get("id"),
         },
     )
 
-    # Enviar email de confirmación (fire-and-forget)
     _send_upgrade_email_async(user)
 
 
-def _on_subscription_updated(sub_obj: dict, db: Session) -> None:
-    """
-    customer.subscription.updated
-    Actualiza subscription_expires_at con el nuevo período y sincroniza
-    el plan en caso de cambios de estado (active → past_due, etc.).
-    """
-    stripe = _stripe()  # noqa: F841
-    customer_id = sub_obj.get("customer")
-    status = sub_obj.get("status")   # active | past_due | canceled | ...
-    ts = sub_obj.get("current_period_end")
-
-    user = _find_user_by_customer(customer_id, db)
-    if not user:
-        logger.warning("subscription.updated: usuario no encontrado — customer=%s", customer_id)
-        return
-
-    if status == "active":
-        user.plan = "pro"
-        if ts:
-            user.subscription_expires_at = datetime.fromtimestamp(ts, tz=timezone.utc)
-    elif status in ("canceled", "unpaid"):
-        user.plan = "free"
-        user.subscription_expires_at = None
-
+def _on_payment_failed_or_cancelled(user: User, status: str, db: Session) -> None:
+    """Baja el plan a free cuando un pago es rechazado o la suscripción es cancelada."""
+    user.plan = "free"
+    user.subscription_expires_at = None
+    user.dlocalgo_subscription_id = None
     db.add(user)
     db.commit()
     logger.info(
-        "subscription.updated — user_id=%s status=%s plan=%s",
-        user.user_id, status, user.plan,
+        "Plan bajado a free — user_id=%s reason=%s",
+        user.user_id, status,
     )
 
 
-def _on_subscription_deleted(sub_obj: dict, db: Session) -> None:
-    """
-    customer.subscription.deleted
-    La suscripción fue cancelada definitivamente. Bajamos el plan a 'free'.
-    """
-    customer_id = sub_obj.get("customer")
-    user = _find_user_by_customer(customer_id, db)
-    if not user:
-        logger.warning("subscription.deleted: usuario no encontrado — customer=%s", customer_id)
-        return
+# ── Cancelar suscripción ─────────────────────────────────────────────────────
 
+def cancel_subscription(user: User, db: Session) -> None:
+    """
+    Cancela la suscripción activa del usuario en dLocal Go.
+
+    Llama DELETE /v1/subscription/plan/{plan_id}/subscription/{subscription_id}
+
+    Raises:
+        ValueError   : El usuario no tiene suscripción activa.
+        RuntimeError : Error de red o respuesta inesperada de dLocal Go.
+    """
+    _require_config()
+
+    if not user.dlocalgo_subscription_id:
+        raise ValueError("El usuario no tiene una suscripción activa en dLocal Go.")
+
+    subscription_id = user.dlocalgo_subscription_id
+
+    # Intentar con plan mensual primero, luego anual
+    # (no sabemos en cuál está sin consultar la sub; dLocal Go devolverá 404 en el incorrecto)
+    cancelled = False
+    for plan_id in [settings.dlocalgo_plan_id_monthly, settings.dlocalgo_plan_id_annual]:
+        if not plan_id:
+            continue
+        url = f"{_api_base()}/v1/subscription/plan/{plan_id}/subscription/{subscription_id}"
+        try:
+            resp = httpx.delete(url, headers=_headers(), timeout=15.0)
+            if resp.status_code in (200, 204):
+                cancelled = True
+                break
+            elif resp.status_code == 404:
+                continue  # no está en este plan, intentar el siguiente
+            else:
+                logger.error(
+                    "Error cancelando sub %s en plan %s — HTTP %s: %s",
+                    subscription_id, plan_id, resp.status_code, resp.text[:300],
+                )
+        except httpx.RequestError as exc:
+            logger.error("Error de red cancelando suscripción: %s", exc)
+            raise RuntimeError(f"Error de conexión con dLocal Go: {exc}") from exc
+
+    if not cancelled:
+        raise RuntimeError(
+            f"No se pudo cancelar la suscripción {subscription_id} en dLocal Go. "
+            "Es posible que ya esté cancelada o el ID sea inválido."
+        )
+
+    # Actualizar inmediatamente en DB — el webhook de confirmación también actualizará
     user.plan = "free"
     user.subscription_expires_at = None
+    user.dlocalgo_subscription_id = None
     db.add(user)
     db.commit()
-    logger.info("Suscripción cancelada — user_id=%s → plan=free", user.user_id)
 
-def _on_subscription_deleted(sub_obj: dict, db: Session) -> None:
-    """
-    customer.subscription.deleted
-    La suscripción fue cancelada definitivamente. Bajamos el plan a 'free'.
-    """
-    customer_id = sub_obj.get("customer")
-    user = _find_user_by_customer(customer_id, db)
-    if not user:
-        logger.warning("subscription.deleted: usuario no encontrado — customer=%s", customer_id)
-        return
-
-    user.plan = "free"
-    user.subscription_expires_at = None
-    db.add(user)
-    db.commit()
-    logger.info("Suscripción cancelada — user_id=%s → plan=free", user.user_id)
-
-    # Notificar al usuario (fire-and-forget)
+    logger.info("Suscripción cancelada — user_id=%s sub_id=%s", user.user_id, subscription_id)
     _send_cancellation_email_async(user)
 
 
-def _send_cancellation_email_async(user: User) -> None:
-    """Envía confirmación de cancelación en background."""
-    import threading
-    from app.services.email_service import send_cancellation_confirmation_email
-
-    def _send():
-        try:
-            send_cancellation_confirmation_email(
-                to_email=user.email,
-                full_name=user.full_name or user.username,
-            )
-        except Exception as exc:
-            logger.warning("No se pudo enviar email de cancelación: %s", exc)
-
-    threading.Thread(target=_send, daemon=True).start()
-    
-
-
-def _on_payment_failed(invoice_obj: dict, db: Session) -> None:
-    """
-    invoice.payment_failed
-    El pago falló. Solo logueamos por ahora — Stripe reintentará
-    automáticamente según la configuración del dashboard.
-    """
-    customer_id = invoice_obj.get("customer")
-    attempt_count = invoice_obj.get("attempt_count", "?")
-    logger.warning(
-        "Pago fallido — customer=%s attempt=%s",
-        customer_id, attempt_count,
-    )
-
+# ── Emails async ─────────────────────────────────────────────────────────────
 
 def _send_upgrade_email_async(user: User) -> None:
-    """Envía el email de bienvenida Pro en background (no bloquea el webhook)."""
+    """Envía el email de bienvenida Pro en background."""
     import threading
     from app.services.email_service import send_upgrade_confirmation_email
 
-    def _send():
+    def _send() -> None:
         try:
             send_upgrade_confirmation_email(
                 to_email=user.email,
@@ -368,5 +437,22 @@ def _send_upgrade_email_async(user: User) -> None:
             )
         except Exception as exc:
             logger.warning("No se pudo enviar email de upgrade: %s", exc)
+
+    threading.Thread(target=_send, daemon=True).start()
+
+
+def _send_cancellation_email_async(user: User) -> None:
+    """Envía confirmación de cancelación en background."""
+    import threading
+    from app.services.email_service import send_cancellation_confirmation_email
+
+    def _send() -> None:
+        try:
+            send_cancellation_confirmation_email(
+                to_email=user.email,
+                full_name=user.full_name or user.username,
+            )
+        except Exception as exc:
+            logger.warning("No se pudo enviar email de cancelación: %s", exc)
 
     threading.Thread(target=_send, daemon=True).start()
