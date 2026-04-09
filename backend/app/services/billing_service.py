@@ -300,6 +300,44 @@ def _on_subscription_deleted(sub_obj: dict, db: Session) -> None:
     db.commit()
     logger.info("Suscripción cancelada — user_id=%s → plan=free", user.user_id)
 
+def _on_subscription_deleted(sub_obj: dict, db: Session) -> None:
+    """
+    customer.subscription.deleted
+    La suscripción fue cancelada definitivamente. Bajamos el plan a 'free'.
+    """
+    customer_id = sub_obj.get("customer")
+    user = _find_user_by_customer(customer_id, db)
+    if not user:
+        logger.warning("subscription.deleted: usuario no encontrado — customer=%s", customer_id)
+        return
+
+    user.plan = "free"
+    user.subscription_expires_at = None
+    db.add(user)
+    db.commit()
+    logger.info("Suscripción cancelada — user_id=%s → plan=free", user.user_id)
+
+    # Notificar al usuario (fire-and-forget)
+    _send_cancellation_email_async(user)
+
+
+def _send_cancellation_email_async(user: User) -> None:
+    """Envía confirmación de cancelación en background."""
+    import threading
+    from app.services.email_service import send_cancellation_confirmation_email
+
+    def _send():
+        try:
+            send_cancellation_confirmation_email(
+                to_email=user.email,
+                full_name=user.full_name or user.username,
+            )
+        except Exception as exc:
+            logger.warning("No se pudo enviar email de cancelación: %s", exc)
+
+    threading.Thread(target=_send, daemon=True).start()
+    
+
 
 def _on_payment_failed(invoice_obj: dict, db: Session) -> None:
     """

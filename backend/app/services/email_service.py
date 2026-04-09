@@ -141,6 +141,45 @@ def send_reset_email(to_email: str, reset_token: str) -> None:
         response.get("id") if isinstance(response, dict) else response,
     )
 
+def send_cancellation_confirmation_email(
+    to_email: str,
+    full_name: str,
+) -> None:
+    """Email de confirmación cuando el usuario cancela su suscripción Pro."""
+    html_content = f"""
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <div style="background: #0f2a4a; padding: 24px; text-align: center;">
+        <h1 style="color: white; margin: 0; font-size: 24px;">SAFPRO</h1>
+      </div>
+      <div style="padding: 32px; background: #ffffff;">
+        <h2 style="color: #0f2a4a;">Tu suscripción Pro ha sido cancelada</h2>
+        <p>Hola {full_name},</p>
+        <p>Confirmamos que tu suscripción Pro de SAFPRO ha sido cancelada exitosamente. 
+        Tu cuenta ha vuelto al plan gratuito.</p>
+        <p>Si esto fue un error o cambias de opinión, puedes reactivar tu plan en cualquier momento:</p>
+        <div style="text-align: center; margin: 32px 0;">
+          <a href="{settings.frontend_base}/upgrade"
+             style="background: #f97316; color: white; padding: 12px 28px; 
+                    border-radius: 6px; text-decoration: none; font-weight: bold;">
+            Reactivar Plan Pro
+          </a>
+        </div>
+        <p style="color: #6b7280; font-size: 14px;">
+          Si tienes preguntas, responde a este correo.
+        </p>
+      </div>
+      <div style="background: #f3f4f6; padding: 16px; text-align: center;">
+        <p style="color: #9ca3af; font-size: 12px; margin: 0;">
+          SAFPRO · Análisis financiero personal · Panamá
+        </p>
+      </div>
+    </div>
+    """
+    _send_email(
+        to_email=to_email,
+        subject="Tu suscripción Pro de SAFPRO fue cancelada",
+        html_content=html_content,
+    )
 
 def send_admin_job_failed_alert(
     user_email: str,
