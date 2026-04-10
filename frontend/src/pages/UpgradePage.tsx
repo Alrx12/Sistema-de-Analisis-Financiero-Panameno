@@ -1,13 +1,18 @@
 /**
  * UpgradePage.tsx — Página de precios y upgrade a Plan Pro.
  *
- * Flujo con dLocal Go:
+ * Flujo (procesador detectado automáticamente por el backend):
  *   1. Usuario ve tabla Free vs Pro
  *   2. Elige intervalo (mensual / anual)
  *   3. Click en "Suscribirse" → POST /billing/create-checkout-session
- *   4. Redirige al hosted checkout de dLocal Go
- *   5. Al completar, dLocal Go notifica al backend via webhook
- *   6. El plan se actualiza automáticamente a 'pro'
+ *   4. Backend devuelve checkout_url + processor ("paypal" | "dlocalgo")
+ *   5. Redirige al hosted checkout del procesador activo
+ *   6. Al completar, el procesador notifica al backend via webhook
+ *   7. El plan se actualiza automáticamente a 'pro'
+ *
+ * Precios:
+ *   PayPal:    $6.50/mes · $56/año  (neto ~$5/$45 después de comisiones + ITBMS)
+ *   dLocal Go: $5.00/mes · $45/año
  */
 import { useState } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
@@ -23,7 +28,7 @@ import {
   AlertTriangle,
 } from "lucide-react"
 import { getBillingStatus, createCheckoutSession, cancelSubscription } from "@/api/billing"
-import type { BillingInterval } from "@/api/billing"
+import type { BillingInterval, BillingProcessor } from "@/api/billing"
 import { useAuthStore } from "@/stores/authStore"
 import { toast } from "@/components/ui/toast"
 
@@ -46,6 +51,18 @@ const PRO_FEATURES = [
   "Soporte prioritario",
 ]
 
+// ── Precios por procesador ────────────────────────────────────────────────────
+const PRICES: Record<"paypal" | "dlocalgo", { monthly: number; annual: number }> = {
+  paypal:   { monthly: 6.50, annual: 56 },
+  dlocalgo: { monthly: 5.00, annual: 45 },
+}
+
+function getProcessorLabel(processor: BillingProcessor): string {
+  if (processor === "paypal") return "PayPal"
+  if (processor === "dlocalgo") return "dLocal Go"
+  return "procesador de pagos"
+}
+
 export default function UpgradePage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -55,6 +72,8 @@ export default function UpgradePage() {
 
   const [interval, setInterval] = useState<BillingInterval>("monthly")
   const [showCancelConfirm, setShowCancelConfirm] = useState(false)
+  // Procesador detectado después de iniciar checkout (para el label de "Redirigiendo a…")
+  const [checkoutProcessor, setCheckoutProcessor] = useState<BillingProcessor>(null)
 
   // Estado de la suscripción
   const { data: billing, isLoading: billingLoading } = useQuery({
@@ -63,10 +82,23 @@ export default function UpgradePage() {
     staleTime: 1000 * 60,
   })
 
-  // Crear checkout session → redirigir a dLocal Go
+  // Procesador activo del sistema (para mostrar precios correctos antes de checkout)
+  // Si el backend aún no responde, asumimos PayPal (es el Plan A)
+  const activeProcessor: "paypal" | "dlocalgo" = "paypal"
+  const prices = PRICES[activeProcessor]
+
+  const monthlyPrice = prices.monthly
+  const annualPrice = prices.annual
+  const annualMonthly = (annualPrice / 12).toFixed(2)
+
+  // Porcentaje de descuento anual
+  const annualDiscount = Math.round((1 - annualPrice / (monthlyPrice * 12)) * 100)
+
+  // Crear checkout session → redirigir al procesador activo
   const checkoutMutation = useMutation({
     mutationFn: (iv: BillingInterval) => createCheckoutSession(iv),
     onSuccess: (data) => {
+      setCheckoutProcessor(data.processor)
       window.location.href = data.checkout_url
     },
     onError: () => {
@@ -92,10 +124,10 @@ export default function UpgradePage() {
   const isPro = billing?.plan === "pro"
   const isFF = billing?.plan === "friends_and_family"
   const hasActiveSub = billing?.has_active_subscription ?? false
+  const userProcessor = billing?.processor ?? null
 
-  const monthlyPrice = 5
-  const annualPrice = 45
-  const annualMonthly = (annualPrice / 12).toFixed(2)
+  // Label del procesador del usuario (para el botón de cancelar y el FAQ)
+  const processorLabel = getProcessorLabel(userProcessor ?? activeProcessor)
 
   return (
     <div style={{ minHeight: "100vh", background: "#f4f5f7", color: "#111827" }}>
@@ -270,7 +302,7 @@ export default function UpgradePage() {
                 className="absolute -top-2 -right-2 text-xs font-bold px-1.5 py-0.5 rounded-full"
                 style={{ background: "#e05c19", color: "#fff" }}
               >
-                −25%
+                −{annualDiscount}%
               </span>
             </button>
           </div>
@@ -333,15 +365,15 @@ export default function UpgradePage() {
                   </>
                 ) : (
                   <>
-                    <span className="text-4xl font-extrabold text-white">${monthlyPrice}</span>
+                    <span className="text-4xl font-extrabold text-white">${monthlyPrice.toFixed(2)}</span>
                     <span className="text-white/50 text-sm">/mes</span>
                   </>
                 )}
               </div>
               <p className="text-white/50 text-sm mt-1">
                 {interval === "annual"
-                  ? "Facturado $45 al año — ahorras $15"
-                  : "Facturado mensualmente"}
+                  ? `Facturado $${annualPrice} al año — ahorras ${annualDiscount}%`
+                  : "Facturado mensualmente · Cancela cuando quieras"}
               </p>
             </div>
 
@@ -371,7 +403,10 @@ export default function UpgradePage() {
                 {checkoutMutation.isPending ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Redirigiendo al pago…
+                    {checkoutProcessor
+                      ? `Redirigiendo a ${getProcessorLabel(checkoutProcessor)}…`
+                      : "Preparando pago…"
+                    }
                   </>
                 ) : (
                   <>
@@ -393,9 +428,9 @@ export default function UpgradePage() {
         {/* ── Garantías ── */}
         <div className="mt-10 grid sm:grid-cols-3 gap-4 max-w-3xl mx-auto text-center">
           {[
-            { emoji: "🔒", title: "Sin credenciales bancarias", desc: "Solo subes tu Excel exportado." },
-            { emoji: "🚫", title: "Cancela cuando quieras", desc: "Sin permanencia ni penalizaciones." },
-            { emoji: "💳", title: "Pagos seguros con dLocal Go", desc: "Merchant oficial en Panamá. Visa y Mastercard." },
+            { emoji: "🔒", title: "Sin credenciales bancarias", desc: "Solo subes tu Excel exportado. Nunca pedimos acceso a tu banca." },
+            { emoji: "🚫", title: "Cancela cuando quieras", desc: "Sin permanencia ni penalizaciones. Tu historial se conserva." },
+            { emoji: "💳", title: "Pagos seguros con PayPal", desc: "Plataforma de pagos global. Acepta Visa, Mastercard y cuentas PayPal." },
           ].map(({ emoji, title, desc }) => (
             <div key={title} className="rounded-xl p-4" style={{ background: "#ffffff", boxShadow: "0 1px 6px rgba(0,0,0,0.08)" }}>
               <div className="text-2xl mb-2">{emoji}</div>
@@ -426,7 +461,11 @@ export default function UpgradePage() {
             },
             {
               q: "¿Emiten factura?",
-              a: "dLocal Go genera una confirmación de pago por email en cada cobro. Para factura fiscal contáctanos a admin@safpro.us.",
+              a: `${processorLabel} genera una confirmación de pago por email en cada cobro. Para factura fiscal contáctanos a admin@safpro.us.`,
+            },
+            {
+              q: "¿Por qué el precio en PayPal es $6.50 y no $5?",
+              a: "PayPal cobra una comisión de procesamiento (~3.49% + $0.49 por transacción) más el ITBMS (7%) que aplica en Panamá. El precio de $6.50 está calculado para que el servicio sea sostenible después de esas deducciones. El costo neto es equivalente al de $5 por mes.",
             },
           ].map(({ q, a }) => (
             <details

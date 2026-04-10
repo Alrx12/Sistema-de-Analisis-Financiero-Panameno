@@ -33,6 +33,10 @@ class User(Base):
     # Plan de suscripción: 'friends_and_family' | 'free' | 'pro'
     plan: Mapped[str] = mapped_column(String(30), nullable=False, default="friends_and_family")
 
+    # PayPal — suscripción activa (Plan A / fallback de dLocal Go)
+    # subscription_id retornado por PayPal al activarse la suscripción (I-xxxx).
+    paypal_subscription_id: Mapped[str | None] = mapped_column(String(100), nullable=True, unique=True)
+
     # dLocal Go — suscripción activa
     # Almacena el subscription_id devuelto por dLocal Go al suscribirse.
     # Se usa para cancelar o cambiar de plan vía API.

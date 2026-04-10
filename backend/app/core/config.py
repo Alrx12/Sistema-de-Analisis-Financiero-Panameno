@@ -51,6 +51,18 @@ class Settings(BaseSettings):
     github_client_id: str = ""
     github_client_secret: str = ""
 
+    # ── PayPal — pagos y suscripciones (Plan A si dLocal Go no está disponible) ─
+    # 1. Crea una cuenta Business en paypal.com/business
+    # 2. Ve a developer.paypal.com → My Apps → Create App → copia Client ID y Secret
+    # 3. Ejecuta scripts/setup_paypal_plans.py para crear los planes
+    # 4. Configura el webhook en developer.paypal.com → Webhooks → copia el Webhook ID
+    paypal_client_id: str = ""              # Client ID de la app PayPal
+    paypal_client_secret: str = ""          # Client Secret de la app PayPal
+    paypal_sandbox: bool = True             # True = api-m.sandbox.paypal.com
+    paypal_plan_id_monthly: str = ""        # ID del plan mensual ($6.50 USD/mes)
+    paypal_plan_id_annual: str = ""         # ID del plan anual  ($56.00 USD/año)
+    paypal_webhook_id: str = ""             # ID del webhook (para verificación de firma)
+
     # ── dLocal Go — pagos y suscripciones ──────────────────────────────────────
     # Obtén las keys en: https://merchant.dlocalgo.com → Developers → API Keys
     dlocalgo_api_key: str = ""               # API key del merchant

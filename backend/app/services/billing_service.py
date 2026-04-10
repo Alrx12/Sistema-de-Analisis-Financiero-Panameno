@@ -1,45 +1,40 @@
 """
-billing_service.py — Lógica de negocio para dLocal Go.
+billing_service.py — Lógica de negocio para pagos y suscripciones.
 
-Responsabilidades:
-  - Construir la URL de checkout de suscripción (subscribe_url + external_id)
-  - Verificar la firma HMAC-SHA256 de los webhooks entrantes
-  - Obtener el detalle de un pago vía GET /v1/payments/:payment_id
-  - Procesar el evento de webhook y actualizar el plan del usuario
-  - Cancelar la suscripción activa del usuario
+Soporta dos procesadores (el activo se detecta por credenciales en .env):
+  - PayPal Subscriptions  (plan A — disponible de inmediato)
+  - dLocal Go             (plan B — cuando aprueben el merchant account)
 
-Flujo de suscripción (dLocal Go nativo):
-  1. Admin crea planes monthly/anual con setup_dlocalgo_plans.py
-     → Guarda DLOCALGO_PLAN_ID_MONTHLY y DLOCALGO_PLAN_ID_ANNUAL en .env
-  2. Usuario hace clic en "Suscribirse"
-     → Frontend llama POST /billing/create-checkout-session
-     → Backend devuelve subscribe_url?external_id={user_id}&email={email}
-     → Frontend redirige al usuario al checkout de dLocal Go
-  3. Usuario completa el pago en dLocal Go
-     → dLocal Go llama POST /billing/webhook con {"payment_id": "DP-xxx"}
-     → Backend verifica firma HMAC-SHA256
-     → Backend hace GET /v1/payments/{payment_id} para obtener detalles
-     → Backend identifica al usuario por external_id
-     → Backend actualiza user.plan = "pro" + guarda subscription_id
-  4. dLocal Go cobra automáticamente en cada ciclo (mensual/anual)
-     → Mismo flujo de webhook por cada renovación
-  5. Usuario cancela
-     → Frontend llama DELETE /billing/cancel
-     → Backend llama DELETE /v1/subscription/plan/{plan_id}/subscription/{sub_id}
-     → Webhook confirma cancelación → plan → "free"
+Flujo unificado (ambos procesadores):
+  1. POST /billing/create-checkout-session → devuelve checkout_url
+  2. Usuario completa el pago en el checkout hosted del procesador
+  3. Procesador llama POST /billing/webhook (PayPal) o POST /billing/dlocalgo/webhook
+  4. Backend verifica firma y actualiza user.plan = "pro"
+  5. DELETE /billing/cancel → cancela la suscripción activa
 
-Autenticación dLocal Go:
-  Authorization: Bearer {api_key}:{secret_key}
+────────────────────────────────────────────────────────────────────────────────
+PayPal Subscriptions:
+  Auth      : OAuth2 Bearer (client_id:secret → POST /v1/oauth2/token)
+  Checkout  : POST /v1/billing/subscriptions → links[rel=approve]
+  custom_id : user.user_id (identificador en el webhook)
+  Webhook   : POST /billing/webhook (PayPal-Transmission-* headers)
+  Verify    : POST /v1/notifications/verify-webhook-signature (API call)
+  Cancel    : POST /v1/billing/subscriptions/{id}/cancel
 
-Verificación de webhook:
-  Header: "V2-HMAC-SHA256, Signature: {hex}"
-  Cálculo: HMAC-SHA256(api_key + json_payload, secret_key).hexdigest()
+dLocal Go:
+  Auth      : Bearer api_key:secret_key
+  Checkout  : GET /v1/subscription/plan/{id} → subscribe_url + ?external_id=user_id
+  Webhook   : POST /billing/dlocalgo/webhook (V2-HMAC-SHA256 header)
+  Verify    : HMAC-SHA256(api_key + payload, secret_key)
+  Cancel    : DELETE /v1/subscription/plan/{plan_id}/subscription/{sub_id}
+────────────────────────────────────────────────────────────────────────────────
 """
 from __future__ import annotations
 
 import hashlib
 import hmac
 import logging
+import threading
 from datetime import datetime, timezone
 from urllib.parse import quote, urlencode
 
@@ -53,78 +48,450 @@ from app.services.analytics_service import track_event
 logger = logging.getLogger(__name__)
 
 
-# ── Helpers de configuración ─────────────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════════════════════
+# DETECTOR DE PROCESADOR ACTIVO
+# ══════════════════════════════════════════════════════════════════════════════
 
-def _require_config() -> None:
-    """Lanza RuntimeError si faltan las credenciales de dLocal Go."""
-    if not settings.dlocalgo_api_key or not settings.dlocalgo_secret_key:
-        raise RuntimeError(
-            "DLOCALGO_API_KEY y DLOCALGO_SECRET_KEY no configurados. "
-            "Obtén tus keys en merchant.dlocalgo.com → Developers → API Keys "
-            "y agrégalos al .env."
-        )
+def active_processor() -> str | None:
+    """
+    Detecta qué procesador de pagos está configurado.
 
+    Prioridad: PayPal > dLocal Go
+    (PayPal está listo para usar hoy; dLocal Go requiere aprobación del merchant)
 
-def _api_base() -> str:
-    """URL base según el entorno (sandbox o live)."""
-    if settings.dlocalgo_sandbox:
-        return "https://api-sbx.dlocalgo.com"
-    return "https://api.dlocalgo.com"
-
-
-def _headers() -> dict[str, str]:
-    """Headers de autenticación para la API de dLocal Go."""
-    return {
-        "Authorization": f"Bearer {settings.dlocalgo_api_key}:{settings.dlocalgo_secret_key}",
-        "Content-Type": "application/json",
-    }
+    Returns:
+        "paypal" | "dlocalgo" | None
+    """
+    if settings.paypal_client_id and settings.paypal_client_secret:
+        return "paypal"
+    if settings.dlocalgo_api_key and settings.dlocalgo_secret_key:
+        return "dlocalgo"
+    return None
 
 
-# ── Checkout — construir URL de suscripción ──────────────────────────────────
+# ══════════════════════════════════════════════════════════════════════════════
+# CHECKOUT — punto de entrada unificado
+# ══════════════════════════════════════════════════════════════════════════════
 
 def create_checkout_url(user: User, interval: str) -> str:
     """
-    Devuelve la URL del checkout de dLocal Go para que el usuario se suscriba.
-
-    Recupera el subscribe_url del plan almacenado en config y le agrega:
-      - external_id = user.user_id  (para identificar al usuario en el webhook)
-      - email       = user.email    (pre-rellena el campo en el checkout)
+    Genera la URL de checkout para el procesador activo.
 
     Args:
         user     : Usuario autenticado que quiere suscribirse.
         interval : "monthly" | "annual"
 
     Returns:
-        URL completa al hosted checkout de dLocal Go.
+        URL al hosted checkout (PayPal approval page o dLocal Go subscribe_url).
 
     Raises:
-        RuntimeError : Falta config, o el plan no existe en dLocal Go.
+        RuntimeError : Ningún procesador configurado, o error de API.
         ValueError   : interval inválido.
     """
-    _require_config()
-
-    if interval == "monthly":
-        plan_id = settings.dlocalgo_plan_id_monthly
-    elif interval == "annual":
-        plan_id = settings.dlocalgo_plan_id_annual
-    else:
+    if interval not in ("monthly", "annual"):
         raise ValueError(f"interval debe ser 'monthly' o 'annual', recibido: {interval!r}")
 
-    if not plan_id:
+    processor = active_processor()
+    if processor == "paypal":
+        return _paypal_create_checkout_url(user, interval)
+    elif processor == "dlocalgo":
+        return _dlocalgo_create_checkout_url(user, interval)
+    else:
         raise RuntimeError(
-            f"DLOCALGO_PLAN_ID_{interval.upper()} no configurado. "
-            "Ejecuta scripts/setup_dlocalgo_plans.py para crear los planes "
-            "y agrega los IDs al .env."
+            "No hay procesador de pagos configurado. "
+            "Agrega PAYPAL_CLIENT_ID + PAYPAL_CLIENT_SECRET al .env, "
+            "o DLOCALGO_API_KEY + DLOCALGO_SECRET_KEY."
         )
 
-    # Obtener el subscribe_url del plan desde la API
-    url = f"{_api_base()}/v1/subscription/plan/{plan_id}"
+
+# ══════════════════════════════════════════════════════════════════════════════
+# PAYPAL SUBSCRIPTIONS
+# ══════════════════════════════════════════════════════════════════════════════
+
+def _paypal_base() -> str:
+    if settings.paypal_sandbox:
+        return "https://api-m.sandbox.paypal.com"
+    return "https://api-m.paypal.com"
+
+
+def _paypal_access_token() -> str:
+    """
+    Obtiene un token OAuth2 de PayPal.
+
+    POST /v1/oauth2/token
+    Basic Auth: client_id:client_secret
+    Body: grant_type=client_credentials
+
+    Returns:
+        access_token (string)
+
+    Raises:
+        RuntimeError si la autenticación falla.
+    """
+    url = f"{_paypal_base()}/v1/oauth2/token"
     try:
-        resp = httpx.get(url, headers=_headers(), timeout=15.0)
+        resp = httpx.post(
+            url,
+            auth=(settings.paypal_client_id, settings.paypal_client_secret),
+            data={"grant_type": "client_credentials"},
+            timeout=15.0,
+        )
+        resp.raise_for_status()
+        return resp.json()["access_token"]
+    except httpx.HTTPStatusError as exc:
+        logger.error(
+            "PayPal auth fallida — HTTP %s: %s",
+            exc.response.status_code, exc.response.text[:300],
+        )
+        raise RuntimeError(
+            f"No se pudo autenticar con PayPal: HTTP {exc.response.status_code}. "
+            "Verifica PAYPAL_CLIENT_ID y PAYPAL_CLIENT_SECRET en .env."
+        ) from exc
+    except httpx.RequestError as exc:
+        raise RuntimeError(f"Error de conexión con PayPal: {exc}") from exc
+
+
+def _paypal_headers(token: str) -> dict[str, str]:
+    return {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+        "Prefer": "return=representation",
+    }
+
+
+def _paypal_create_checkout_url(user: User, interval: str) -> str:
+    """
+    Crea una suscripción en PayPal y devuelve la URL de aprobación.
+
+    Flujo:
+      1. Obtener access_token
+      2. POST /v1/billing/subscriptions con plan_id + custom_id (user_id)
+      3. Extraer link rel="approve" → URL del checkout
+
+    custom_id se usa en el webhook para identificar al usuario sin depender del email.
+    """
+    plan_id = (
+        settings.paypal_plan_id_monthly if interval == "monthly"
+        else settings.paypal_plan_id_annual
+    )
+    if not plan_id:
+        raise RuntimeError(
+            f"PAYPAL_PLAN_ID_{interval.upper()} no configurado. "
+            "Ejecuta scripts/setup_paypal_plans.py y agrega los IDs al .env."
+        )
+
+    token = _paypal_access_token()
+    url = f"{_paypal_base()}/v1/billing/subscriptions"
+
+    body = {
+        "plan_id": plan_id,
+        "custom_id": str(user.user_id),   # identificador en el webhook
+        "subscriber": {
+            "email_address": user.email,
+            "name": {
+                "given_name": (user.full_name or user.username).split()[0],
+            },
+        },
+        "application_context": {
+            "brand_name": "SAFPRO",
+            "locale": "es-PA",
+            "shipping_preference": "NO_SHIPPING",
+            "user_action": "SUBSCRIBE_NOW",
+            "payment_method": {
+                "payer_selected": "PAYPAL",
+                "payee_preferred": "IMMEDIATE_PAYMENT_REQUIRED",
+            },
+            "return_url": f"{settings.frontend_base}/upgrade/success",
+            "cancel_url": f"{settings.frontend_base}/upgrade?cancelled=1",
+        },
+    }
+
+    try:
+        resp = httpx.post(url, json=body, headers=_paypal_headers(token), timeout=20.0)
         resp.raise_for_status()
     except httpx.HTTPStatusError as exc:
         logger.error(
-            "Error obteniendo plan dLocal Go — plan_id=%s status=%s body=%s",
+            "PayPal create subscription fallida — HTTP %s: %s",
+            exc.response.status_code, exc.response.text[:500],
+        )
+        raise RuntimeError(
+            f"No se pudo crear la suscripción en PayPal: HTTP {exc.response.status_code}"
+        ) from exc
+    except httpx.RequestError as exc:
+        raise RuntimeError(f"Error de conexión con PayPal: {exc}") from exc
+
+    data = resp.json()
+    # Buscar el link de aprobación
+    approve_url: str | None = next(
+        (lnk["href"] for lnk in data.get("links", []) if lnk.get("rel") == "approve"),
+        None,
+    )
+    if not approve_url:
+        raise RuntimeError(
+            f"PayPal no devolvió link de aprobación. Respuesta: {data}"
+        )
+
+    logger.info(
+        "PayPal checkout creado — user_id=%s interval=%s sub_id=%s",
+        user.user_id, interval, data.get("id"),
+    )
+    return approve_url
+
+
+def verify_paypal_webhook_signature(
+    body: bytes,
+    transmission_id: str | None,
+    transmission_time: str | None,
+    cert_url: str | None,
+    auth_algo: str | None,
+    transmission_sig: str | None,
+) -> bool:
+    """
+    Verifica la firma del webhook de PayPal usando su API de verificación.
+
+    POST /v1/notifications/verify-webhook-signature
+    Requiere PAYPAL_WEBHOOK_ID en .env.
+
+    Returns:
+        True si la firma es VERIFIED, False en cualquier otro caso.
+    """
+    if not settings.paypal_webhook_id:
+        # Si no hay webhook_id configurado, aceptar en sandbox para facilitar el desarrollo
+        if settings.paypal_sandbox:
+            logger.warning(
+                "PAYPAL_WEBHOOK_ID no configurado — aceptando webhook en sandbox sin verificación"
+            )
+            return True
+        logger.error("PAYPAL_WEBHOOK_ID no configurado — rechazando webhook en producción")
+        return False
+
+    if not all([transmission_id, transmission_time, cert_url, auth_algo, transmission_sig]):
+        logger.warning("Webhook PayPal con headers incompletos — rechazado")
+        return False
+
+    try:
+        token = _paypal_access_token()
+        url = f"{_paypal_base()}/v1/notifications/verify-webhook-signature"
+        payload = {
+            "transmission_id": transmission_id,
+            "transmission_time": transmission_time,
+            "cert_url": cert_url,
+            "auth_algo": auth_algo,
+            "transmission_sig": transmission_sig,
+            "webhook_id": settings.paypal_webhook_id,
+            "webhook_event": body.decode("utf-8"),
+        }
+        resp = httpx.post(url, json=payload, headers=_paypal_headers(token), timeout=15.0)
+        resp.raise_for_status()
+        verification_status = resp.json().get("verification_status", "FAILURE")
+        if verification_status != "SUCCESS":
+            logger.warning("PayPal webhook no verificado — status=%s", verification_status)
+        return verification_status == "SUCCESS"
+    except Exception as exc:
+        logger.error("Error verificando webhook PayPal: %s", exc)
+        return False
+
+
+def handle_paypal_webhook_event(payload: dict, db: Session) -> dict:
+    """
+    Procesa un evento de webhook de PayPal ya verificado.
+
+    Eventos que maneja:
+      BILLING.SUBSCRIPTION.ACTIVATED → plan = "pro", guarda paypal_subscription_id
+      BILLING.SUBSCRIPTION.CANCELLED → plan = "free", limpia subscription_id
+      BILLING.SUBSCRIPTION.SUSPENDED → plan = "free"
+      PAYMENT.SALE.COMPLETED         → renovación confirmada (solo log)
+      BILLING.SUBSCRIPTION.PAYMENT.FAILED → log + (futuro: notificar al usuario)
+
+    Returns:
+        dict {"status": "ok", "action": ...}
+    """
+    event_type: str = payload.get("event_type", "")
+    resource: dict = payload.get("resource", {})
+
+    logger.info("PayPal webhook — event_type=%s", event_type)
+
+    if event_type == "BILLING.SUBSCRIPTION.ACTIVATED":
+        subscription_id: str = resource.get("id", "")
+        custom_id: str = resource.get("custom_id", "")
+        user = _find_user_by_uuid(custom_id, db)
+        if not user:
+            logger.warning(
+                "PayPal webhook: usuario no encontrado — custom_id=%s", custom_id
+            )
+            return {"status": "ignored", "reason": "usuario no encontrado"}
+        _paypal_on_subscription_activated(user, subscription_id, db)
+        return {"status": "ok", "action": "plan_activated", "user_id": str(user.user_id)}
+
+    elif event_type in ("BILLING.SUBSCRIPTION.CANCELLED", "BILLING.SUBSCRIPTION.SUSPENDED"):
+        subscription_id = resource.get("id", "")
+        user = db.query(User).filter(
+            User.paypal_subscription_id == subscription_id
+        ).first()
+        if not user:
+            logger.warning(
+                "PayPal webhook: usuario no encontrado para sub=%s", subscription_id
+            )
+            return {"status": "ignored", "reason": "suscripción no encontrada"}
+        _paypal_on_subscription_ended(user, event_type, db)
+        return {"status": "ok", "action": "plan_downgraded", "user_id": str(user.user_id)}
+
+    elif event_type == "PAYMENT.SALE.COMPLETED":
+        # Renovación exitosa — el plan ya es "pro", solo logueamos
+        billing_agreement_id = resource.get("billing_agreement_id", "")
+        logger.info(
+            "PayPal renovación confirmada — subscription_id=%s amount=%s",
+            billing_agreement_id,
+            resource.get("amount", {}).get("total", "?"),
+        )
+        return {"status": "ok", "action": "renewal_logged"}
+
+    elif event_type == "BILLING.SUBSCRIPTION.PAYMENT.FAILED":
+        subscription_id = resource.get("id", "")
+        logger.warning(
+            "PayPal pago fallido — subscription_id=%s", subscription_id
+        )
+        # Por ahora solo loguear; en el futuro: notificar al usuario por email
+        return {"status": "ok", "action": "payment_failure_logged"}
+
+    else:
+        logger.info("PayPal webhook no manejado — event_type=%s", event_type)
+        return {"status": "ok", "action": "ignored", "event_type": event_type}
+
+
+def _paypal_on_subscription_activated(
+    user: User,
+    subscription_id: str,
+    db: Session,
+) -> None:
+    """Activa el plan Pro tras la activación de la suscripción PayPal."""
+    user.plan = "pro"
+    user.paypal_subscription_id = subscription_id
+    db.add(user)
+    db.commit()
+
+    logger.info(
+        "PayPal: usuario actualizado a plan=pro — user_id=%s sub_id=%s",
+        user.user_id, subscription_id,
+    )
+    track_event(
+        user_id=user.user_id,
+        event_type="plan_upgraded",
+        plan="pro",
+        metadata={"processor": "paypal", "subscription_id": subscription_id},
+    )
+    _send_upgrade_email_async(user)
+
+
+def _paypal_on_subscription_ended(user: User, reason: str, db: Session) -> None:
+    """Baja el plan a free cuando la suscripción PayPal es cancelada o suspendida."""
+    user.plan = "free"
+    user.paypal_subscription_id = None
+    user.subscription_expires_at = None
+    db.add(user)
+    db.commit()
+    logger.info(
+        "PayPal: plan bajado a free — user_id=%s reason=%s",
+        user.user_id, reason,
+    )
+
+
+def cancel_paypal_subscription(user: User, db: Session) -> None:
+    """
+    Cancela la suscripción activa del usuario en PayPal.
+
+    POST /v1/billing/subscriptions/{id}/cancel
+
+    Raises:
+        ValueError   : El usuario no tiene suscripción PayPal activa.
+        RuntimeError : Error de red o respuesta inesperada.
+    """
+    if not user.paypal_subscription_id:
+        raise ValueError("El usuario no tiene una suscripción activa en PayPal.")
+
+    subscription_id = user.paypal_subscription_id
+    token = _paypal_access_token()
+    url = f"{_paypal_base()}/v1/billing/subscriptions/{subscription_id}/cancel"
+
+    try:
+        resp = httpx.post(
+            url,
+            json={"reason": "User requested cancellation via SAFPRO"},
+            headers=_paypal_headers(token),
+            timeout=15.0,
+        )
+        # PayPal devuelve 204 No Content en éxito
+        if resp.status_code not in (200, 204):
+            logger.error(
+                "PayPal cancel fallida — HTTP %s: %s",
+                resp.status_code, resp.text[:300],
+            )
+            raise RuntimeError(
+                f"No se pudo cancelar la suscripción en PayPal: HTTP {resp.status_code}"
+            )
+    except httpx.RequestError as exc:
+        raise RuntimeError(f"Error de conexión con PayPal: {exc}") from exc
+
+    # Actualizar inmediatamente en DB (el webhook de PayPal también confirmará)
+    user.plan = "free"
+    user.paypal_subscription_id = None
+    user.subscription_expires_at = None
+    db.add(user)
+    db.commit()
+
+    logger.info(
+        "PayPal: suscripción cancelada — user_id=%s sub_id=%s",
+        user.user_id, subscription_id,
+    )
+    _send_cancellation_email_async(user)
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# dLOCAL GO
+# ══════════════════════════════════════════════════════════════════════════════
+
+def _require_dlocalgo_config() -> None:
+    if not settings.dlocalgo_api_key or not settings.dlocalgo_secret_key:
+        raise RuntimeError(
+            "DLOCALGO_API_KEY y DLOCALGO_SECRET_KEY no configurados. "
+            "Obtén tus keys en merchant.dlocalgo.com → Developers → API Keys."
+        )
+
+
+def _dlocalgo_base() -> str:
+    if settings.dlocalgo_sandbox:
+        return "https://api-sbx.dlocalgo.com"
+    return "https://api.dlocalgo.com"
+
+
+def _dlocalgo_headers() -> dict[str, str]:
+    return {
+        "Authorization": f"Bearer {settings.dlocalgo_api_key}:{settings.dlocalgo_secret_key}",
+        "Content-Type": "application/json",
+    }
+
+
+def _dlocalgo_create_checkout_url(user: User, interval: str) -> str:
+    """Construye la URL de checkout de dLocal Go para la suscripción."""
+    _require_dlocalgo_config()
+
+    plan_id = (
+        settings.dlocalgo_plan_id_monthly if interval == "monthly"
+        else settings.dlocalgo_plan_id_annual
+    )
+    if not plan_id:
+        raise RuntimeError(
+            f"DLOCALGO_PLAN_ID_{interval.upper()} no configurado. "
+            "Ejecuta scripts/setup_dlocalgo_plans.py."
+        )
+
+    url = f"{_dlocalgo_base()}/v1/subscription/plan/{plan_id}"
+    try:
+        resp = httpx.get(url, headers=_dlocalgo_headers(), timeout=15.0)
+        resp.raise_for_status()
+    except httpx.HTTPStatusError as exc:
+        logger.error(
+            "dLocal Go plan fetch fallida — plan_id=%s HTTP %s: %s",
             plan_id, exc.response.status_code, exc.response.text[:500],
         )
         raise RuntimeError(
@@ -132,67 +499,48 @@ def create_checkout_url(user: User, interval: str) -> str:
             f"HTTP {exc.response.status_code}"
         ) from exc
     except httpx.RequestError as exc:
-        logger.error("Error de red al obtener plan dLocal Go: %s", exc)
         raise RuntimeError(f"Error de conexión con dLocal Go: {exc}") from exc
 
     plan_data = resp.json()
     subscribe_url: str | None = plan_data.get("subscribe_url")
     if not subscribe_url:
         raise RuntimeError(
-            f"El plan {plan_id} no devolvió subscribe_url. "
-            f"Respuesta: {plan_data}"
+            f"El plan {plan_id} no devolvió subscribe_url. Respuesta: {plan_data}"
         )
 
-    # Agregar external_id, email y redirect_url para identificar al usuario
-    # y redirigirlo de vuelta a SAFPRO tras completar el pago.
-    # dLocal Go permite estos query params en el subscribe_url.
-    success_url = f"{settings.frontend_base}/upgrade/success"
-    cancel_url = f"{settings.frontend_base}/upgrade?cancelled=1"
     params = urlencode({
         "external_id": str(user.user_id),
         "email": user.email,
-        "redirect_url": success_url,
-        "cancel_url": cancel_url,
+        "redirect_url": f"{settings.frontend_base}/upgrade/success",
+        "cancel_url": f"{settings.frontend_base}/upgrade?cancelled=1",
     }, quote_via=quote)
     separator = "&" if "?" in subscribe_url else "?"
     full_url = f"{subscribe_url}{separator}{params}"
 
     logger.info(
-        "Checkout URL generada — user_id=%s interval=%s plan_id=%s",
+        "dLocal Go checkout URL generada — user_id=%s interval=%s plan_id=%s",
         user.user_id, interval, plan_id,
     )
     return full_url
 
 
-# ── Webhook — verificación de firma ─────────────────────────────────────────
-
-def verify_webhook_signature(payload_bytes: bytes, auth_header: str | None) -> bool:
+def verify_dlocalgo_webhook_signature(payload_bytes: bytes, auth_header: str | None) -> bool:
     """
     Verifica la firma HMAC-SHA256 del webhook de dLocal Go.
 
-    Formato del header:
-        Authorization: V2-HMAC-SHA256, Signature: {hex_signature}
-
-    Cálculo:
-        message   = api_key + json_payload (string)
-        signature = HMAC-SHA256(message, secret_key).hexdigest()
-
-    Returns:
-        True si la firma es válida, False en caso contrario.
+    Header: "V2-HMAC-SHA256, Signature: {hex}"
+    Cálculo: HMAC-SHA256(api_key + payload, secret_key).hexdigest()
     """
     if not auth_header:
-        logger.warning("Webhook recibido sin header Authorization")
+        logger.warning("dLocal Go webhook sin header Authorization")
         return False
-
-    # Extraer el hex de la firma: "V2-HMAC-SHA256, Signature: abc123..."
     try:
         sig_value = auth_header.split("Signature:")[-1].strip()
     except Exception:
-        logger.warning("Header Authorization de webhook malformado: %s", auth_header)
+        logger.warning("dLocal Go webhook Authorization malformado: %s", auth_header)
         return False
 
     if not sig_value:
-        logger.warning("Firma vacía en webhook Authorization header")
         return False
 
     message = settings.dlocalgo_api_key + payload_bytes.decode("utf-8")
@@ -204,227 +552,168 @@ def verify_webhook_signature(payload_bytes: bytes, auth_header: str | None) -> b
 
     valid = hmac.compare_digest(expected, sig_value)
     if not valid:
-        logger.warning("Firma de webhook inválida — esperado=%s recibido=%s", expected[:16] + "…", sig_value[:16] + "…")
+        logger.warning(
+            "dLocal Go firma inválida — esperado=%s… recibido=%s…",
+            expected[:16], sig_value[:16],
+        )
     return valid
 
 
-# ── Webhook — procesamiento del evento ──────────────────────────────────────
-
-def handle_webhook_event(payload: dict, db: Session) -> dict:
-    """
-    Procesa un evento de webhook de dLocal Go ya verificado.
-
-    dLocal Go envía: {"payment_id": "DP-xxx"}
-
-    El handler:
-      1. Obtiene el detalle del pago via GET /v1/payments/{payment_id}
-      2. Extrae external_id (= user_id) y subscription_id
-      3. Actualiza user.plan y user.dlocalgo_subscription_id según el status
-
-    Statuses posibles del pago: PAID | PENDING | REJECTED | CANCELLED
-
-    Returns:
-        dict con {"status": "ok", "action": ...} para logging.
-    """
+def handle_dlocalgo_webhook_event(payload: dict, db: Session) -> dict:
+    """Procesa un evento de webhook de dLocal Go ya verificado."""
     payment_id: str | None = payload.get("payment_id")
     if not payment_id:
-        logger.warning("Webhook sin payment_id: %s", payload)
+        logger.warning("dLocal Go webhook sin payment_id: %s", payload)
         return {"status": "ignored", "reason": "no payment_id"}
 
-    # Obtener detalle del pago
-    payment = _get_payment(payment_id)
+    payment = _dlocalgo_get_payment(payment_id)
     if payment is None:
         return {"status": "error", "reason": f"no se pudo obtener {payment_id}"}
-
-    logger.info(
-        "Webhook procesando — payment_id=%s status=%s order_id=%s",
-        payment_id,
-        payment.get("status"),
-        payment.get("order_id", ""),
-    )
 
     status = (payment.get("status") or "").upper()
     external_id: str | None = payment.get("external_id") or payment.get("order_id")
     subscription_id: str | None = payment.get("subscription_id")
 
-    # Intentar encontrar usuario por external_id (UUID del user)
-    user = _find_user_by_external_id(external_id, db)
+    user = _find_user_by_uuid(external_id, db)
     if not user:
         logger.warning(
-            "Webhook: usuario no encontrado — external_id=%s payment_id=%s",
-            external_id, payment_id,
+            "dLocal Go webhook: usuario no encontrado — external_id=%s", external_id
         )
         return {"status": "ignored", "reason": "usuario no encontrado"}
 
     if status == "PAID":
-        _on_payment_successful(user, payment, subscription_id, db)
+        user.plan = "pro"
+        if subscription_id:
+            user.dlocalgo_subscription_id = subscription_id
+        db.add(user)
+        db.commit()
+        logger.info(
+            "dLocal Go: usuario actualizado a plan=pro — user_id=%s sub_id=%s",
+            user.user_id, subscription_id,
+        )
+        track_event(
+            user_id=user.user_id,
+            event_type="plan_upgraded",
+            plan="pro",
+            metadata={"processor": "dlocalgo", "subscription_id": subscription_id},
+        )
+        _send_upgrade_email_async(user)
         return {"status": "ok", "action": "plan_activated", "user_id": str(user.user_id)}
 
     elif status in ("CANCELLED", "REJECTED"):
-        _on_payment_failed_or_cancelled(user, status, db)
+        user.plan = "free"
+        user.dlocalgo_subscription_id = None
+        user.subscription_expires_at = None
+        db.add(user)
+        db.commit()
+        logger.info(
+            "dLocal Go: plan bajado a free — user_id=%s reason=%s",
+            user.user_id, status,
+        )
         return {"status": "ok", "action": "plan_downgraded", "user_id": str(user.user_id)}
 
     else:
-        # PENDING u otros — no accionable todavía
-        logger.info("Webhook status no accionable: %s — payment_id=%s", status, payment_id)
+        logger.info("dLocal Go status no accionable: %s — payment_id=%s", status, payment_id)
         return {"status": "ok", "action": "ignored", "payment_status": status}
 
 
-def _get_payment(payment_id: str) -> dict | None:
-    """GET /v1/payments/{payment_id} — devuelve el objeto o None si falla."""
-    url = f"{_api_base()}/v1/payments/{payment_id}"
+def _dlocalgo_get_payment(payment_id: str) -> dict | None:
+    url = f"{_dlocalgo_base()}/v1/payments/{payment_id}"
     try:
-        resp = httpx.get(url, headers=_headers(), timeout=15.0)
+        resp = httpx.get(url, headers=_dlocalgo_headers(), timeout=15.0)
         resp.raise_for_status()
         return resp.json()
-    except httpx.HTTPStatusError as exc:
-        logger.error(
-            "Error obteniendo pago %s — HTTP %s: %s",
-            payment_id, exc.response.status_code, exc.response.text[:300],
-        )
-        return None
-    except httpx.RequestError as exc:
-        logger.error("Error de red obteniendo pago %s: %s", payment_id, exc)
+    except Exception as exc:
+        logger.error("Error obteniendo pago dLocal Go %s: %s", payment_id, exc)
         return None
 
 
-def _find_user_by_external_id(external_id: str | None, db: Session) -> User | None:
-    """Busca un usuario por su UUID (pasado como external_id al checkout)."""
-    if not external_id:
-        return None
-    try:
-        import uuid
-        uid = uuid.UUID(external_id)
-        return db.query(User).filter(User.user_id == uid).first()
-    except (ValueError, AttributeError):
-        logger.warning("external_id no es un UUID válido: %s", external_id)
-        return None
-
-
-def _on_payment_successful(
-    user: User,
-    payment: dict,
-    subscription_id: str | None,
-    db: Session,
-) -> None:
-    """Activa el plan Pro tras un pago exitoso."""
-    user.plan = "pro"
-
-    # Guardar subscription_id para poder cancelar después
-    if subscription_id:
-        user.dlocalgo_subscription_id = subscription_id
-
-    # subscription_expires_at: dLocal Go gestiona la renovación automáticamente,
-    # pero guardamos la fecha del próximo cobro si viene en el payload
-    next_charge_at: datetime | None = None
-    if payment.get("next_charge_at"):
-        try:
-            next_charge_at = datetime.fromisoformat(payment["next_charge_at"])
-            if next_charge_at.tzinfo is None:
-                next_charge_at = next_charge_at.replace(tzinfo=timezone.utc)
-        except (ValueError, TypeError):
-            pass
-    user.subscription_expires_at = next_charge_at
-
-    db.add(user)
-    db.commit()
-
-    logger.info(
-        "Usuario actualizado a plan=pro — user_id=%s sub_id=%s",
-        user.user_id, subscription_id,
-    )
-
-    track_event(
-        user_id=user.user_id,
-        event_type="plan_upgraded",
-        plan="pro",
-        metadata={
-            "processor": "dlocalgo",
-            "subscription_id": subscription_id,
-            "payment_id": payment.get("id"),
-        },
-    )
-
-    _send_upgrade_email_async(user)
-
-
-def _on_payment_failed_or_cancelled(user: User, status: str, db: Session) -> None:
-    """Baja el plan a free cuando un pago es rechazado o la suscripción es cancelada."""
-    user.plan = "free"
-    user.subscription_expires_at = None
-    user.dlocalgo_subscription_id = None
-    db.add(user)
-    db.commit()
-    logger.info(
-        "Plan bajado a free — user_id=%s reason=%s",
-        user.user_id, status,
-    )
-
-
-# ── Cancelar suscripción ─────────────────────────────────────────────────────
-
-def cancel_subscription(user: User, db: Session) -> None:
-    """
-    Cancela la suscripción activa del usuario en dLocal Go.
-
-    Llama DELETE /v1/subscription/plan/{plan_id}/subscription/{subscription_id}
-
-    Raises:
-        ValueError   : El usuario no tiene suscripción activa.
-        RuntimeError : Error de red o respuesta inesperada de dLocal Go.
-    """
-    _require_config()
+def cancel_dlocalgo_subscription(user: User, db: Session) -> None:
+    """Cancela la suscripción activa del usuario en dLocal Go."""
+    _require_dlocalgo_config()
 
     if not user.dlocalgo_subscription_id:
         raise ValueError("El usuario no tiene una suscripción activa en dLocal Go.")
 
     subscription_id = user.dlocalgo_subscription_id
-
-    # Intentar con plan mensual primero, luego anual
-    # (no sabemos en cuál está sin consultar la sub; dLocal Go devolverá 404 en el incorrecto)
     cancelled = False
     for plan_id in [settings.dlocalgo_plan_id_monthly, settings.dlocalgo_plan_id_annual]:
         if not plan_id:
             continue
-        url = f"{_api_base()}/v1/subscription/plan/{plan_id}/subscription/{subscription_id}"
+        url = f"{_dlocalgo_base()}/v1/subscription/plan/{plan_id}/subscription/{subscription_id}"
         try:
-            resp = httpx.delete(url, headers=_headers(), timeout=15.0)
+            resp = httpx.delete(url, headers=_dlocalgo_headers(), timeout=15.0)
             if resp.status_code in (200, 204):
                 cancelled = True
                 break
             elif resp.status_code == 404:
-                continue  # no está en este plan, intentar el siguiente
+                continue
             else:
                 logger.error(
-                    "Error cancelando sub %s en plan %s — HTTP %s: %s",
+                    "dLocal Go cancel fallida — sub=%s plan=%s HTTP %s: %s",
                     subscription_id, plan_id, resp.status_code, resp.text[:300],
                 )
         except httpx.RequestError as exc:
-            logger.error("Error de red cancelando suscripción: %s", exc)
             raise RuntimeError(f"Error de conexión con dLocal Go: {exc}") from exc
 
     if not cancelled:
         raise RuntimeError(
-            f"No se pudo cancelar la suscripción {subscription_id} en dLocal Go. "
-            "Es posible que ya esté cancelada o el ID sea inválido."
+            f"No se pudo cancelar la suscripción {subscription_id} en dLocal Go."
         )
 
-    # Actualizar inmediatamente en DB — el webhook de confirmación también actualizará
     user.plan = "free"
-    user.subscription_expires_at = None
     user.dlocalgo_subscription_id = None
+    user.subscription_expires_at = None
     db.add(user)
     db.commit()
-
-    logger.info("Suscripción cancelada — user_id=%s sub_id=%s", user.user_id, subscription_id)
+    logger.info(
+        "dLocal Go: suscripción cancelada — user_id=%s sub_id=%s",
+        user.user_id, subscription_id,
+    )
     _send_cancellation_email_async(user)
 
 
-# ── Emails async ─────────────────────────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════════════════════
+# CANCELACIÓN — punto de entrada unificado
+# ══════════════════════════════════════════════════════════════════════════════
+
+def cancel_subscription(user: User, db: Session) -> None:
+    """
+    Cancela la suscripción activa del usuario, detectando el procesador por
+    el subscription_id que esté guardado.
+
+    Raises:
+        ValueError   : El usuario no tiene suscripción activa.
+        RuntimeError : Error de comunicación con el procesador.
+    """
+    if user.paypal_subscription_id:
+        cancel_paypal_subscription(user, db)
+    elif user.dlocalgo_subscription_id:
+        cancel_dlocalgo_subscription(user, db)
+    else:
+        raise ValueError(
+            "El usuario no tiene una suscripción activa en ningún procesador."
+        )
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# HELPERS COMPARTIDOS
+# ══════════════════════════════════════════════════════════════════════════════
+
+def _find_user_by_uuid(uid_str: str | None, db: Session) -> User | None:
+    """Busca un usuario por su UUID (como string)."""
+    if not uid_str:
+        return None
+    try:
+        import uuid
+        uid = uuid.UUID(uid_str)
+        return db.query(User).filter(User.user_id == uid).first()
+    except (ValueError, AttributeError):
+        logger.warning("UUID inválido: %s", uid_str)
+        return None
+
 
 def _send_upgrade_email_async(user: User) -> None:
-    """Envía el email de bienvenida Pro en background."""
-    import threading
     from app.services.email_service import send_upgrade_confirmation_email
 
     def _send() -> None:
@@ -442,8 +731,6 @@ def _send_upgrade_email_async(user: User) -> None:
 
 
 def _send_cancellation_email_async(user: User) -> None:
-    """Envía confirmación de cancelación en background."""
-    import threading
     from app.services.email_service import send_cancellation_confirmation_email
 
     def _send() -> None:
@@ -456,3 +743,18 @@ def _send_cancellation_email_async(user: User) -> None:
             logger.warning("No se pudo enviar email de cancelación: %s", exc)
 
     threading.Thread(target=_send, daemon=True).start()
+
+
+# ── Mantener compatibilidad con código existente (dLocal Go legacy API) ───────
+# Aliases para que cualquier import directo de funciones antiguas no rompa.
+
+def create_checkout_url_dlocalgo(user: User, interval: str) -> str:
+    return _dlocalgo_create_checkout_url(user, interval)
+
+
+def verify_webhook_signature(payload_bytes: bytes, auth_header: str | None) -> bool:
+    return verify_dlocalgo_webhook_signature(payload_bytes, auth_header)
+
+
+def handle_webhook_event(payload: dict, db: Session) -> dict:
+    return handle_dlocalgo_webhook_event(payload, db)
