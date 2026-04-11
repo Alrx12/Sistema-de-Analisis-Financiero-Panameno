@@ -296,6 +296,70 @@ def send_admin_job_failed_alert(
     )
 
 
+def send_contact_form_email(
+    sender_name: str,
+    sender_email: str,
+    message: str,
+) -> None:
+    """
+    Reenvía un mensaje del formulario de contacto público a admin@safpro.us.
+
+    Args:
+        sender_name  : Nombre del visitante que escribe.
+        sender_email : Email del visitante (para poder responderle).
+        message      : Contenido del mensaje.
+    """
+    ADMIN_EMAIL = "admin@safpro.us"
+    resend = _get_resend()
+
+    html_body = f"""
+    <div style="font-family: sans-serif; max-width: 520px; margin: auto; color: #1a1a2e;">
+      <div style="background: linear-gradient(135deg, #1c2b4b, #2d4878); padding: 20px 24px; border-radius: 12px 12px 0 0;">
+        <p style="color: #fff; font-size: 13px; margin: 0; opacity: 0.7;">SAFPRO — Formulario de contacto</p>
+        <h2 style="color: #ffffff; margin: 4px 0 0 0; font-size: 18px;">Nuevo mensaje de contacto</h2>
+      </div>
+      <div style="background: #ffffff; padding: 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 20px;">
+          <tr style="border-bottom: 1px solid #f3f4f6;">
+            <td style="padding: 8px 4px; color: #6b7280; width: 80px;">Nombre</td>
+            <td style="padding: 8px 4px; font-weight: 600;">{sender_name}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 4px; color: #6b7280;">Email</td>
+            <td style="padding: 8px 4px;">
+              <a href="mailto:{sender_email}" style="color: #2563eb;">{sender_email}</a>
+            </td>
+          </tr>
+        </table>
+        <div>
+          <p style="font-size: 13px; color: #6b7280; margin: 0 0 8px 0;">Mensaje:</p>
+          <div style="background: #f9fafb; border-left: 3px solid #e05c19; padding: 12px 16px;
+                      border-radius: 4px; font-size: 14px; line-height: 1.7; white-space: pre-wrap;">{message}</div>
+        </div>
+        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
+        <p style="font-size: 11px; color: #9ca3af; margin: 0;">
+          Responde directamente a este email para contactar al remitente.
+        </p>
+      </div>
+    </div>
+    """
+
+    params: resend.Emails.SendParams = {
+        "from": "SAFPRO Contacto <noreply@safpro.us>",
+        "to": [ADMIN_EMAIL],
+        "reply_to": sender_email,
+        "subject": f"[Contacto] Mensaje de {sender_name}",
+        "html": html_body,
+    }
+
+    response = resend.Emails.send(params)
+    logger.info(
+        "Email de contacto reenviado — from=%s resend_id=%s",
+        sender_email,
+        response.get("id") if isinstance(response, dict) else response,
+    )
+
+
 def send_upgrade_confirmation_email(
     to_email: str,
     full_name: str,

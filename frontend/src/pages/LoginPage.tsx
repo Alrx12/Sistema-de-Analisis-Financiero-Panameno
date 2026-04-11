@@ -293,19 +293,26 @@ export default function LoginPage() {
             </Link>
           </p>
 
-          {/* Privacy link */}
+          {/* Footer links */}
           <p className="text-center text-xs mt-3" style={{ color: "rgba(255,255,255,0.2)" }}>
             <Link to="/privacy" className="auth-link" style={{ fontSize: "inherit" }}>
-              Política de Privacidad
+              Privacidad
             </Link>
             {" · "}
             <Link to="/terms" className="auth-link" style={{ fontSize: "inherit" }}>
-              Términos de Uso
+              Términos
             </Link>
             {" · "}
             <Link to="/faq" className="auth-link" style={{ fontSize: "inherit" }}>
-              Preguntas frecuentes
+              FAQ
             </Link>
+            {" · "}
+            <Link to="/contacto" className="auth-link" style={{ fontSize: "inherit" }}>
+              Contacto
+            </Link>
+          </p>
+          <p className="text-center text-xs mt-1" style={{ color: "rgba(255,255,255,0.12)" }}>
+            admin@safpro.us · Alexis Antonio Pineda Del Cid
           </p>
         </div>
       </div>

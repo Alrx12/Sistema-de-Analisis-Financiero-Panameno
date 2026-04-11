@@ -284,15 +284,24 @@ export default function FaqPage() {
       <div className="rounded-xl border border-border bg-muted/30 p-4 flex items-start gap-3">
         <Star className="h-4 w-4 text-primary shrink-0 mt-0.5" />
         <p className="text-xs text-muted-foreground leading-relaxed">
-          ¿No encontraste respuesta a tu pregunta? Puedes contactar al administrador de la plataforma.
+          ¿No encontraste respuesta a tu pregunta?{" "}
+          <Link to="/contacto" className="font-semibold underline" style={{ color: "#e05c19" }}>
+            Escríbenos directamente
+          </Link>{" "}
+          o envíanos un correo a{" "}
+          <a href="mailto:admin@safpro.us" className="font-semibold underline" style={{ color: "#1c2b4b" }}>
+            admin@safpro.us
+          </a>
+          . Respondemos en menos de 48 horas hábiles.
           SAFPRO es un proyecto en desarrollo activo y sus funcionalidades se expanden constantemente.
         </p>
       </div>
 
       {/* Footer links */}
-      <div className="flex items-center justify-between py-4 text-sm" style={{ color: "#9ca3af" }}>
-        <span>© 2026 SAFPRO. Todos los derechos reservados.</span>
+      <div className="flex flex-wrap items-center justify-between gap-3 py-4 text-sm" style={{ color: "#9ca3af" }}>
+        <span>© 2026 SAFPRO · Alexis Antonio Pineda Del Cid</span>
         <div className="flex gap-4">
+          <Link to="/contacto" className="hover:text-indigo-600 transition-colors">Contacto</Link>
           <Link to="/privacy" className="hover:text-indigo-600 transition-colors">Privacidad</Link>
           <Link to="/terms" className="hover:text-indigo-600 transition-colors">Términos</Link>
           <Link to="/login" className="hover:text-indigo-600 transition-colors">Iniciar sesión</Link>

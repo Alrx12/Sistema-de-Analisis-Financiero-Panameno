@@ -14,6 +14,7 @@ const OAuthCallbackPage   = lazy(() => import("@/pages/OAuthCallbackPage"))
 const PrivacyPolicyPage   = lazy(() => import("@/pages/PrivacyPolicyPage"))
 const TermsPage           = lazy(() => import("@/pages/TermsPage"))
 const FaqPage             = lazy(() => import("@/pages/FaqPage"))
+const ContactPage         = lazy(() => import("@/pages/ContactPage"))
 
 // Onboarding / billing — pantalla completa, fuera del AppShell
 const OnboardingPage      = lazy(() => import("@/pages/OnboardingPage"))
@@ -91,6 +92,7 @@ export default function App() {
           <Route path="/privacy"         element={<PrivacyPolicyPage />} />
           <Route path="/terms"           element={<TermsPage />} />
           <Route path="/faq"             element={<FaqPage />} />
+          <Route path="/contacto"        element={<ContactPage />} />
 
           {/* Onboarding — protegida, pantalla completa */}
           <Route path="/onboarding"      element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />

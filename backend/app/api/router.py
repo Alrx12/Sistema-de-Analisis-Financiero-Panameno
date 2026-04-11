@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from app.api.v1.admin import router as admin_router
+from app.api.v1.contact import router as contact_router
 from app.api.v1.admin_analytics import router as admin_analytics_router
 from app.api.v1.billing import router as billing_router
 from app.api.v1.accounts import router as accounts_router
@@ -35,3 +36,4 @@ api_router.include_router(users_router, prefix="/users", tags=["users"])
 api_router.include_router(profile_router, prefix="/users", tags=["profile"])
 api_router.include_router(wallets_router, prefix="/wallets", tags=["wallets"])
 api_router.include_router(billing_router, prefix="/billing", tags=["billing"])
+api_router.include_router(contact_router, prefix="/contact", tags=["contact"])

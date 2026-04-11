@@ -369,14 +369,48 @@ export default function TermsPage() {
           </p>
         </section>
 
-        {/* 13. Contacto */}
+        {/* 13. Identidad legal del responsable */}
+        <section style={{ background: "#ffffff", borderRadius: "0.75rem", padding: "1.5rem", display: "flex", flexDirection: "column", gap: "0.75rem", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
+          <h2 className="text-base font-bold flex items-center gap-2" style={{ color: "#1c2b4b" }}>
+            <UserCheck className="h-4 w-4" style={{ color: "#e05c19" }} />
+            13. Identidad del Responsable del Servicio
+          </h2>
+          <p className="text-sm leading-relaxed" style={{ color: "#374151" }}>
+            SAFPRO es operado por una persona natural legalmente identificada bajo las leyes
+            de la República de Panamá:
+          </p>
+          <div
+            className="rounded-lg p-4 grid gap-2"
+            style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}
+          >
+            {[
+              { label: "Nombre completo", value: "Alexis Antonio Pineda Del Cid" },
+              { label: "Documento de identidad (cédula)", value: "8-916-525" },
+              { label: "País de residencia y operación", value: "República de Panamá" },
+              { label: "Correo de contacto", value: "admin@safpro.us" },
+              { label: "Sitio web", value: "https://safpro.us" },
+            ].map((row) => (
+              <div key={row.label} className="flex items-start gap-2 text-sm">
+                <span className="font-semibold shrink-0" style={{ color: "#1c2b4b", minWidth: 220 }}>{row.label}:</span>
+                <span style={{ color: "#374151" }}>{row.value}</span>
+              </div>
+            ))}
+          </div>
+          <p className="text-sm leading-relaxed" style={{ color: "#6b7280" }}>
+            Esta información se proporciona en cumplimiento de las obligaciones de transparencia
+            establecidas en la Ley 81 de 2019 sobre Protección de Datos Personales de la
+            República de Panamá.
+          </p>
+        </section>
+
+        {/* 14. Contacto */}
         <section
           className="rounded-xl p-6 space-y-3"
           style={{ background: "#1c2b4b" }}
         >
           <h2 className="text-base font-bold text-white flex items-center gap-2">
             <Mail className="h-4 w-4" />
-            13. Contacto
+            14. Contacto
           </h2>
           <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.7)" }}>
             Para preguntas, reclamos o solicitudes relacionadas con estos Términos:
@@ -388,15 +422,20 @@ export default function TermsPage() {
             <Mail className="h-4 w-4" />
             admin@safpro.us
           </a>
-          <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.5)" }}>
-            Haremos nuestro mejor esfuerzo para responder en un plazo razonable de tiempo hábil.
+          <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.7)" }}>
+            También puedes usar nuestro{" "}
+            <Link to="/contacto" style={{ color: "#f07843", textDecoration: "underline" }}>
+              formulario de contacto
+            </Link>
+            . Respondemos en menos de 48 horas hábiles.
           </p>
         </section>
 
         {/* Footer */}
-        <div className="flex items-center justify-between py-4 text-sm" style={{ color: "#9ca3af" }}>
-          <span>© 2026 SAFPRO. Todos los derechos reservados.</span>
+        <div className="flex flex-wrap items-center justify-between gap-3 py-4 text-sm" style={{ color: "#9ca3af" }}>
+          <span>© 2026 SAFPRO · Alexis Antonio Pineda Del Cid</span>
           <div className="flex gap-4">
+            <Link to="/contacto" className="hover:text-indigo-600 transition-colors">Contacto</Link>
             <Link to="/privacy" className="hover:text-indigo-600 transition-colors">Privacidad</Link>
             <Link to="/faq" className="hover:text-indigo-600 transition-colors">FAQ</Link>
             <Link to="/login" className="hover:text-indigo-600 transition-colors">Iniciar sesión</Link>
