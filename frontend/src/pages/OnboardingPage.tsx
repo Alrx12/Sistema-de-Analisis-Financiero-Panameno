@@ -10,18 +10,22 @@ import type { IndustryType, GoalType } from "@/types"
 
 // ─── Opciones ─────────────────────────────────────────────────────────────────
 
-const INDUSTRIES: { value: IndustryType; label: string; emoji: string }[] = [
-  { value: "tecnologia",   label: "Tecnología",               emoji: "💻" },
-  { value: "salud",        label: "Salud",                    emoji: "🏥" },
-  { value: "educacion",    label: "Educación",                emoji: "📚" },
-  { value: "finanzas",     label: "Finanzas / Banca",         emoji: "🏦" },
-  { value: "comercio",     label: "Comercio / Retail",        emoji: "🛒" },
-  { value: "construccion", label: "Construcción",             emoji: "🏗️" },
-  { value: "gobierno",     label: "Gobierno / Público",       emoji: "🏛️" },
-  { value: "transporte",   label: "Transporte / Logística",   emoji: "🚛" },
-  { value: "servicios",    label: "Servicios profesionales",  emoji: "💼" },
-  { value: "otro",         label: "Otro",                     emoji: "⚡" },
+const INDUSTRIES: { value: IndustryType; label: string; emoji: string; independent?: boolean }[] = [
+  { value: "tecnologia",     label: "Tecnología",                   emoji: "💻" },
+  { value: "salud",          label: "Salud",                        emoji: "🏥" },
+  { value: "educacion",      label: "Educación",                    emoji: "📚" },
+  { value: "finanzas",       label: "Finanzas / Banca",             emoji: "🏦" },
+  { value: "comercio",       label: "Comercio / Retail",            emoji: "🛒" },
+  { value: "construccion",   label: "Construcción",                 emoji: "🏗️" },
+  { value: "gobierno",       label: "Gobierno / Público",           emoji: "🏛️" },
+  { value: "transporte",     label: "Transporte / Logística",       emoji: "🚛" },
+  { value: "servicios",      label: "Servicios profesionales",      emoji: "💼" },
+  { value: "entretenimiento",label: "Entretenimiento / Creativo",   emoji: "🎭", independent: true },
+  { value: "otro",           label: "Otro",                         emoji: "⚡" },
 ]
+
+// Industrias donde los ingresos suelen ser variables/por proyecto
+const VARIABLE_INCOME_INDUSTRIES: IndustryType[] = ["entretenimiento", "servicios"]
 
 const GOALS: { value: GoalType; label: string; description: string; emoji: string }[] = [
   { value: "fondo_emergencia", label: "Fondo de emergencia",  description: "Tener 3–6 meses de gastos ahorrados para imprevistos",      emoji: "🛡️" },
@@ -168,7 +172,7 @@ export default function OnboardingPage() {
                 </div>
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                  {INDUSTRIES.map(({ value, label, emoji }) => {
+                  {INDUSTRIES.map(({ value, label, emoji, independent }) => {
                     const selected = industry === value
                     return (
                       <button key={value} onClick={() => setIndustry(value)} style={{
@@ -179,9 +183,21 @@ export default function OnboardingPage() {
                         color: selected ? C.primary : C.text,
                         fontSize: 14, fontWeight: selected ? 600 : 400,
                         cursor: "pointer", transition: "all 0.15s",
+                        flexWrap: "wrap",
                       }}>
-                        <span style={{ fontSize: 18, lineHeight: 1 }}>{emoji}</span>
-                        <span>{label}</span>
+                        <span style={{ fontSize: 18, lineHeight: 1, flexShrink: 0 }}>{emoji}</span>
+                        <span style={{ flex: 1 }}>{label}</span>
+                        {independent && (
+                          <span style={{
+                            fontSize: 10, fontWeight: 600, letterSpacing: "0.02em",
+                            padding: "2px 6px", borderRadius: 999,
+                            background: selected ? "rgba(99,102,241,0.2)" : "rgba(224,92,25,0.1)",
+                            color: selected ? C.primary : C.orange,
+                            lineHeight: 1.6, flexShrink: 0,
+                          }}>
+                            Independiente
+                          </span>
+                        )}
                       </button>
                     )
                   })}
@@ -225,6 +241,20 @@ export default function OnboardingPage() {
                   <label style={{ display: "block", fontSize: 14, fontWeight: 500, color: C.text, marginBottom: 8 }}>
                     Ingreso mensual neto (después de impuestos)
                   </label>
+                  {industry && VARIABLE_INCOME_INDUSTRIES.includes(industry) && (
+                    <div style={{
+                      display: "flex", gap: 8, alignItems: "flex-start",
+                      padding: "10px 12px", borderRadius: 8, marginBottom: 10,
+                      background: C.orangeLight, border: `1px solid rgba(224,92,25,0.25)`,
+                    }}>
+                      <span style={{ fontSize: 16, flexShrink: 0, lineHeight: 1, marginTop: 1 }}>💡</span>
+                      <p style={{ margin: 0, fontSize: 12, color: "#92400e", lineHeight: 1.5 }}>
+                        <strong>Ingreso variable:</strong> Si trabajas por proyecto o de forma independiente,
+                        usa el <strong>promedio de tus últimos 3 meses</strong> como referencia.
+                        Puedes ajustarlo en cualquier momento desde tu perfil.
+                      </p>
+                    </div>
+                  )}
                   <div style={{ position: "relative" }}>
                     <span style={{
                       position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)",

@@ -425,10 +425,11 @@
 }
 
 /* Panel izquierdo (branding) */
+/* NOTA: display está manejado por Tailwind hidden / lg:flex en el JSX.
+   NO poner display:flex aquí porque sobreescribe hidden en mobile. */
 .auth-panel-left {
   background: #0d1426;
   border-right: 1px solid rgba(255,255,255,0.07);
-  display: flex;
   flex-direction: column;
   justify-content: center;
   padding: 48px 52px;
@@ -445,6 +446,14 @@
   min-height: 100vh;
   min-height: 100dvh;
   background: #070c18;
+}
+
+/* Responsive: en mobile el panel derecho usa menos padding */
+@media (max-width: 640px) {
+  .auth-panel-right {
+    padding: 32px 20px;
+    align-items: flex-start;
+  }
 }
 
 /* Logo de marca en la izquierda */

@@ -220,6 +220,7 @@ export type IndustryType =
   | "gobierno"
   | "transporte"
   | "servicios"
+  | "entretenimiento"
   | "otro"
 
 export type GoalType =

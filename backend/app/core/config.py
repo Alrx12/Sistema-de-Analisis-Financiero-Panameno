@@ -78,6 +78,38 @@ class Settings(BaseSettings):
     stripe_price_id_monthly: str = ""
     stripe_price_id_annual: str = ""
 
+    # ── CORS — orígenes permitidos ────────────────────────────────────────────
+    # En producción se sobreescribe via .env.  En debug se permite localhost.
+    # Formato: lista separada por comas → "https://safpro.us,https://www.safpro.us"
+    cors_allowed_origins: str = "https://safpro.us,https://www.safpro.us"
+
+    @property
+    def cors_origins(self) -> list[str]:
+        """Devuelve la lista de orígenes CORS parseada."""
+        base = [o.strip() for o in self.cors_allowed_origins.split(",") if o.strip()]
+        if self.debug:
+            # En local el frontend corre en :3000
+            extra = ["http://localhost:3000", "http://127.0.0.1:3000"]
+            return list(dict.fromkeys(base + extra))  # dedup preservando orden
+        return base
+
+    # ── Sentry — error tracking ───────────────────────────────────────────────
+    # Obtener DSN en sentry.io → Settings → Projects → Client Keys
+    sentry_dsn: str = ""
+    sentry_traces_sample_rate: float = 0.1   # 10 % de transacciones → Performance
+    sentry_profiles_sample_rate: float = 0.1  # 10 % profiling (requiere Perf plan)
+
+    # ── BetterStack — log management ─────────────────────────────────────────
+    # Obtener token en betterstack.com → Logs → Sources → Connect source → Python
+    betterstack_source_token: str = ""
+
+    # ── Umami Analytics — privacy-friendly ──────────────────────────────────
+    # Crear cuenta en umami.is o self-host.
+    # El website_id se inyecta en el HTML del frontend via Vite.
+    # En este archivo se almacena solo como referencia de configuración.
+    umami_website_id: str = ""
+    umami_script_url: str = "https://cloud.umami.is/script.js"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

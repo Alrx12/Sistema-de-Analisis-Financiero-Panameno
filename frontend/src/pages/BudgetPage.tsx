@@ -149,12 +149,21 @@ function getAdjustedTargets(profile: UserProfile | null | undefined): AdjustedTa
     adjustments.push("-5% en necesidades (vivienda propia sin pago mensual)")
   }
 
-  // Ingresos variables o independientes: más colchón de ahorro
+  // Ingresos variables o independientes: más colchón de ahorro.
+  // Aplica si el tipo de empleo es variable/independiente, O si la industria es
+  // Entretenimiento (actores, músicos, productores: ingresos por proyecto,
+  // irregulares por naturaleza aunque no hayan completado el campo de empleo).
   const variableTypes: EmploymentType[] = ["employed_variable", "self_employed", "business_owner", "unemployed"]
-  if (profile.employment_type && variableTypes.includes(profile.employment_type)) {
+  const isVariableIncome =
+    (profile.employment_type != null && variableTypes.includes(profile.employment_type)) ||
+    profile.industry === "entretenimiento"
+  if (isVariableIncome) {
     savings += 5
     wants -= 5
-    adjustments.push("+5% en ahorro/reserva por ingresos variables o propios")
+    const reason = profile.industry === "entretenimiento" && !variableTypes.includes(profile.employment_type ?? "" as EmploymentType)
+      ? "+5% en ahorro/reserva por ingresos variables (industria del entretenimiento)"
+      : "+5% en ahorro/reserva por ingresos variables o propios"
+    adjustments.push(reason)
   }
 
   // Deudas activas: incrementar meta de ahorro/deuda
