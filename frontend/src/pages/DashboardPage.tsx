@@ -1072,20 +1072,21 @@ function MetricPill({
 function KpiCard({ title, value, icon, iconClass, valueClass, sub }: {
   title: string; value: string; icon: ReactNode; iconClass?: string; valueClass?: string; sub?: string
 }) {
+  // Ajusta el tamaño de fuente según la longitud del valor para que siempre quepa completo
+  const len = value.length
+  const sizeClass = len <= 7 ? "text-2xl" : len <= 11 ? "text-xl" : "text-lg"
+
   return (
     <Card className="zoho-card border-0">
-      <CardContent className="pt-5 pb-5 overflow-hidden">
+      <CardContent className="pt-5 pb-5">
         <div className="flex items-start justify-between gap-2 mb-3 min-w-0">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide leading-tight">{title}</p>
           <div className={`shrink-0 ${iconClass ?? "kpi-icon-blue"}`}>{icon}</div>
         </div>
-        <p
-          className={`text-2xl font-bold leading-tight truncate ${valueClass ?? ""}`}
-          title={value}
-        >
+        <p className={`${sizeClass} font-bold leading-tight whitespace-nowrap ${valueClass ?? ""}`}>
           {value}
         </p>
-        {sub && <p className="mt-1.5 text-xs text-muted-foreground truncate" title={sub}>{sub}</p>}
+        {sub && <p className="mt-1.5 text-xs text-muted-foreground" title={sub}>{sub}</p>}
       </CardContent>
     </Card>
   )
