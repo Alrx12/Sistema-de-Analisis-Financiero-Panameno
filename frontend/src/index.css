@@ -448,11 +448,19 @@
   background: #070c18;
 }
 
-/* Responsive: en mobile el panel derecho usa menos padding */
-@media (max-width: 640px) {
+/* Responsive: en mobile el panel derecho es scrollable y empieza desde arriba */
+@media (max-width: 1023px) {
   .auth-panel-right {
-    padding: 32px 20px;
+    padding: 28px 20px 40px;
     align-items: flex-start;
+    overflow-y: auto;
+    /* Permite que el banner + formulario hagan scroll natural */
+    min-height: auto;
+  }
+  /* El wrapper auth-page permite scroll en mobile */
+  .auth-page {
+    min-height: 100dvh;
+    height: auto;
   }
 }
 

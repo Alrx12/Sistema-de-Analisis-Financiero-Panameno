@@ -121,15 +121,55 @@ export default function LoginPage() {
       <div className="auth-panel-right" style={{ flex: 1 }}>
         <div className="auth-card" style={{ width: "100%", maxWidth: 360 }}>
 
-          {/* Logo visible solo en móvil */}
-          <div className="flex items-center gap-3 mb-8 lg:hidden">
-            <div
-              className="flex h-9 w-9 items-center justify-center rounded-xl text-white"
-              style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}
-            >
-              <TrendingUp className="h-5 w-5" />
+          {/* ── Banner móvil — visible solo en < lg ── */}
+          <div className="lg:hidden mb-8">
+            {/* Logo */}
+            <div className="flex items-center gap-3 mb-5">
+              <div
+                className="flex h-9 w-9 items-center justify-center rounded-xl text-white flex-shrink-0"
+                style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)", boxShadow: "0 4px 14px rgba(99,102,241,0.4)" }}
+              >
+                <TrendingUp className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="font-extrabold text-base" style={{ color: "#f1f5f9", letterSpacing: "-0.03em" }}>SAFPRO</div>
+                <div className="text-xs font-semibold uppercase" style={{ color: "rgba(255,255,255,0.3)", letterSpacing: ".1em" }}>Financial AI</div>
+              </div>
             </div>
-            <span className="text-lg font-bold" style={{ color: "#f1f5f9" }}>SAFPRO</span>
+
+            {/* Tagline */}
+            <div className="mb-4" style={{ fontSize: 22, fontWeight: 800, lineHeight: 1.2, letterSpacing: "-0.03em", color: "#f1f5f9" }}>
+              Tus finanzas,{" "}
+              <span className="auth-tagline-gradient">finalmente claras.</span>
+            </div>
+
+            {/* Features — versión compacta */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+              {[
+                { icon: "🤖", title: "IA que aprende contigo", sub: "Corriges una vez, recuerda para siempre" },
+                { icon: "🔒", title: "Tus datos, solo tuyos", sub: "Sin acceso a tus credenciales bancarias" },
+                { icon: "🏦", title: "5 bancos soportados", sub: "BG, BAC, Banistmo, Banesco, Credicorp" },
+              ].map((f) => (
+                <div
+                  key={f.icon}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 10,
+                    padding: "9px 12px", borderRadius: 9,
+                    background: "rgba(255,255,255,0.03)",
+                    border: "1px solid rgba(255,255,255,0.06)",
+                  }}
+                >
+                  <span style={{ fontSize: 16, flexShrink: 0 }}>{f.icon}</span>
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: "#f1f5f9", marginBottom: 1 }}>{f.title}</div>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.38)" }}>{f.sub}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Separador */}
+            <div style={{ height: 1, background: "rgba(255,255,255,0.07)", margin: "20px 0 0" }} />
           </div>
 
           <div className="auth-form-title">Bienvenido de vuelta</div>

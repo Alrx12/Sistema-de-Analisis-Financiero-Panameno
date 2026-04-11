@@ -62,12 +62,13 @@ def upgrade() -> None:
                 f"ALTER TABLE {table} ENABLE ROW LEVEL SECURITY"
             )
         )
-        # FORCE para que aplique también al owner de la tabla
-        conn.execute(
-            __import__("sqlalchemy", fromlist=["text"]).text(
-                f"ALTER TABLE {table} FORCE ROW LEVEL SECURITY"
-            )
-        )
+        # NOTA: NO usamos FORCE ROW LEVEL SECURITY.
+        # Con FORCE, incluso el superuser apineda quedaría sujeto a las políticas,
+        # lo que rompe el login (no hay JWT al autenticar → app.current_user_id
+        # está vacío → RLS bloquea todas las filas de users).
+        # Sin FORCE, el superuser bypasea RLS automáticamente (comportamiento
+        # estándar de PostgreSQL). Las políticas entran en efecto cuando se
+        # configure el rol restringido safpro_app (ver CLAUDE.md § RLS).
         # Política principal: user_id debe coincidir con la variable de sesión
         conn.execute(
             __import__("sqlalchemy", fromlist=["text"]).text(f"""
@@ -91,11 +92,7 @@ def upgrade() -> None:
             "ALTER TABLE analysis_transactions ENABLE ROW LEVEL SECURITY"
         )
     )
-    conn.execute(
-        __import__("sqlalchemy", fromlist=["text"]).text(
-            "ALTER TABLE analysis_transactions FORCE ROW LEVEL SECURITY"
-        )
-    )
+    # Sin FORCE — ver nota arriba sobre por qué no usamos FORCE ROW LEVEL SECURITY
     conn.execute(
         __import__("sqlalchemy", fromlist=["text"]).text("""
             CREATE POLICY safpro_user_isolation ON analysis_transactions
@@ -117,11 +114,7 @@ def upgrade() -> None:
             "ALTER TABLE uploaded_files ENABLE ROW LEVEL SECURITY"
         )
     )
-    conn.execute(
-        __import__("sqlalchemy", fromlist=["text"]).text(
-            "ALTER TABLE uploaded_files FORCE ROW LEVEL SECURITY"
-        )
-    )
+    # Sin FORCE — ver nota arriba sobre por qué no usamos FORCE ROW LEVEL SECURITY
     conn.execute(
         __import__("sqlalchemy", fromlist=["text"]).text("""
             CREATE POLICY safpro_user_isolation ON uploaded_files
@@ -145,11 +138,7 @@ def upgrade() -> None:
             "ALTER TABLE users ENABLE ROW LEVEL SECURITY"
         )
     )
-    conn.execute(
-        __import__("sqlalchemy", fromlist=["text"]).text(
-            "ALTER TABLE users FORCE ROW LEVEL SECURITY"
-        )
-    )
+    # Sin FORCE — crítico para que el login funcione (ver nota arriba)
     conn.execute(
         __import__("sqlalchemy", fromlist=["text"]).text("""
             CREATE POLICY safpro_user_isolation ON users
