@@ -33,6 +33,7 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import json
 import logging
 import threading
 from datetime import datetime, timezone
@@ -279,7 +280,7 @@ def verify_paypal_webhook_signature(
             "auth_algo": auth_algo,
             "transmission_sig": transmission_sig,
             "webhook_id": settings.paypal_webhook_id,
-            "webhook_event": body.decode("utf-8"),
+            "webhook_event": json.loads(body),
         }
         resp = httpx.post(url, json=payload, headers=_paypal_headers(token), timeout=15.0)
         resp.raise_for_status()

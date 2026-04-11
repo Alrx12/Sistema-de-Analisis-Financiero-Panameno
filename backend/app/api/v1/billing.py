@@ -194,7 +194,14 @@ async def paypal_webhook(
     }
 
     # Verificar firma (en sandbox sin webhook_id configurado se omite con warning)
-    if not billing_service.verify_paypal_webhook_signature(body, headers):
+    if not billing_service.verify_paypal_webhook_signature(
+        body,
+        paypal_transmission_id,
+        paypal_transmission_time,
+        paypal_cert_url,
+        paypal_auth_algo,
+        paypal_transmission_sig,
+    ):
         logger.warning("Webhook PayPal con firma inválida o no verificable — rechazado")
         return JSONResponse(
             status_code=200,
