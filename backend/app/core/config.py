@@ -1,4 +1,13 @@
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Valores placeholder/ejemplo que NUNCA deben usarse en producción.
+# Si alguno de estos llega a producción, la app falla en startup (ver validate_production_secrets).
+_INSECURE_SECRET_EXAMPLES = {
+    "",
+    "CHANGE-THIS-IN-PRODUCTION",
+    "clave_segura_larga",
+}
 
 
 class Settings(BaseSettings):
@@ -8,11 +17,18 @@ class Settings(BaseSettings):
 
     api_v1_prefix: str = "/api/v1"
 
-    database_url: str = "postgresql+psycopg://apineda:InsightLex@100.88.92.80:5432/safpro"
+    # ⚠️  El default es un placeholder local — NUNCA tiene credenciales reales.
+    # En producción se sobreescribe vía .env: DATABASE_URL=postgresql+psycopg://...
+    database_url: str = "postgresql+psycopg://user:password@localhost:5432/safpro"
 
-    secret_key: str = "9f4d7a2c8e1b5f0a3d6c9b2e7f1a4c8d9e2b6f0a1c3d5e7f9b2a4c6d8e1f3a5"
+    # ⚠️  Vacío por defecto — la app falla en startup si no se configura en .env.
+    # Genera una clave segura con:
+    #   python -c "import secrets; print(secrets.token_hex(32))"
+    secret_key: str = ""
     algorithm: str = "HS256"
-    access_token_expire_minutes: int = 60 * 24
+    # 8 horas (reducido desde 24h para que la suspensión de usuarios sea efectiva en <8h
+    # sin necesidad de implementar una blacklist de JWTs en Redis).
+    access_token_expire_minutes: int = 60 * 8
 
     upload_dir: str = "storage/uploads"
     processed_dir: str = "storage/processed"
@@ -109,6 +125,28 @@ class Settings(BaseSettings):
     # En este archivo se almacena solo como referencia de configuración.
     umami_website_id: str = ""
     umami_script_url: str = "https://cloud.umami.is/script.js"
+
+    @model_validator(mode="after")
+    def validate_production_secrets(self) -> "Settings":
+        """En producción (DEBUG=false) falla en startup si las credenciales críticas
+        son placeholder/vacías.  Principio fail-fast: mejor no arrancar que arrancar
+        con credenciales inseguras sin saberlo.
+        """
+        if not self.debug:
+            # secret_key
+            if self.secret_key in _INSECURE_SECRET_EXAMPLES or len(self.secret_key) < 32:
+                raise ValueError(
+                    "SECRET_KEY inválida o demasiado corta para producción. "
+                    "Genera una con: python -c \"import secrets; print(secrets.token_hex(32))\" "
+                    "y agrégala al .env del servidor."
+                )
+            # database_url
+            if not self.database_url or "user:password" in self.database_url:
+                raise ValueError(
+                    "DATABASE_URL no está configurada correctamente para producción. "
+                    "Asegúrate de que DATABASE_URL esté en el .env del servidor."
+                )
+        return self
 
     model_config = SettingsConfigDict(
         env_file=".env",

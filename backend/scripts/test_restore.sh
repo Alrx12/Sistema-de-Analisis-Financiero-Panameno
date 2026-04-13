@@ -26,7 +26,8 @@ set -uo pipefail   # NO -e para poder capturar errores y reportarlos
 DB_HOST="${DB_HOST:-localhost}"
 DB_PORT="${DB_PORT:-5432}"
 DB_USER="${DB_USER:-apineda}"
-PGPASSWORD="${PGPASSWORD:-InsightLex}"
+# ⚠️  No hardcodeado — leer de entorno o de .pgpass en el servidor.
+PGPASSWORD="${PGPASSWORD:?ERROR: PGPASSWORD no está configurado. Agrega 'export PGPASSWORD=...' antes de correr este script o usa ~/.pgpass}"
 
 PROD_DB="${PROD_DB:-safpro}"
 TEST_DB="${TEST_DB:-safpro_restore_test}"
