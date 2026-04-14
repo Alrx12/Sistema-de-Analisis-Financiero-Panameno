@@ -1,0 +1,6 @@
+// Barrel export — importar desde "@safpro/api"
+export { createApiClient, getApiClient } from "./client"
+export * from "./auth"
+export * from "./analysis"
+export * from "./files"
+export * from "./users"

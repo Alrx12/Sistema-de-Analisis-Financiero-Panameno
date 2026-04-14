@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(node -e \"const lock = require\\('./package-lock.json'\\); const pkgs = lock.packages || {}; const keys = Object.keys\\(pkgs\\).filter\\(k => k.startsWith\\('node_modules/'\\)\\).slice\\(0,5\\); keys.forEach\\(k => console.log\\(k, pkgs[k].version\\)\\);\")",
+      "Bash(node -e \" const lock = require\\('./package-lock.json'\\); const pkgs = lock.packages || {}; // Check esbuild - CVE-2025-31125 in <0.25.0, vite uses it // Check if there are any packages that match known CVE version ranges const checks = [ // [package, version, CVE note] ]; // Print all top-level resolved versions for audit const topLevel = Object.keys\\(pkgs\\).filter\\(k => \\(k.match\\(/^node_modules\\\\/[^/]+$/\\)\\)\\).sort\\(\\); topLevel.forEach\\(k => { console.log\\(pkgs[k].version + ' ' + k.replace\\('node_modules/',''\\)\\); }\\); \")",
+      "Bash(node -e \" const lock = require\\('./package-lock.json'\\); const pkgs = lock.packages || {}; const topLevel = Object.keys\\(pkgs\\).filter\\(k => \\(k.match\\(/^node_modules\\\\/[^/]+$/\\)\\)\\).sort\\(\\); topLevel.forEach\\(k => { console.log\\(pkgs[k].version + ' ' + k.replace\\('node_modules/',''\\)\\); }\\); \")"
+    ]
+  }
+}

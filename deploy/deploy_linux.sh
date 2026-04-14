@@ -46,7 +46,14 @@ sudo apt-get install -y --no-install-recommends \
 # Node.js 20.x (si no está instalado)
 if ! command -v node &>/dev/null; then
     echo "    Instalando Node.js 20.x..."
-    curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - >/dev/null 2>&1
+    curl -fsSL https://deb.nodesource.com/setup_20.x -o /tmp/nodesource_setup.sh
+    # Verificar que el script fue descargado correctamente antes de ejecutar
+    if [ ! -s /tmp/nodesource_setup.sh ]; then
+        echo "ERROR: fallo al descargar el script de Node.js" >&2
+        exit 1
+    fi
+    sudo bash /tmp/nodesource_setup.sh >/dev/null 2>&1
+    rm -f /tmp/nodesource_setup.sh
     sudo apt-get install -y nodejs
 fi
 
@@ -140,7 +147,7 @@ echo "    Migraciones OK."
 echo ""
 echo ">>> [7/8] Instalando dependencias y haciendo build del frontend..."
 cd "$APP_DIR/frontend"
-npm install --silent 2>/dev/null
+npm ci --frozen-lockfile --silent 2>/dev/null
 npm run build 2>/dev/null
 echo "    Frontend build OK → $APP_DIR/frontend/dist/"
 

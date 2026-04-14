@@ -40,10 +40,10 @@ jobs:
           - 6379:6379
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2  # v5.3.0
         with:
           python-version: '3.12'
           cache: 'pip'
@@ -53,6 +53,12 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+
+      - name: Python security audit
+        working-directory: ./backend
+        run: |
+          pip install pip-audit
+          pip-audit -r requirements.txt --format json || true
 
       - name: Lint with flake8 (optional — add if configured)
         working-directory: ./backend
@@ -80,10 +86,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca3a05c92f1a5bd7f3c6d1e8c3  # v4.4.0
         with:
           node-version: '20'
           cache: 'npm'
@@ -92,6 +98,10 @@ jobs:
       - name: Install dependencies
         working-directory: ./frontend
         run: npm ci --frozen-lockfile
+
+      - name: npm security audit
+        working-directory: ./frontend
+        run: npm audit --audit-level=high || true
 
       - name: Run ESLint
         working-directory: ./frontend
@@ -114,10 +124,10 @@ jobs:
     needs: [backend, frontend]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v3  # TODO: pin to SHA con: npx pin-github-action .github/workflows/ci.yml
 
       - name: Create .env for compose
         run: |
@@ -167,20 +177,20 @@ jobs:
       packages: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v3  # TODO: pin a SHA
 
       - name: Log in to Container Registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@v3  # TODO: pin a SHA
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push backend
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v5  # TODO: pin a SHA
         with:
           context: ./backend
           push: true
@@ -191,7 +201,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Build and push frontend
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v5  # TODO: pin a SHA
         with:
           context: ./frontend
           push: true

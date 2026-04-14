@@ -1,0 +1,8 @@
+{
+  "name": "@safpro/categories",
+  "version": "1.0.0",
+  "description": "Categorías de presupuesto compartidas",
+  "main": "index.ts",
+  "types": "index.ts",
+  "private": true
+}

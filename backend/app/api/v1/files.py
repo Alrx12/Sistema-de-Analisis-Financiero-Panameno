@@ -124,7 +124,7 @@ async def upload_file(
     # 1. Leer y validar
     content = await file.read()
     original_filename = file.filename or "upload"
-    extension = file_service.validate_upload(file, len(content))
+    extension = file_service.validate_upload(file, len(content), content)
     file_type = Path(original_filename).suffix.lower().lstrip(".")
 
     # 2. Límite de uploads por plan (anti-abuso)

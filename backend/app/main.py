@@ -150,6 +150,7 @@ async def security_headers_middleware(request: Request, call_next: object) -> Re
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Content-Security-Policy"] = "default-src 'none'"
         # Quitar X-Powered-By / Server headers que revelan stack
         # MutableHeaders no tiene .pop() — usar del con guard
         for h in ("server", "x-powered-by"):

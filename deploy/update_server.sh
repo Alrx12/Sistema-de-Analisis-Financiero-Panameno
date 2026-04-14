@@ -56,7 +56,7 @@ tar -czf "$FRONTEND_TAR" \
     --exclude='.vite' \
     -C "$PROJECT_DIR/frontend" .
 scp -q "$FRONTEND_TAR" "$SERVER:/tmp/safpro_frontend_update.tar.gz"
-ssh "$SERVER" "cd $REMOTE_DIR/frontend && tar xzf /tmp/safpro_frontend_update.tar.gz && rm /tmp/safpro_frontend_update.tar.gz && npm install --silent && npm run build"
+ssh "$SERVER" "cd $REMOTE_DIR/frontend && tar xzf /tmp/safpro_frontend_update.tar.gz && rm /tmp/safpro_frontend_update.tar.gz && npm ci --frozen-lockfile --silent && npm run build"
 rm -f "$FRONTEND_TAR"
 echo "    ✅ Frontend rebuildeado."
 

@@ -259,10 +259,10 @@ def verify_paypal_webhook_signature(
     if not settings.paypal_webhook_id:
         # Si no hay webhook_id configurado, aceptar en sandbox para facilitar el desarrollo
         if settings.paypal_sandbox:
-            logger.warning(
-                "PAYPAL_WEBHOOK_ID no configurado — aceptando webhook en sandbox sin verificación"
+            logger.error(
+                "PAYPAL_WEBHOOK_ID no configurado — rechazando webhook (configura PAYPAL_WEBHOOK_ID en .env)"
             )
-            return True
+            return False
         logger.error("PAYPAL_WEBHOOK_ID no configurado — rechazando webhook en producción")
         return False
 

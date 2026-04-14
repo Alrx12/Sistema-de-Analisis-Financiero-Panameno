@@ -18,6 +18,11 @@ __pycache__/
 **/.env.local
 *.pem
 *.key
+*.pfx
+*.p12
+id_rsa
+id_ed25519
+id_ecdsa
 # Credenciales de cloudflared (contienen tokens de acceso)
 .cloudflared/*.json
 .cloudflared/cert.pem
@@ -89,3 +94,4 @@ docs/
 # ========================
 CLAUDE.md
 memory.md
+SAFPRO_AUDITORIA*.md

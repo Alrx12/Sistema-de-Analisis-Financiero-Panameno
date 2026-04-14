@@ -1,0 +1,15 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "paths": {
+      "@safpro/types": ["../packages/types/index.ts"],
+      "@safpro/api": ["../packages/api/index.ts"],
+      "@safpro/api/*": ["../packages/api/*"],
+      "@safpro/stores": ["../packages/stores/index.ts"],
+      "@safpro/categories": ["../packages/categories/index.ts"],
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.d.ts", "expo-env.d.ts"]
+}

@@ -13,7 +13,7 @@ _INSECURE_SECRET_EXAMPLES = {
 class Settings(BaseSettings):
     app_name: str = "SAFPRO API"
     app_version: str = "0.1.0"
-    debug: bool = True
+    debug: bool = False
 
     api_v1_prefix: str = "/api/v1"
 

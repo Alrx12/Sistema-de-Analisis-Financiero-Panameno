@@ -39,7 +39,6 @@ numpy==2.4.3
 openpyxl==3.1.5
 packaging==26.0
 pandas==3.0.1
-passlib==1.7.4
 pluggy==1.6.0
 prompt_toolkit==3.0.52
 psycopg==3.3.3
