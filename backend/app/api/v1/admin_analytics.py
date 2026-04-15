@@ -18,6 +18,7 @@ from app.models.uploaded_file import UploadedFile
 from app.models.analysis_snapshot import AnalysisSnapshot
 from app.models.analysis_transaction import AnalysisTransaction
 from app.models.processing_job import ProcessingJob
+from app.models.user_profile import UserProfile
 
 router = APIRouter()
 
@@ -67,6 +68,20 @@ def get_analytics(
     admin_users: int = (
         db.query(func.count(User.user_id))
         .filter(User.is_admin == True)  # noqa: E712
+        .scalar()
+        or 0
+    )
+
+    # Verificación de email y onboarding
+    verified_users: int = (
+        db.query(func.count(User.user_id))
+        .filter(User.is_verified == True)  # noqa: E712
+        .scalar()
+        or 0
+    )
+    onboarding_completed: int = (
+        db.query(func.count(UserProfile.user_id))
+        .filter(UserProfile.onboarding_completed == True)  # noqa: E712
         .scalar()
         or 0
     )
@@ -213,6 +228,8 @@ def get_analytics(
             "suspended_users": suspended_users,
             "admin_users": admin_users,
             "users_by_plan": users_by_plan,
+            "verified_users": verified_users,
+            "onboarding_completed": onboarding_completed,
         },
         "retention": {
             "users_with_1_analysis": users_1_analysis,

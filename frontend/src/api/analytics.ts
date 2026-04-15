@@ -10,6 +10,8 @@ export interface AnalyticsOverview {
   suspended_users: number
   admin_users: number
   users_by_plan: Record<string, number>
+  verified_users: number
+  onboarding_completed: number
 }
 
 export interface AnalyticsRetention {

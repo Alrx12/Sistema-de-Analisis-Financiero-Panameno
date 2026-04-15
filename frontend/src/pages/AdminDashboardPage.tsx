@@ -119,6 +119,68 @@ function KpiCard({
   )
 }
 
+// ── Funnel card (circular progress) ──────────────────────────────────────────
+function FunnelCard({
+  label,
+  count,
+  total,
+  color,
+  sublabel,
+}: {
+  label: string
+  count: number
+  total: number
+  color: string
+  sublabel?: string
+}) {
+  const pct = total > 0 ? Math.round((count / total) * 100) : 0
+  const radius = 28
+  const circ = 2 * Math.PI * radius
+  const fill = (pct / 100) * circ
+
+  return (
+    <div className="zoho-card p-4 flex items-center gap-4">
+      {/* Ring SVG */}
+      <div className="relative shrink-0" style={{ width: 72, height: 72 }}>
+        <svg width="72" height="72" viewBox="0 0 72 72" style={{ transform: "rotate(-90deg)" }}>
+          <circle
+            cx="36" cy="36" r={radius}
+            fill="none"
+            stroke="#e2e8f0"
+            strokeWidth="6"
+          />
+          <circle
+            cx="36" cy="36" r={radius}
+            fill="none"
+            stroke={color}
+            strokeWidth="6"
+            strokeDasharray={`${fill} ${circ}`}
+            strokeLinecap="round"
+            style={{ transition: "stroke-dasharray 0.6s ease" }}
+          />
+        </svg>
+        <div
+          className="absolute inset-0 flex items-center justify-center font-bold text-base"
+          style={{ color }}
+        >
+          {pct}%
+        </div>
+      </div>
+      {/* Text */}
+      <div className="min-w-0">
+        <p className="text-sm text-muted-foreground uppercase tracking-wide font-medium leading-tight">
+          {label}
+        </p>
+        <p className="text-2xl font-bold leading-tight mt-0.5">
+          {count}
+          <span className="text-base font-normal text-muted-foreground"> / {total}</span>
+        </p>
+        {sublabel && <p className="text-xs text-muted-foreground mt-0.5">{sublabel}</p>}
+      </div>
+    </div>
+  )
+}
+
 // ── Section wrapper ───────────────────────────────────────────────────────────
 function Section({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) {
   return (
@@ -1056,6 +1118,24 @@ export default function AdminDashboardPage() {
             sub={overview.failed_jobs > 0 ? "Ver tabla abajo" : "Todo OK ✓"}
             icon={<AlertTriangle className="h-4 w-4" />}
             color={overview.failed_jobs > 0 ? "red" : "green"}
+          />
+        </div>
+
+        {/* Funnel de conversión: verificación + onboarding */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <FunnelCard
+            label="Emails verificados"
+            count={overview.verified_users ?? 0}
+            total={overview.total_users}
+            color="#10b981"
+            sublabel={`${overview.total_users - (overview.verified_users ?? 0)} pendientes de verificar`}
+          />
+          <FunnelCard
+            label="Onboarding completo"
+            count={overview.onboarding_completed ?? 0}
+            total={overview.total_users}
+            color="#6366f1"
+            sublabel={`${overview.total_users - (overview.onboarding_completed ?? 0)} sin completar perfil`}
           />
         </div>
 
