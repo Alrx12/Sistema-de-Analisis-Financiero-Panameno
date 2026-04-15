@@ -128,3 +128,43 @@ export async function deleteAdminUser(userId: string): Promise<{ message: string
   const { data } = await apiClient.delete(`/admin/users/${userId}`)
   return data
 }
+
+// ── Email broadcast ───────────────────────────────────────────────────────────
+
+export interface EmailSegmentInfo {
+  label: string
+  count: number | null
+}
+
+export interface EmailSegmentsResponse {
+  [segment: string]: EmailSegmentInfo
+}
+
+export interface EmailBroadcastPayload {
+  subject: string
+  body_html: string
+  segment: string
+  specific_email?: string
+}
+
+export interface EmailBroadcastResult {
+  sent: number
+  failed: number
+  total: number
+  segment: string
+  errors: string[] | null
+}
+
+/** Devuelve conteo de usuarios por segmento de envío. */
+export async function getEmailSegments(): Promise<EmailSegmentsResponse> {
+  const { data } = await apiClient.get("/admin/email/segments")
+  return data
+}
+
+/** Envía un email broadcast al segmento elegido. */
+export async function sendEmailBroadcast(
+  payload: EmailBroadcastPayload,
+): Promise<EmailBroadcastResult> {
+  const { data } = await apiClient.post("/admin/email/send", payload)
+  return data
+}

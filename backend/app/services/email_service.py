@@ -463,3 +463,109 @@ def send_upgrade_confirmation_email(
         response.get("id") if isinstance(response, dict) else response,
     )
 
+
+# ── Admin broadcast ───────────────────────────────────────────────────────────
+
+def _wrap_broadcast_body(first_name: str, body_html: str) -> str:
+    """Envuelve el cuerpo HTML del admin en el template SAFPRO navy/naranja."""
+    # Convertir saltos de línea planos en párrafos si el admin escribió texto plano
+    if "<p" not in body_html and "<br" not in body_html:
+        paragraphs = [
+            f'<p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">{line.strip()}</p>'
+            for line in body_html.split("\n")
+            if line.strip()
+        ]
+        body_html = "\n".join(paragraphs)
+
+    return f"""<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+</head>
+<body style="margin:0;padding:0;background:#f4f5f7;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f5f7;padding:32px 0;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+
+        <!-- Header -->
+        <tr>
+          <td style="background:#1c2b4b;border-radius:12px 12px 0 0;padding:28px 40px;text-align:center;">
+            <span style="font-size:22px;font-weight:700;color:#ffffff;letter-spacing:1px;">SAFPRO</span>
+            <span style="font-size:13px;color:#a0b0cc;display:block;margin-top:4px;">Sistema de Análisis Financiero</span>
+          </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+          <td style="background:#ffffff;padding:36px 40px;">
+            <p style="margin:0 0 20px;font-size:18px;font-weight:600;color:#1c2b4b;">Hola, {first_name} 👋</p>
+            {body_html}
+            <div style="margin-top:28px;text-align:center;">
+              <a href="https://safpro.us"
+                 style="display:inline-block;background:#e05c19;color:#ffffff;font-size:15px;
+                        font-weight:700;padding:14px 36px;border-radius:8px;text-decoration:none;">
+                Ir a SAFPRO →
+              </a>
+            </div>
+            <p style="margin:24px 0 0;font-size:13px;color:#6b7280;text-align:center;">
+              — Alexis,
+              <a href="mailto:admin@safpro.us" style="color:#e05c19;text-decoration:none;">admin@safpro.us</a>
+            </p>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="background:#f4f5f7;border-radius:0 0 12px 12px;padding:18px 40px;text-align:center;">
+            <p style="margin:0;font-size:12px;color:#9ca3af;">
+              SAFPRO ·
+              <a href="https://safpro.us/terms" style="color:#9ca3af;">Términos</a> ·
+              <a href="https://safpro.us/privacy" style="color:#9ca3af;">Privacidad</a>
+            </p>
+            <p style="margin:6px 0 0;font-size:11px;color:#d1d5db;">
+              Alexis Antonio Pineda Del Cid · admin@safpro.us · Panamá
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>"""
+
+
+def send_admin_broadcast_email(
+    to_email: str,
+    full_name: str | None,
+    subject: str,
+    body_html: str,
+) -> str:
+    """
+    Envía un email broadcast compuesto por el admin, envuelto en el template SAFPRO.
+
+    Returns:
+        Resend email id.
+    Raises:
+        Exception si falla el envío.
+    """
+    from app.core.config import settings
+
+    resend = _get_resend()
+    first_name = (full_name or to_email).split()[0]
+    html = _wrap_broadcast_body(first_name, body_html)
+
+    params: dict = {
+        "from": settings.email_from,
+        "to": [to_email],
+        "reply_to": ["admin@safpro.us"],
+        "subject": subject,
+        "html": html,
+    }
+
+    response = resend.Emails.send(params)
+    rid = response.get("id") if isinstance(response, dict) else getattr(response, "id", str(response))
+    logger.info("broadcast_email to=%s resend_id=%s", to_email, rid)
+    return str(rid)
+

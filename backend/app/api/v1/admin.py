@@ -15,7 +15,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import FileResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -25,6 +25,7 @@ from app.models.analysis_snapshot import AnalysisSnapshot
 from app.models.processing_job import ProcessingJob
 from app.models.uploaded_file import UploadedFile
 from app.models.user import User
+from app.models.user_profile import UserProfile
 
 logger = logging.getLogger(__name__)
 
@@ -529,4 +530,158 @@ def get_stats(
             "queued_or_processing": jobs_queued,
             "error": jobs_error,
         },
+    }
+
+
+# ── Email broadcast ───────────────────────────────────────────────────────────
+
+_VALID_SEGMENTS = {
+    "all", "unverified", "no_onboarding", "active",
+    "free", "pro", "friends_and_family", "specific",
+}
+
+_SEGMENT_LABELS = {
+    "all": "Todos los usuarios activos",
+    "unverified": "Sin verificar (solo email/password)",
+    "no_onboarding": "Sin onboarding completado",
+    "active": "Verificados con onboarding completo",
+    "free": "Plan Free",
+    "pro": "Plan Pro",
+    "friends_and_family": "Plan Friends & Family",
+    "specific": "Email específico",
+}
+
+
+class EmailBroadcastRequest(BaseModel):
+    subject: str = Field(..., min_length=1, max_length=200)
+    body_html: str = Field(..., min_length=1, max_length=50_000)
+    segment: str = Field(..., description="all|unverified|no_onboarding|active|free|pro|friends_and_family|specific")
+    specific_email: str | None = Field(default=None)
+
+
+def _query_segment(db: Session, segment: str, specific_email: str | None) -> list:
+    """Devuelve lista de (email, full_name) según el segmento."""
+    base = (
+        db.query(User.email, User.full_name, User.is_verified, User.social_provider, User.plan)
+        .filter(User.is_suspended == False, User.is_admin == False)  # noqa: E712
+    )
+
+    if segment == "specific":
+        if not specific_email:
+            return []
+        return (
+            db.query(User.email, User.full_name)
+            .filter(User.email == specific_email, User.is_suspended == False)  # noqa: E712
+            .all()
+        )
+
+    if segment == "unverified":
+        rows = base.filter(User.is_verified == False, User.social_provider == None).all()  # noqa: E712
+        return [(r.email, r.full_name) for r in rows]
+
+    if segment == "no_onboarding":
+        rows = (
+            db.query(User.email, User.full_name)
+            .join(UserProfile, UserProfile.user_id == User.user_id, isouter=True)
+            .filter(
+                User.is_suspended == False,  # noqa: E712
+                User.is_admin == False,  # noqa: E712
+                User.is_verified == True,  # noqa: E712
+                (UserProfile.onboarding_completed == False) | (UserProfile.user_id == None),  # noqa: E712
+            )
+            .all()
+        )
+        return [(r.email, r.full_name) for r in rows]
+
+    if segment == "active":
+        rows = (
+            db.query(User.email, User.full_name)
+            .join(UserProfile, UserProfile.user_id == User.user_id)
+            .filter(
+                User.is_suspended == False,  # noqa: E712
+                User.is_admin == False,  # noqa: E712
+                User.is_verified == True,  # noqa: E712
+                UserProfile.onboarding_completed == True,  # noqa: E712
+            )
+            .all()
+        )
+        return [(r.email, r.full_name) for r in rows]
+
+    if segment in {"free", "pro", "friends_and_family"}:
+        rows = base.filter(User.plan == segment).all()
+        return [(r.email, r.full_name) for r in rows]
+
+    # all
+    rows = base.all()
+    return [(r.email, r.full_name) for r in rows]
+
+
+@router.get("/email/segments", summary="Conteo de usuarios por segmento de email")
+def get_email_segments(
+    db: Session = Depends(get_db),
+    _admin: User = Depends(require_admin),
+) -> dict:
+    """Devuelve cuántos usuarios hay en cada segmento de envío."""
+    counts = {}
+    for seg in _VALID_SEGMENTS:
+        if seg == "specific":
+            counts[seg] = {"label": _SEGMENT_LABELS[seg], "count": None}
+            continue
+        recipients = _query_segment(db, seg, None)
+        counts[seg] = {"label": _SEGMENT_LABELS[seg], "count": len(recipients)}
+    return counts
+
+
+@router.post("/email/send", summary="Enviar email broadcast a un segmento")
+def send_email_broadcast(
+    body: EmailBroadcastRequest,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin),
+) -> dict:
+    """
+    Envía un email compuesto por el admin a todos los usuarios del segmento elegido.
+    El cuerpo (body_html) se envuelve automáticamente en el template SAFPRO.
+    """
+    if body.segment not in _VALID_SEGMENTS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Segmento inválido. Válidos: {sorted(_VALID_SEGMENTS)}",
+        )
+    if body.segment == "specific" and not body.specific_email:
+        raise HTTPException(status_code=400, detail="specific_email es requerido para segmento 'specific'")
+
+    recipients = _query_segment(db, body.segment, body.specific_email)
+    if not recipients:
+        return {"sent": 0, "failed": 0, "total": 0, "segment": body.segment}
+
+    from app.services.email_service import send_admin_broadcast_email
+
+    sent = failed = 0
+    errors: list[str] = []
+
+    for email, full_name in recipients:
+        try:
+            send_admin_broadcast_email(
+                to_email=email,
+                full_name=full_name,
+                subject=body.subject,
+                body_html=body.body_html,
+            )
+            sent += 1
+        except Exception as exc:
+            failed += 1
+            errors.append(f"{email}: {exc}")
+            logger.error("broadcast_fail to=%s err=%s", email, exc)
+
+    logger.info(
+        "admin_action=email_broadcast admin=%s segment=%s sent=%d failed=%d",
+        admin.email, body.segment, sent, failed,
+    )
+
+    return {
+        "sent": sent,
+        "failed": failed,
+        "total": len(recipients),
+        "segment": body.segment,
+        "errors": errors if errors else None,
     }

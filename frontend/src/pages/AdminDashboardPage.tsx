@@ -37,6 +37,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Search,
+  Mail,
+  Send,
+  Eye,
+  Users2,
 } from "lucide-react"
 import { useState } from "react"
 import { getAnalytics } from "@/api/analytics"
@@ -50,6 +54,8 @@ import {
   unsuspendUser,
   patchUserPlan,
   deleteAdminUser,
+  getEmailSegments,
+  sendEmailBroadcast,
   type AdminFailedJob,
   type AdminUserItem,
 } from "@/api/admin"
@@ -663,6 +669,257 @@ function FailedJobsManager() {
   )
 }
 
+// ── EmailComposer ─────────────────────────────────────────────────────────────
+
+const SEGMENT_OPTIONS = [
+  { value: "all",               label: "Todos los usuarios activos" },
+  { value: "unverified",        label: "Sin verificar (email/password)" },
+  { value: "no_onboarding",     label: "Sin onboarding completado" },
+  { value: "active",            label: "Verificados con onboarding completo" },
+  { value: "free",              label: "Plan Free" },
+  { value: "pro",               label: "Plan Pro" },
+  { value: "friends_and_family",label: "Plan Friends & Family" },
+  { value: "specific",          label: "Email específico" },
+]
+
+function EmailComposer() {
+  const [segment, setSegment]             = useState("all")
+  const [specificEmail, setSpecificEmail] = useState("")
+  const [subject, setSubject]             = useState("")
+  const [bodyHtml, setBodyHtml]           = useState("")
+  const [preview, setPreview]             = useState<string | null>(null)
+  const [showConfirm, setShowConfirm]     = useState(false)
+  const [result, setResult]               = useState<{ sent: number; failed: number; total: number } | null>(null)
+
+  const { data: segments } = useQuery({
+    queryKey: ["adminEmailSegments"],
+    queryFn: getEmailSegments,
+    staleTime: 60_000,
+  })
+
+  const sendMutation = useMutation({
+    mutationFn: () =>
+      sendEmailBroadcast({
+        subject,
+        body_html: bodyHtml,
+        segment,
+        specific_email: segment === "specific" ? specificEmail : undefined,
+      }),
+    onSuccess: (data) => {
+      setResult(data)
+      setShowConfirm(false)
+      toast(`✅ ${data.sent} emails enviados correctamente`, "success")
+    },
+    onError: (err: any) => {
+      setShowConfirm(false)
+      toast(err?.response?.data?.detail || "Error al enviar emails", "error")
+    },
+  })
+
+  const recipientCount =
+    segment === "specific"
+      ? (specificEmail ? 1 : 0)
+      : (segments?.[segment]?.count ?? "…")
+
+  const canSend = subject.trim().length > 0 && bodyHtml.trim().length > 0 &&
+    (segment !== "specific" || specificEmail.trim().length > 0)
+
+  // Preview: wrap body in SAFPRO template (client-side lightweight version)
+  function handlePreview() {
+    const paragraphs = bodyHtml.includes("<p")
+      ? bodyHtml
+      : bodyHtml.split("\n").filter(l => l.trim()).map(l =>
+          `<p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">${l}</p>`
+        ).join("\n")
+
+    const html = `<!DOCTYPE html><html><body style="margin:0;padding:24px;background:#f4f5f7;font-family:sans-serif;">
+<div style="max-width:600px;margin:auto;background:#fff;border-radius:12px;overflow:hidden;">
+  <div style="background:#1c2b4b;padding:24px 40px;text-align:center;">
+    <span style="font-size:20px;font-weight:700;color:#fff;">SAFPRO</span>
+  </div>
+  <div style="padding:32px 40px;">
+    <p style="font-size:18px;font-weight:600;color:#1c2b4b;margin:0 0 20px;">Hola, [Nombre] 👋</p>
+    ${paragraphs}
+    <div style="text-align:center;margin-top:24px;">
+      <a href="https://safpro.us" style="background:#e05c19;color:#fff;padding:14px 36px;border-radius:8px;text-decoration:none;font-weight:700;">Ir a SAFPRO →</a>
+    </div>
+  </div>
+  <div style="background:#f4f5f7;padding:16px 40px;text-align:center;font-size:12px;color:#9ca3af;">
+    SAFPRO · Términos · Privacidad
+  </div>
+</div>
+</body></html>`
+    setPreview(html)
+  }
+
+  return (
+    <Section icon={<Mail size={18} />} title="Emails — Comunicaciones" defaultOpen={false}>
+      <div className="space-y-5">
+
+        {/* Resultado previo */}
+        {result && (
+          <div className="flex items-center gap-3 p-3 rounded-lg bg-green-50 border border-green-200">
+            <CheckCircle2 size={16} className="text-green-600 shrink-0" />
+            <span className="text-sm text-green-800">
+              Último envío: <strong>{result.sent}</strong> enviados,{" "}
+              <strong>{result.failed}</strong> fallidos de <strong>{result.total}</strong> destinatarios.
+            </span>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Segmento */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-600 mb-1 uppercase tracking-wide">
+              Destinatarios
+            </label>
+            <select
+              value={segment}
+              onChange={e => { setSegment(e.target.value); setResult(null) }}
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-orange-300"
+            >
+              {SEGMENT_OPTIONS.map(o => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+            {segment !== "specific" && segments && (
+              <p className="mt-1 text-xs text-slate-500 flex items-center gap-1">
+                <Users2 size={11} />
+                {segments[segment]?.count ?? "…"} usuarios en este segmento
+              </p>
+            )}
+          </div>
+
+          {/* Email específico */}
+          {segment === "specific" && (
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 mb-1 uppercase tracking-wide">
+                Email
+              </label>
+              <input
+                type="email"
+                placeholder="usuario@ejemplo.com"
+                value={specificEmail}
+                onChange={e => setSpecificEmail(e.target.value)}
+                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300"
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Asunto */}
+        <div>
+          <label className="block text-xs font-semibold text-slate-600 mb-1 uppercase tracking-wide">
+            Asunto
+          </label>
+          <input
+            type="text"
+            placeholder="Ej: Novedades en SAFPRO — y algo que viene pronto 🚀"
+            value={subject}
+            onChange={e => setSubject(e.target.value)}
+            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300"
+          />
+        </div>
+
+        {/* Cuerpo */}
+        <div>
+          <label className="block text-xs font-semibold text-slate-600 mb-1 uppercase tracking-wide">
+            Cuerpo del email
+            <span className="ml-2 text-slate-400 normal-case font-normal">(texto plano o HTML básico)</span>
+          </label>
+          <textarea
+            rows={10}
+            placeholder={"Puedes escribir párrafos separados por línea en blanco.\n\nO usar <p>, <strong>, <br> y links.\n\nEl encabezado y pie de SAFPRO se agregan automáticamente."}
+            value={bodyHtml}
+            onChange={e => setBodyHtml(e.target.value)}
+            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-orange-300 resize-y"
+          />
+        </div>
+
+        {/* Acciones */}
+        <div className="flex items-center gap-3 flex-wrap">
+          <button
+            onClick={handlePreview}
+            disabled={!bodyHtml.trim()}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-40 transition"
+          >
+            <Eye size={14} /> Vista previa
+          </button>
+
+          <button
+            onClick={() => setShowConfirm(true)}
+            disabled={!canSend || sendMutation.isPending}
+            className="flex items-center gap-2 px-5 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold disabled:opacity-40 transition"
+          >
+            <Send size={14} />
+            {sendMutation.isPending
+              ? "Enviando…"
+              : `Enviar a ${recipientCount} usuario${recipientCount === 1 ? "" : "s"}`}
+          </button>
+        </div>
+
+        {/* Confirmación */}
+        {showConfirm && (
+          <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg space-y-3">
+            <p className="text-sm font-semibold text-amber-800 flex items-center gap-2">
+              <AlertTriangle size={16} />
+              ¿Confirmar envío?
+            </p>
+            <p className="text-sm text-amber-700">
+              Se enviará <strong>"{subject}"</strong> a{" "}
+              <strong>{recipientCount} usuario{recipientCount === 1 ? "" : "s"}</strong>.
+              Esta acción no se puede deshacer.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => sendMutation.mutate()}
+                disabled={sendMutation.isPending}
+                className="px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold transition"
+              >
+                {sendMutation.isPending ? "Enviando…" : "Sí, enviar"}
+              </button>
+              <button
+                onClick={() => setShowConfirm(false)}
+                className="px-4 py-2 rounded-lg border border-slate-200 text-sm text-slate-600 hover:bg-slate-50 transition"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Modal de preview */}
+        {preview && (
+          <div
+            className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+            onClick={() => setPreview(null)}
+          >
+            <div
+              className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between px-5 py-3 border-b">
+                <span className="text-sm font-semibold text-slate-700">Vista previa del email</span>
+                <button
+                  onClick={() => setPreview(null)}
+                  className="text-slate-400 hover:text-slate-600 text-lg leading-none"
+                >✕</button>
+              </div>
+              <iframe
+                srcDoc={preview}
+                className="flex-1 w-full rounded-b-xl"
+                style={{ minHeight: 500 }}
+                title="preview"
+              />
+            </div>
+          </div>
+        )}
+
+      </div>
+    </Section>
+  )
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function AdminDashboardPage() {
   const user = useAuthStore((s) => s.user)
@@ -1039,6 +1296,9 @@ export default function AdminDashboardPage() {
 
       {/* ══════════════ SECCIÓN 6: JOBS FALLIDOS — GESTIÓN ══════════════════════ */}
       <FailedJobsManager />
+
+      {/* ══════════════ SECCIÓN 7: COMUNICACIONES — EMAIL ═══════════════════════ */}
+      <EmailComposer />
 
       {/* Footer */}
       <div className="text-center text-xs text-muted-foreground pb-4">
