@@ -21,7 +21,7 @@ import {
   Users,
 } from "lucide-react"
 import { getProfile, updateProfile } from "@/api/profile"
-import { deleteMyAccount, deleteMyUploads, deleteAllAnalysis } from "@/api/users"
+import { deleteMyAccount, deleteMyUploads, deleteAllAnalysis, updateMyName } from "@/api/users"
 import { useAuthStore } from "@/stores/authStore"
 import { cn } from "@/lib/utils"
 import { toast } from "@/components/ui/toast"
@@ -107,6 +107,33 @@ export default function AccountPage() {
   const queryClient = useQueryClient()
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
+
+  // ── Name editing ─────────────────────────────────────────────────────────────
+  const setUser = useAuthStore((s) => s.setUser)
+  const [editingName, setEditingName] = useState(false)
+  const [nameInput, setNameInput]     = useState("")
+
+  const updateNameMutation = useMutation({
+    mutationFn: (name: string) => updateMyName(name),
+    onSuccess: (updatedUser) => {
+      setUser(updatedUser)
+      setEditingName(false)
+      toast("Nombre actualizado correctamente.", "success")
+    },
+    onError: () => toast("No se pudo actualizar el nombre. Intenta de nuevo.", "error"),
+  })
+
+  function handleStartEditName() {
+    setNameInput(user?.full_name ?? "")
+    setEditingName(true)
+  }
+
+  function handleSaveName() {
+    const trimmed = nameInput.trim()
+    if (!trimmed) { toast("El nombre no puede estar vacío.", "error"); return }
+    if (trimmed === user?.full_name) { setEditingName(false); return }
+    updateNameMutation.mutate(trimmed)
+  }
 
   // ── Profile query ────────────────────────────────────────────────────────────
   const { data: profile, isLoading: profileLoading } = useQuery({
@@ -273,8 +300,47 @@ export default function AccountPage() {
           >
             {initials}
           </div>
-          <div className="space-y-1">
-            <p className="font-semibold text-sm">{user?.full_name ?? "—"}</p>
+          <div className="space-y-1 flex-1 min-w-0">
+            {/* Nombre editable */}
+            {editingName ? (
+              <div className="flex items-center gap-2">
+                <input
+                  autoFocus
+                  value={nameInput}
+                  onChange={e => setNameInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === "Enter") handleSaveName(); if (e.key === "Escape") setEditingName(false) }}
+                  className="border border-slate-300 rounded-md px-2 py-1 text-sm font-semibold w-full max-w-[220px] focus:outline-none focus:ring-2 focus:ring-orange-300"
+                  style={{ color: "#111827", background: "#ffffff" }}
+                  maxLength={100}
+                />
+                <button
+                  onClick={handleSaveName}
+                  disabled={updateNameMutation.isPending}
+                  className="shrink-0 flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-white transition"
+                  style={{ background: "#e05c19" }}
+                >
+                  {updateNameMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
+                  Guardar
+                </button>
+                <button
+                  onClick={() => setEditingName(false)}
+                  className="shrink-0 text-xs text-muted-foreground hover:text-foreground transition"
+                >
+                  Cancelar
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <p className="font-semibold text-sm">{user?.full_name ?? "—"}</p>
+                <button
+                  onClick={handleStartEditName}
+                  className="text-xs text-muted-foreground hover:text-orange-500 transition underline underline-offset-2"
+                  title="Cambiar nombre"
+                >
+                  Editar
+                </button>
+              </div>
+            )}
             <p className="text-xs text-muted-foreground">{user?.email}</p>
             <PlanBadge plan={user?.plan ?? "free"} />
           </div>

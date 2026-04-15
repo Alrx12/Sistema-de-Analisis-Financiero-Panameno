@@ -6,6 +6,11 @@ export async function getMe(): Promise<User> {
   return res.data
 }
 
+export async function updateMyName(full_name: string): Promise<User> {
+  const res = await apiClient.patch<User>("/users/me", { full_name })
+  return res.data
+}
+
 export async function deleteMyAccount(): Promise<{ message: string }> {
   const res = await apiClient.delete<{ message: string }>("/users/me")
   return res.data

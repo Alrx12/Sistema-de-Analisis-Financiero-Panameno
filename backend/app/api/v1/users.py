@@ -1,7 +1,8 @@
 import logging
 from pathlib import Path
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
@@ -18,6 +19,29 @@ router = APIRouter()
 
 @router.get("/me", response_model=UserResponse)
 def get_me(current_user: User = Depends(get_current_user)) -> UserResponse:
+    return UserResponse.model_validate(current_user)
+
+
+class UpdateMeRequest(BaseModel):
+    full_name: str = Field(..., min_length=1, max_length=100, strip_whitespace=True)
+
+
+@router.patch("/me", response_model=UserResponse, summary="Actualizar nombre del usuario")
+def update_me(
+    body: UpdateMeRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> UserResponse:
+    name = body.full_name.strip()
+    if not name:
+        raise HTTPException(status_code=422, detail="El nombre no puede estar vacío.")
+    current_user.full_name = name
+    db.commit()
+    db.refresh(current_user)
+    audit_logger.info(
+        "name_updated | user_id=%s new_name=%s",
+        current_user.user_id, name,
+    )
     return UserResponse.model_validate(current_user)
 
 
