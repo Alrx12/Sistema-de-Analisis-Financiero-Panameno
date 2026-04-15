@@ -294,10 +294,20 @@ export default function DashboardPage() {
     queryFn: getProfile,
   })
 
-  // Gastos adicionales manuales del perfil → suma mensual
-  const manualMonthly = useMemo(() => {
+  // Gastos adicionales manuales del perfil → solo aplica cuando hay un mes específico seleccionado.
+  // Son estimados recurrentes (no transacciones reales con fecha), así que:
+  //   - mes específico → suma 1× el monthly_amount de cada estimado ✅
+  //   - año sin mes    → suma 12× (un mes por cada mes del año) ✅
+  //   - sin filtro     → no se suma (no tiene sentido añadir "1 mes" a un total de todos los tiempos) ✅
+  const manualMonthlyBase = useMemo(() => {
     return (profile?.manual_expenses ?? []).reduce((sum, e) => sum + (e.monthly_amount ?? 0), 0)
   }, [profile])
+
+  const manualMonthly = useMemo(() => {
+    if (selectedMonth) return manualMonthlyBase          // mes específico → 1×
+    if (selectedYear)  return manualMonthlyBase * 12     // año completo  → 12×
+    return 0                                              // sin filtro    → no aplica
+  }, [manualMonthlyBase, selectedMonth, selectedYear])
 
   const activeRecommendations = useMemo(() => {
     const src = selectedBankKey
@@ -344,7 +354,7 @@ export default function DashboardPage() {
   if (isError)  return <ErrorMsg />
   if (!kpis)    return <EmptyState />
 
-  const adjustedBalance = kpis.balance - manualMonthly
+  const adjustedBalance = kpis.balance - manualMonthly  // manualMonthly ya es 0 cuando no hay filtro de período
   const savingsRate = kpis.total_income > 0
     ? ((adjustedBalance / kpis.total_income) * 100).toFixed(1) : "0.0"
 
@@ -469,7 +479,15 @@ export default function DashboardPage() {
           icon={<TrendingUp className="h-4 w-4" />} iconClass="kpi-icon-green" valueClass="text-green-600" />
         <KpiCard title="Gastos" value={formatCurrency(kpis.total_expenses + manualMonthly)}
           icon={<TrendingDown className="h-4 w-4" />} iconClass="kpi-icon-red" valueClass="text-red-500"
-          sub={manualMonthly > 0 ? `Incl. $${manualMonthly.toFixed(0)}/mes adicionales` : undefined} />
+          sub={
+            manualMonthlyBase > 0 && manualMonthly > 0
+              ? selectedMonth
+                ? `Incl. $${manualMonthlyBase.toFixed(0)}/mes adicionales`
+                : `Incl. $${manualMonthlyBase.toFixed(0)}/mes × 12`
+              : manualMonthlyBase > 0 && !selectedYear
+                ? `Sin filtro — estimados mensuales no aplicados`
+                : undefined
+          } />
         <KpiCard title="Balance neto" value={formatCurrency(adjustedBalance)}
           icon={<Wallet className="h-4 w-4" />} iconClass="kpi-icon-blue"
           valueClass={adjustedBalance >= 0 ? "text-green-600" : "text-red-500"}
