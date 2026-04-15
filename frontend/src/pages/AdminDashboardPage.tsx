@@ -753,7 +753,7 @@ function EmailComposer() {
   }
 
   return (
-    <Section icon={<Mail size={18} />} title="Emails — Comunicaciones" defaultOpen={false}>
+    <Section icon={<Mail size={18} />} title="Emails — Comunicaciones">
       <div className="space-y-5">
 
         {/* Resultado previo */}

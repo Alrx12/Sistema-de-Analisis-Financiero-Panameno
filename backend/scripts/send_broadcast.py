@@ -18,6 +18,7 @@ from __future__ import annotations
 import argparse
 import logging
 import sys
+import urllib.parse
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -44,6 +45,10 @@ log = logging.getLogger(__name__)
 # ── Banners personalizados ────────────────────────────────────────────────────
 
 def _banner_unverified(verify_url: str) -> str:
+    # URL-encode completo para sobrevivir SafeLinks de Outlook/Hotmail
+    # (los JWT son base64url y no necesitan encoding, pero SafeLinks a veces
+    #  doble-encodea el '=' de padding — encode_url elimina ese riesgo)
+    safe_url = verify_url  # el token ya es base64url (sin = si PyJWT lo omite)
     return f"""
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
       <tr>
@@ -52,11 +57,15 @@ def _banner_unverified(verify_url: str) -> str:
           <p style="margin:4px 0 10px;font-size:13px;color:#92400e;line-height:1.5;">
             Sin verificar, no puedes subir tus estados de cuenta. Tarda menos de un minuto.
           </p>
-          <a href="{verify_url}"
+          <a href="{safe_url}"
              style="display:inline-block;background:#e05c19;color:#fff;font-size:13px;
                     font-weight:600;padding:8px 18px;border-radius:6px;text-decoration:none;">
             Verificar mi correo →
           </a>
+          <p style="margin:10px 0 0;font-size:11px;color:#a16207;word-break:break-all;">
+            Si el botón no funciona, copia y pega este enlace en tu navegador:<br/>
+            {safe_url}
+          </p>
         </td>
       </tr>
     </table>
@@ -381,7 +390,9 @@ def main():
                     SECRET_KEY,
                     algorithm=ALGORITHM,
                 )
-                verify_url = f"{frontend_url}/verify-email?token={token}"
+                # URL-encode el token para que SafeLinks (Outlook/Hotmail) no lo corrompa
+                token_encoded = urllib.parse.quote(token, safe="")
+                verify_url = f"{frontend_url}/verify-email?token={token_encoded}"
                 banner = _banner_unverified(verify_url)
             elif not row.onboarding_completed:
                 banner = _banner_onboarding()

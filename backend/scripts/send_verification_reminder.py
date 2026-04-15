@@ -20,6 +20,7 @@ import argparse
 import logging
 import os
 import sys
+import urllib.parse
 from datetime import datetime
 from pathlib import Path
 
@@ -293,7 +294,8 @@ def main():
                 algorithm=ALGORITHM,
             )
 
-            verify_url = f"{frontend_url}/verify-email?token={token}"
+            token_encoded = urllib.parse.quote(token, safe="")
+            verify_url = f"{frontend_url}/verify-email?token={token_encoded}"
             html = build_email_html(row.full_name or row.email, verify_url)
 
             params: resend.Emails.SendParams = {
