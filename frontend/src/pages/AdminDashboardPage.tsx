@@ -777,6 +777,7 @@ function EmailComposer() {
               value={segment}
               onChange={e => { setSegment(e.target.value); setResult(null) }}
               className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-orange-300"
+              style={{ color: "#111827", background: "#ffffff" }}
             >
               {SEGMENT_OPTIONS.map(o => (
                 <option key={o.value} value={o.value}>{o.label}</option>
@@ -802,6 +803,7 @@ function EmailComposer() {
                 value={specificEmail}
                 onChange={e => setSpecificEmail(e.target.value)}
                 className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300"
+                style={{ color: "#111827", background: "#ffffff" }}
               />
             </div>
           )}
@@ -818,6 +820,7 @@ function EmailComposer() {
             value={subject}
             onChange={e => setSubject(e.target.value)}
             className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300"
+            style={{ color: "#111827", background: "#ffffff" }}
           />
         </div>
 
@@ -833,6 +836,7 @@ function EmailComposer() {
             value={bodyHtml}
             onChange={e => setBodyHtml(e.target.value)}
             className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-orange-300 resize-y"
+            style={{ color: "#111827", background: "#ffffff" }}
           />
         </div>
 
