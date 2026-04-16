@@ -92,6 +92,43 @@ docs/
 # Documentación interna
 # (contiene notas de sesiones, decisiones de diseño internas y detalles de infra)
 # ========================
+private/
 CLAUDE.md
+MEMORY.md
 memory.md
 SAFPRO_AUDITORIA*.md
+SAFPRO_PROMPT_*.md
+PLANTILLA_PARA_PROMPTS.md
+Powerbi_prompt.md
+
+# Archivos de presentación y research internos
+*.pptx
+*.pdf
+*.docx
+!frontend/public/**/*.pdf
+
+# Archivo con credenciales (nunca debió commitearse)
+Token\ de\ API\ para\ crear\ cuenta.txt
+
+# Basura de raíz
+test_write
+sentry.py
+safpro_redesign_preview.html
+node_modules/
+package-lock.json
+package.json
+
+# Herramientas IDE / agentes
+.agent/
+.codebuddy/
+.continue/
+.cursor/
+.gemini/
+.kiro/
+.opencode/
+.qoder/
+.roo/
+.trae/
+.windsurf/
+the-architect/
+status/
