@@ -2,8 +2,6 @@
  * Root Layout — Expo Router
  * Inicializa: API client, Auth store, TanStack Query
  */
-import "../global.css"
-import { useEffect } from "react"
 import { Stack } from "expo-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import * as SecureStore from "expo-secure-store"

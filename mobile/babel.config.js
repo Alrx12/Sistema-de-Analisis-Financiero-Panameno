@@ -2,8 +2,10 @@ module.exports = function (api) {
   api.cache(true)
   return {
     presets: [
-      // NativeWind v4 — se configura aquí, no como plugin separado
-      ["babel-preset-expo", { jsxImportSource: "nativewind" }],
+      // babel-preset-expo sin jsxImportSource de NativeWind
+      // (NativeWind no se usa activamente en ningún componente —
+      //  si en el futuro se usa, descomentar jsxImportSource: "nativewind")
+      "babel-preset-expo",
     ],
     plugins: [
       // Resuelve @safpro/* a los módulos locales en ./packages/
@@ -21,8 +23,7 @@ module.exports = function (api) {
           },
         },
       ],
-      // Reanimated siempre debe ir último
-      "react-native-reanimated/plugin",
+      // react-native-reanimated/plugin va aquí si se reintegra Reanimated
     ],
   }
 }

@@ -1,5 +1,4 @@
 const { getDefaultConfig } = require("expo/metro-config")
-const { withNativeWind } = require("nativewind/metro")
 const path = require("path")
 
 const projectRoot = __dirname
@@ -21,4 +20,6 @@ config.resolver.sourceExts = [
   "tsx",
 ]
 
-module.exports = withNativeWind(config, { input: "./global.css" })
+// NativeWind desactivado — ningún componente usa className=
+// Para reactivar: npm i nativewind && envolver con withNativeWind
+module.exports = config
