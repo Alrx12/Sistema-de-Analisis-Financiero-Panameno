@@ -6,6 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
 import { useQuery } from "@tanstack/react-query"
 import * as SecureStore from "expo-secure-store"
+import { Ionicons } from "@expo/vector-icons"
 import { getMe } from "@safpro/api/users"
 import { getAuthStore } from "@safpro/stores"
 
@@ -76,16 +77,41 @@ export default function AccountScreen() {
           </View>
         </View>
 
+        {/* Herramientas */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Herramientas</Text>
+          <TouchableOpacity style={styles.actionRow} onPress={() => router.push("/(tabs)/simulaciones")}>
+            <View style={styles.actionIcon}>
+              <Ionicons name="flask-outline" size={18} color="#e05c19" />
+            </View>
+            <Text style={styles.actionText}>Simulaciones</Text>
+            <Ionicons name="chevron-forward" size={16} color="#9ca3af" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.actionRow} onPress={() => router.push("/(tabs)/ayuda")}>
+            <View style={styles.actionIcon}>
+              <Ionicons name="help-circle-outline" size={18} color="#3b82f6" />
+            </View>
+            <Text style={styles.actionText}>Ayuda y FAQ</Text>
+            <Ionicons name="chevron-forward" size={16} color="#9ca3af" />
+          </TouchableOpacity>
+        </View>
+
         {/* Acciones */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Acciones</Text>
+          <Text style={styles.sectionTitle}>Cuenta</Text>
           <TouchableOpacity style={styles.actionRow} onPress={() => Alert.alert("Próximamente", "Gestión de plan disponible pronto.")}>
-            <Text style={styles.actionText}>⬆️ Actualizar plan</Text>
-            <Text style={styles.actionChevron}>›</Text>
+            <View style={styles.actionIcon}>
+              <Ionicons name="arrow-up-circle-outline" size={18} color="#7c3aed" />
+            </View>
+            <Text style={styles.actionText}>Actualizar plan</Text>
+            <Ionicons name="chevron-forward" size={16} color="#9ca3af" />
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionRow} onPress={() => Alert.alert("Próximamente", "Cambio de contraseña disponible pronto.")}>
-            <Text style={styles.actionText}>🔑 Cambiar contraseña</Text>
-            <Text style={styles.actionChevron}>›</Text>
+            <View style={styles.actionIcon}>
+              <Ionicons name="key-outline" size={18} color="#6b7280" />
+            </View>
+            <Text style={styles.actionText}>Cambiar contraseña</Text>
+            <Ionicons name="chevron-forward" size={16} color="#9ca3af" />
           </TouchableOpacity>
         </View>
 
@@ -146,14 +172,21 @@ const styles = StyleSheet.create({
   infoValue: { fontWeight: "600", color: "#1c2b4b" },
   actionRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: "#f3f4f6",
+    gap: 10,
   },
-  actionText: { color: "#374151", fontSize: 15 },
-  actionChevron: { color: "#9ca3af", fontSize: 20 },
+  actionIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: "#f3f4f6",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  actionText: { color: "#374151", fontSize: 15, flex: 1 },
   logoutBtn: {
     margin: 12,
     backgroundColor: "#fee2e2",

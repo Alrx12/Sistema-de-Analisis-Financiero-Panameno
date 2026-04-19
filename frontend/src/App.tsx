@@ -1,6 +1,7 @@
-import { type ReactNode, lazy, Suspense } from "react"
+import { type ReactNode, lazy, Suspense, useEffect } from "react"
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 import { useAuthStore } from "@/stores/authStore"
+import { getMe } from "@/api/users"
 import AppShell from "@/components/AppShell"
 
 // ─── Lazy imports — cada página genera su propio chunk ────────────────────────
@@ -78,6 +79,17 @@ function PublicRoute({ children }: { children: ReactNode }) {
 
 // ─── App ──────────────────────────────────────────────────────────────────────
 export default function App() {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const setUser = useAuthStore((s) => s.setUser)
+
+  // Refrescar usuario desde el servidor al arrancar — garantiza is_admin actualizado
+  useEffect(() => {
+    if (!isAuthenticated) return
+    getMe().then(setUser).catch(() => {
+      // Si falla (token expirado), el interceptor de axios ya maneja el logout
+    })
+  }, [isAuthenticated])
+
   return (
     <BrowserRouter>
       <Suspense fallback={<PageLoader />}>

@@ -18,7 +18,7 @@ from app.schemas.transaction import (
     ReclassifyRequest,
     ReclassifyResponse,
 )
-from app.services.analytics_service import track_event
+from app.services.analytics_service import track_event, upsert_kb_user_stats
 from app.services.detail_normalizer import canonicalize_detail
 from app.services.financial_classifier import FinancialClassifier
 from app.services.transaction_service import reclassify_transaction
@@ -210,6 +210,12 @@ def apply_review_group(
             "Bulk review-group applied — user=%s, key=%r, updated=%d, kb=%s",
             user_id, body.canonical_key, updated_count, kb_target,
         )
+        upsert_kb_user_stats(
+            user_id=current_user.user_id,
+            personal_exact_matches=len(classifier.personal_rules["exact_matches"]),
+            personal_patterns=len(classifier.personal_rules["patterns"]),
+            global_contributions_delta=1 if kb_target == "global" else 0,
+        )
 
     return ApplyGroupResponse(
         updated_count=updated_count,
@@ -293,6 +299,13 @@ def learn_transaction(
             "kb_target": kb_target,
             "budget_category": body.budget_category,
         },
+    )
+
+    upsert_kb_user_stats(
+        user_id=current_user.user_id,
+        personal_exact_matches=personal_exact,
+        personal_patterns=personal_patterns,
+        global_contributions_delta=1 if kb_target == "global" else 0,
     )
 
     return LearnResponse(

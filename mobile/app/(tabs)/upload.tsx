@@ -105,13 +105,13 @@ export default function UploadScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Subir Estado de Cuenta</Text>
+        <Text style={styles.subtitle}>
+          Exporta tu estado de cuenta desde tu banca en línea y súbelo aquí.
+        </Text>
+      </View>
       <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Subir Estado de Cuenta</Text>
-          <Text style={styles.subtitle}>
-            Exporta tu estado de cuenta desde tu banca en línea y súbelo aquí.
-          </Text>
-        </View>
 
         {/* Bancos soportados */}
         <View style={styles.banksCard}>
@@ -181,9 +181,14 @@ export default function UploadScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: "#f4f5f7" },
   container: { padding: 20 },
-  header: { marginBottom: 20 },
-  title: { fontSize: 22, fontWeight: "700", color: "#1c2b4b" },
-  subtitle: { color: "#6b7280", marginTop: 4, lineHeight: 20 },
+  header: {
+    backgroundColor: "#1c2b4b",
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 20,
+  },
+  title: { fontSize: 22, fontWeight: "700", color: "#ffffff" },
+  subtitle: { color: "#93afd4", marginTop: 4, lineHeight: 20 },
   banksCard: {
     backgroundColor: "#ffffff",
     borderRadius: 12,

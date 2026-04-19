@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.models.analysis_transaction import AnalysisTransaction
 from app.models.user import User
+from app.services.analytics_service import upsert_kb_user_stats
 from app.services.financial_classifier import FinancialClassifier
 
 logger = logging.getLogger(__name__)
@@ -99,11 +100,14 @@ def reclassify_transaction(
         new_global_exact = len(classifier.global_rules["exact_matches"])
         kb_target = "global" if new_global_exact > prev_global_exact else "personal"
 
+        personal_exact = len(classifier.personal_rules["exact_matches"])
+        personal_patterns = len(classifier.personal_rules["patterns"])
+
         learn_result = {
             "detail_learned": canonical_key,
             "kb_target": kb_target,
-            "personal_exact_matches": len(classifier.personal_rules["exact_matches"]),
-            "personal_patterns": len(classifier.personal_rules["patterns"]),
+            "personal_exact_matches": personal_exact,
+            "personal_patterns": personal_patterns,
         }
 
         logger.info(
@@ -113,6 +117,13 @@ def reclassify_transaction(
             tx.detail[:80],
             canonical_key,
             kb_target,
+        )
+
+        upsert_kb_user_stats(
+            user_id=user.user_id,
+            personal_exact_matches=personal_exact,
+            personal_patterns=personal_patterns,
+            global_contributions_delta=1 if kb_target == "global" else 0,
         )
 
     return {"transaction": tx, "learn_result": learn_result}

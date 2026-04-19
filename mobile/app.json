@@ -34,15 +34,18 @@
         {
           "iCloudContainerEnvironment": "Production"
         }
-      ]
+      ],
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true
     },
     "extra": {
+      "router": {},
       "eas": {
-        "projectId": "REEMPLAZAR-CON-EAS-PROJECT-ID"
+        "projectId": "59794fe6-4cfa-4446-b9d7-28a401e17185"
       }
-    }
+    },
+    "owner": "alrx12"
   }
 }

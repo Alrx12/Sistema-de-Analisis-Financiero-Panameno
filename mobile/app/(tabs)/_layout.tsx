@@ -1,16 +1,16 @@
 /**
- * Tab Navigator — navegación principal de la app
- * 5 tabs: Dashboard, Upload, Análisis, Presupuesto, Cuenta
+ * Tab Navigator — navegación principal
+ * Tabs visibles: Inicio, Subir, Análisis, Entrenar, Presupuesto, Cuenta
+ * Ocultos (stack desde Cuenta): Simulaciones, Ayuda
  */
 import { Tabs } from "expo-router"
-import { View, Text } from "react-native"
+import { Ionicons } from "@expo/vector-icons"
 
-// Íconos SVG simples para no depender de expo-vector-icons en v1
-function TabIcon({ emoji, focused }: { emoji: string; focused: boolean }) {
-  return (
-    <Text style={{ fontSize: focused ? 22 : 20, opacity: focused ? 1 : 0.6 }}>
-      {emoji}
-    </Text>
+type IoniconName = React.ComponentProps<typeof Ionicons>["name"]
+
+function tabIcon(name: IoniconName, focusedName: IoniconName) {
+  return ({ color, focused }: { color: string; focused: boolean }) => (
+    <Ionicons name={focused ? focusedName : name} size={24} color={color} />
   )
 }
 
@@ -20,16 +20,17 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: "#e05c19",
-        tabBarInactiveTintColor: "#6b7280",
+        tabBarInactiveTintColor: "#9ca3af",
         tabBarStyle: {
           backgroundColor: "#ffffff",
           borderTopColor: "#e5e7eb",
           borderTopWidth: 1,
           paddingBottom: 8,
-          height: 60,
+          paddingTop: 4,
+          height: 64,
         },
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: "600",
         },
       }}
@@ -38,35 +39,58 @@ export default function TabLayout() {
         name="dashboard"
         options={{
           title: "Inicio",
-          tabBarIcon: ({ focused }) => <TabIcon emoji="📊" focused={focused} />,
+          tabBarIcon: tabIcon("bar-chart-outline", "bar-chart"),
         }}
       />
       <Tabs.Screen
         name="upload"
         options={{
           title: "Subir",
-          tabBarIcon: ({ focused }) => <TabIcon emoji="⬆️" focused={focused} />,
+          tabBarIcon: tabIcon("cloud-upload-outline", "cloud-upload"),
         }}
       />
       <Tabs.Screen
         name="analysis"
         options={{
           title: "Análisis",
-          tabBarIcon: ({ focused }) => <TabIcon emoji="🔍" focused={focused} />,
+          tabBarIcon: tabIcon("search-outline", "search"),
+        }}
+      />
+      <Tabs.Screen
+        name="retrain"
+        options={{
+          title: "Entrenar",
+          tabBarIcon: tabIcon("bulb-outline", "bulb"),
         }}
       />
       <Tabs.Screen
         name="budget"
         options={{
-          title: "Presupuesto",
-          tabBarIcon: ({ focused }) => <TabIcon emoji="🎯" focused={focused} />,
+          tabBarLabel: "50/30/20",
+          tabBarIcon: tabIcon("pie-chart-outline", "pie-chart"),
         }}
       />
       <Tabs.Screen
         name="account"
         options={{
           title: "Cuenta",
-          tabBarIcon: ({ focused }) => <TabIcon emoji="👤" focused={focused} />,
+          tabBarIcon: tabIcon("person-circle-outline", "person-circle"),
+        }}
+      />
+
+      {/* Pantallas ocultas — accesibles desde Cuenta */}
+      <Tabs.Screen
+        name="simulaciones"
+        options={{
+          title: "Simulaciones",
+          href: null,  // No aparece en el tab bar
+        }}
+      />
+      <Tabs.Screen
+        name="ayuda"
+        options={{
+          title: "Ayuda",
+          href: null,
         }}
       />
     </Tabs>
