@@ -1,0 +1,55 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:   # Se activa manualmente desde GitHub Actions
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Accept Android licenses
+        run: yes | sdkmanager --licenses || true
+
+      - name: Install mobile dependencies
+        working-directory: mobile
+        run: npm install --legacy-peer-deps
+
+      - name: Expo Prebuild (genera carpeta android/)
+        working-directory: mobile
+        env:
+          EXPO_PUBLIC_API_URL: https://safpro.us/api/v1
+        run: npx expo prebuild --platform android --no-install
+
+      - name: Build debug APK (firmado con debug key)
+        working-directory: mobile/android
+        env:
+          JAVA_OPTS: "-Xmx4g -XX:MaxMetaspaceSize=512m"
+          EXPO_PUBLIC_API_URL: https://safpro.us/api/v1
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: safpro-debug-apk
+          path: mobile/android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 14
+          if-no-files-found: error
