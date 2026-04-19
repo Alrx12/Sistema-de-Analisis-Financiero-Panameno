@@ -11,6 +11,8 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # Necesario para que git funcione correctamente en pasos de build
 
       - name: Setup Node.js 20
         uses: actions/setup-node@v4
@@ -28,6 +30,9 @@ jobs:
 
       - name: Accept Android licenses
         run: yes | sdkmanager --licenses || true
+
+      - name: Configure git safe directory
+        run: git config --global --add safe.directory "*"
 
       - name: Install mobile dependencies
         working-directory: mobile
