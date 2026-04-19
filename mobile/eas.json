@@ -1,6 +1,7 @@
 {
   "cli": {
-    "version": ">= 14.0.0"
+    "version": ">= 14.0.0",
+    "appVersionSource": "local"
   },
   "build": {
     "development": {
@@ -19,12 +20,16 @@
       },
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://safpro.us/api/v1"
+        "EXPO_PUBLIC_API_URL": "https://safpro.us/api/v1",
+        "NODE_ENV": "production"
       }
     },
     "production": {
       "android": {
         "buildType": "app-bundle"
+      },
+      "env": {
+        "NODE_ENV": "production"
       }
     }
   },
