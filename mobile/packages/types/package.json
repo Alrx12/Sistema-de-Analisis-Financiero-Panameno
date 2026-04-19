@@ -1,0 +1,8 @@
+{
+  "name": "@safpro/types",
+  "version": "1.0.0",
+  "description": "TypeScript types compartidos entre web y mobile",
+  "main": "index.ts",
+  "types": "index.ts",
+  "private": true
+}

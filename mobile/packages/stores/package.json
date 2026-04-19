@@ -1,0 +1,11 @@
+{
+  "name": "@safpro/stores",
+  "version": "1.0.0",
+  "description": "Zustand stores compartidos entre web y mobile",
+  "main": "index.ts",
+  "types": "index.ts",
+  "private": true,
+  "dependencies": {
+    "zustand": "^4.5.0"
+  }
+}
