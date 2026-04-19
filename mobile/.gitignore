@@ -4,3 +4,7 @@
 
 expo-env.d.ts
 # @end expo-cli
+
+# Expo local state (no va al repo)
+.expo/
+node_modules/
