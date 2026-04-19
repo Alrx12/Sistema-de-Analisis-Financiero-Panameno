@@ -42,6 +42,7 @@ jobs:
         working-directory: mobile
         env:
           EXPO_PUBLIC_API_URL: https://safpro.us/api/v1
+          NODE_ENV: production
         run: npx expo prebuild --platform android --no-install
 
       - name: Build debug APK (firmado con debug key)
@@ -49,6 +50,7 @@ jobs:
         env:
           JAVA_OPTS: "-Xmx4g -XX:MaxMetaspaceSize=512m"
           EXPO_PUBLIC_API_URL: https://safpro.us/api/v1
+          NODE_ENV: production
         run: ./gradlew assembleDebug --no-daemon --stacktrace
 
       - name: Upload APK artifact
