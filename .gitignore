@@ -115,8 +115,8 @@ test_write
 sentry.py
 safpro_redesign_preview.html
 node_modules/
-package-lock.json
-package.json
+/package-lock.json
+/package.json
 
 # Herramientas IDE / agentes
 .agent/

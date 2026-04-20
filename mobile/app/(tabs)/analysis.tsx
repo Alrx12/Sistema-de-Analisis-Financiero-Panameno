@@ -1,5 +1,6 @@
 /**
  * AnalysisListScreen — historial de snapshots
+ * Tema: dark navy — idéntico al web
  */
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
@@ -7,6 +8,15 @@ import { useRouter } from "expo-router"
 import { useQuery } from "@tanstack/react-query"
 import { listAnalysis } from "@safpro/api/analysis"
 import type { AnalysisSnapshot } from "@safpro/types"
+
+// ── Design tokens ─────────────────────────────────────────────────────────────
+const BG     = "#070c18"
+const CARD   = "#0d1426"
+const BORDER = "rgba(255,255,255,0.07)"
+const TEXT   = "#f1f5f9"
+const MUTED  = "rgba(255,255,255,0.45)"
+const DIM    = "rgba(255,255,255,0.28)"
+const INDIGO = "#6366f1"
 
 function formatDate(dateStr: string | null) {
   if (!dateStr) return "—"
@@ -21,11 +31,12 @@ function SnapshotCard({ item, onPress }: { item: AnalysisSnapshot; onPress: () =
   const savingsRate = item.total_income > 0
     ? ((item.balance / item.total_income) * 100).toFixed(0)
     : "0"
+  const positive = Number(savingsRate) >= 0
 
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
+    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.75}>
       <View style={styles.cardHeader}>
-        <View>
+        <View style={{ flex: 1 }}>
           <Text style={styles.cardPeriod}>
             {formatDate(item.period_start)} — {formatDate(item.period_end)}
           </Text>
@@ -36,11 +47,9 @@ function SnapshotCard({ item, onPress }: { item: AnalysisSnapshot; onPress: () =
           </Text>
         </View>
         <View style={[styles.savingsBadge, {
-          backgroundColor: Number(savingsRate) >= 0 ? "#dcfce7" : "#fee2e2"
+          backgroundColor: positive ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.12)",
         }]}>
-          <Text style={[styles.savingsText, {
-            color: Number(savingsRate) >= 0 ? "#16a34a" : "#dc2626"
-          }]}>
+          <Text style={[styles.savingsText, { color: positive ? "#22c55e" : "#ef4444" }]}>
             {savingsRate}% ahorro
           </Text>
         </View>
@@ -48,19 +57,19 @@ function SnapshotCard({ item, onPress }: { item: AnalysisSnapshot; onPress: () =
 
       <View style={styles.cardAmounts}>
         <View style={styles.amountItem}>
-          <Text style={styles.amountLabel}>Ingresos</Text>
+          <Text style={styles.amountLabel}>INGRESOS</Text>
           <Text style={[styles.amountValue, { color: "#22c55e" }]}>
             {formatCurrency(item.total_income)}
           </Text>
         </View>
         <View style={styles.amountItem}>
-          <Text style={styles.amountLabel}>Gastos</Text>
+          <Text style={styles.amountLabel}>GASTOS</Text>
           <Text style={[styles.amountValue, { color: "#ef4444" }]}>
             {formatCurrency(item.total_expenses)}
           </Text>
         </View>
         <View style={styles.amountItem}>
-          <Text style={styles.amountLabel}>Txs</Text>
+          <Text style={styles.amountLabel}>TXS</Text>
           <Text style={styles.amountValue}>{item.total_transactions}</Text>
         </View>
       </View>
@@ -76,14 +85,14 @@ export default function AnalysisScreen() {
   })
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={styles.safe} edges={["bottom"]}>
       <View style={styles.header}>
         <Text style={styles.title}>Mis Análisis</Text>
         <Text style={styles.subtitle}>{snapshots?.length ?? 0} períodos analizados</Text>
       </View>
 
       {isLoading ? (
-        <ActivityIndicator color="#e05c19" style={{ marginTop: 40 }} size="large" />
+        <ActivityIndicator color={INDIGO} style={{ marginTop: 60 }} size="large" />
       ) : (
         <FlatList
           data={snapshots ?? []}
@@ -98,6 +107,7 @@ export default function AnalysisScreen() {
             />
           )}
           contentContainerStyle={styles.list}
+          showsVerticalScrollIndicator={false}
           ListEmptyComponent={
             <View style={styles.emptyState}>
               <Text style={styles.emptyEmoji}>📊</Text>
@@ -114,38 +124,42 @@ export default function AnalysisScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#f4f5f7" },
+  safe: { flex: 1, backgroundColor: BG },
+
   header: {
-    backgroundColor: "#1c2b4b",
+    backgroundColor: CARD,
     paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 20,
+    paddingTop: 18,
+    paddingBottom: 22,
+    borderBottomWidth: 1,
+    borderBottomColor: BORDER,
   },
-  title: { color: "#ffffff", fontSize: 22, fontWeight: "700" },
-  subtitle: { color: "#93afd4", fontSize: 13, marginTop: 2 },
+  title:    { color: TEXT,  fontSize: 22, fontWeight: "700" },
+  subtitle: { color: MUTED, fontSize: 13, marginTop: 3 },
+
   list: { padding: 12 },
+
   card: {
-    backgroundColor: "#ffffff",
+    backgroundColor: CARD,
     borderRadius: 12,
     padding: 16,
-    marginBottom: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 2,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: BORDER,
   },
-  cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
-  cardPeriod: { fontWeight: "700", color: "#1c2b4b", fontSize: 15 },
-  cardBank: { color: "#6b7280", fontSize: 12, marginTop: 2 },
-  savingsBadge: { borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
+  cardHeader:  { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
+  cardPeriod:  { fontWeight: "700", color: TEXT,  fontSize: 14 },
+  cardBank:    { color: MUTED, fontSize: 12, marginTop: 2 },
+  savingsBadge:{ borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
   savingsText: { fontSize: 12, fontWeight: "700" },
-  cardAmounts: { flexDirection: "row", marginTop: 14, gap: 16 },
-  amountItem: { flex: 1 },
-  amountLabel: { fontSize: 10, color: "#9ca3af", fontWeight: "600", letterSpacing: 0.5 },
-  amountValue: { fontSize: 16, fontWeight: "700", color: "#1c2b4b", marginTop: 2 },
-  emptyState: { alignItems: "center", padding: 48 },
+
+  cardAmounts: { flexDirection: "row", marginTop: 14, gap: 12 },
+  amountItem:  { flex: 1 },
+  amountLabel: { fontSize: 9, color: DIM as string, fontWeight: "700", letterSpacing: 0.8 },
+  amountValue: { fontSize: 15, fontWeight: "700", color: TEXT, marginTop: 3 },
+
+  emptyState: { alignItems: "center", padding: 56 },
   emptyEmoji: { fontSize: 48, marginBottom: 16 },
-  emptyTitle: { fontSize: 18, fontWeight: "700", color: "#1c2b4b", marginBottom: 8 },
-  emptyText: { color: "#6b7280", textAlign: "center", lineHeight: 22 },
+  emptyTitle: { fontSize: 18, fontWeight: "700", color: TEXT,  marginBottom: 8 },
+  emptyText:  { color: MUTED, textAlign: "center", lineHeight: 22 },
 })

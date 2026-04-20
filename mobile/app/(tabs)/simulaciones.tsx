@@ -270,9 +270,9 @@ export default function SimulacionesScreen() {
 // ── Estilos ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#f4f5f7" },
+  safe: { flex: 1, backgroundColor: "#070c18" },
   header: {
-    backgroundColor: "#1c2b4b",
+    backgroundColor: "#0d1426",
     paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 20,
@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
   subtitle: { color: "#93afd4", fontSize: 13, marginTop: 2 },
   tabBar: {
     flexDirection: "row",
-    backgroundColor: "#ffffff",
+    backgroundColor: "#0d1426",
     borderBottomWidth: 1,
     borderBottomColor: "#e5e7eb",
   },
@@ -293,7 +293,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "transparent",
   },
   tabBtnActive: { borderBottomColor: "#e05c19" },
-  tabBtnText:       { fontSize: 13, color: "#6b7280", fontWeight: "600" },
+  tabBtnText:       { fontSize: 13, color: "rgba(255,255,255,0.45)", fontWeight: "600" },
   tabBtnTextActive: { color: "#e05c19" },
   tabContent: { padding: 16, paddingBottom: 40 },
   infoCard: {
@@ -310,23 +310,23 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#374151",
+    color: "#f1f5f9",
     marginBottom: 8,
   },
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#ffffff",
+    backgroundColor: "#0d1426",
     borderRadius: 10,
     borderWidth: 1,
     borderColor: "#e5e7eb",
     paddingHorizontal: 14,
     height: 48,
   },
-  inputPrefix: { fontSize: 18, color: "#374151", marginRight: 4 },
-  input: { flex: 1, fontSize: 18, color: "#1c2b4b", fontWeight: "600" },
+  inputPrefix: { fontSize: 18, color: "#f1f5f9", marginRight: 4 },
+  input: { flex: 1, fontSize: 18, color: "#f1f5f9", fontWeight: "600" },
   resultCard: {
-    backgroundColor: "#ffffff",
+    backgroundColor: "#0d1426",
     borderRadius: 12,
     padding: 20,
     borderLeftWidth: 4,
@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     gap: 8,
   },
-  resultLabel: { fontSize: 13, color: "#6b7280", fontWeight: "600" },
+  resultLabel: { fontSize: 13, color: "rgba(255,255,255,0.45)", fontWeight: "600" },
   resultDays:  { fontSize: 40, fontWeight: "800" },
   statusBadge: { borderRadius: 20, paddingHorizontal: 12, paddingVertical: 4 },
   statusBadgeText: { fontSize: 13, fontWeight: "700" },
@@ -356,32 +356,32 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 16,
   },
-  barLabel: { fontSize: 11, color: "#9ca3af" },
+  barLabel: { fontSize: 11, color: "rgba(255,255,255,0.28)" },
   breakdownRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: "#f3f4f6",
+    borderBottomColor: "rgba(255,255,255,0.07)",
   },
-  breakdownLabel: { color: "#6b7280", fontSize: 14 },
-  breakdownValue: { color: "#1c2b4b", fontWeight: "700", fontSize: 14 },
+  breakdownLabel: { color: "rgba(255,255,255,0.45)", fontSize: 14 },
+  breakdownValue: { color: "#f1f5f9", fontWeight: "700", fontSize: 14 },
   disclaimer: {
     backgroundColor: "#f9fafb",
     borderRadius: 10,
     padding: 12,
     marginTop: 8,
   },
-  disclaimerText: { color: "#9ca3af", fontSize: 12, lineHeight: 18, textAlign: "center" },
+  disclaimerText: { color: "rgba(255,255,255,0.28)", fontSize: 12, lineHeight: 18, textAlign: "center" },
   // Escenarios
   scenarioHint: {
-    color: "#6b7280",
+    color: "rgba(255,255,255,0.45)",
     fontSize: 13,
     marginBottom: 16,
     lineHeight: 18,
   },
   catCard: {
-    backgroundColor: "#ffffff",
+    backgroundColor: "#0d1426",
     borderRadius: 12,
     padding: 14,
     marginBottom: 10,
@@ -396,8 +396,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 10,
   },
-  catName:    { fontSize: 14, fontWeight: "700", color: "#1c2b4b", textTransform: "capitalize" },
-  catMonthly: { fontSize: 13, color: "#6b7280" },
+  catName:    { fontSize: 14, fontWeight: "700", color: "#f1f5f9", textTransform: "capitalize" },
+  catMonthly: { fontSize: 13, color: "rgba(255,255,255,0.45)" },
   stepsRow:   { flexDirection: "row", gap: 6, flexWrap: "wrap" },
   stepBtn: {
     paddingHorizontal: 10,
@@ -408,7 +408,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#f9fafb",
   },
   stepBtnActive: { borderColor: "#e05c19", backgroundColor: "#fef3ec" },
-  stepBtnText:       { fontSize: 12, color: "#6b7280", fontWeight: "600" },
+  stepBtnText:       { fontSize: 12, color: "rgba(255,255,255,0.45)", fontWeight: "600" },
   stepBtnTextActive: { color: "#e05c19" },
   catSaving: {
     fontSize: 12,
@@ -417,7 +417,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   totalCard: {
-    backgroundColor: "#1c2b4b",
+    backgroundColor: "#0d1426",
     borderRadius: 12,
     padding: 20,
     marginTop: 8,
@@ -429,6 +429,6 @@ const styles = StyleSheet.create({
   totalAnual:  { color: "#93afd4", fontSize: 13, marginTop: 4 },
   // Empty state
   emptyState: { flex: 1, alignItems: "center", justifyContent: "center", padding: 40 },
-  emptyTitle: { fontSize: 18, fontWeight: "700", color: "#1c2b4b", marginTop: 16, marginBottom: 8 },
-  emptyText:  { color: "#6b7280", textAlign: "center", lineHeight: 22 },
+  emptyTitle: { fontSize: 18, fontWeight: "700", color: "#f1f5f9", marginTop: 16, marginBottom: 8 },
+  emptyText:  { color: "rgba(255,255,255,0.45)", textAlign: "center", lineHeight: 22 },
 })

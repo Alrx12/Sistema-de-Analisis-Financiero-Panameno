@@ -126,9 +126,9 @@ export default function AyudaScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#f4f5f7" },
+  safe: { flex: 1, backgroundColor: "#070c18" },
   header: {
-    backgroundColor: "#1c2b4b",
+    backgroundColor: "#0d1426",
     paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 20,
@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
   subtitle: { color: "#93afd4", fontSize: 13, marginTop: 2 },
   content:  { padding: 16, paddingBottom: 40 },
   contactBanner: {
-    backgroundColor: "#ffffff",
+    backgroundColor: "#0d1426",
     borderRadius: 12,
     padding: 16,
     flexDirection: "row",
@@ -150,10 +150,10 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  contactTitle: { fontSize: 14, fontWeight: "700", color: "#1c2b4b" },
+  contactTitle: { fontSize: 14, fontWeight: "700", color: "#f1f5f9" },
   contactSub:   { fontSize: 13, color: "#e05c19", marginTop: 2 },
   faqList: {
-    backgroundColor: "#ffffff",
+    backgroundColor: "#0d1426",
     borderRadius: 12,
     marginBottom: 16,
     shadowColor: "#000",
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
   faqItem: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#f3f4f6",
+    borderBottomColor: "rgba(255,255,255,0.07)",
   },
   faqHeader: {
     flexDirection: "row",
@@ -177,18 +177,18 @@ const styles = StyleSheet.create({
   faqQ: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#1c2b4b",
+    color: "#f1f5f9",
     flex: 1,
     lineHeight: 20,
   },
   faqA: {
     fontSize: 13,
-    color: "#6b7280",
+    color: "rgba(255,255,255,0.45)",
     lineHeight: 20,
     marginTop: 10,
   },
   section: {
-    backgroundColor: "#ffffff",
+    backgroundColor: "#0d1426",
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -198,9 +198,9 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  sectionTitle: { fontWeight: "700", color: "#1c2b4b", marginBottom: 12, fontSize: 15 },
+  sectionTitle: { fontWeight: "700", color: "#f1f5f9", marginBottom: 12, fontSize: 15 },
   bankRow:  { flexDirection: "row", alignItems: "center", paddingVertical: 6 },
   bankDot:  { width: 10, height: 10, borderRadius: 5, marginRight: 10 },
-  bankName: { color: "#374151", fontSize: 14 },
-  footer:   { color: "#9ca3af", textAlign: "center", fontSize: 12 },
+  bankName: { color: "#f1f5f9", fontSize: 14 },
+  footer:   { color: "rgba(255,255,255,0.28)", textAlign: "center", fontSize: 12 },
 })
