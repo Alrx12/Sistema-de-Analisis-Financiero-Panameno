@@ -5,7 +5,7 @@
  * badge Pro, usuario y logout.
  */
 import {
-  Animated, Dimensions, StyleSheet, Text,
+  Animated, Dimensions, StyleSheet, Text, Linking,
   TouchableOpacity, TouchableWithoutFeedback, View,
 } from "react-native"
 import { Slot, usePathname, useRouter } from "expo-router"
@@ -189,13 +189,17 @@ function Sidebar({
 
         {/* Plan badge */}
         {isPro && (
-          <View style={styles.planBadge}>
+          <TouchableOpacity
+            style={styles.planBadge}
+            onPress={() => { onClose(); Linking.openURL("https://safpro.us/upgrade") }}
+            activeOpacity={0.8}
+          >
             <Ionicons name="star" size={14} color="#fbbf24" />
             <View>
               <Text style={styles.planBadgeTitle}>Plan Pro activo</Text>
               <Text style={styles.planBadgeSub}>Gestionar suscripción →</Text>
             </View>
-          </View>
+          </TouchableOpacity>
         )}
         {isFF && (
           <View style={[styles.planBadge, { borderColor: "rgba(139,92,246,0.25)" }]}>
@@ -207,13 +211,17 @@ function Sidebar({
           </View>
         )}
         {plan === "free" && (
-          <View style={[styles.planBadge, { borderColor: "rgba(224,92,25,0.3)", backgroundColor: "rgba(224,92,25,0.08)" }]}>
+          <TouchableOpacity
+            style={[styles.planBadge, { borderColor: "rgba(224,92,25,0.3)", backgroundColor: "rgba(224,92,25,0.08)" }]}
+            onPress={() => { onClose(); Linking.openURL("https://safpro.us/upgrade") }}
+            activeOpacity={0.8}
+          >
             <Ionicons name="flash" size={14} color="#f97316" />
             <View>
               <Text style={[styles.planBadgeTitle, { color: "#fb923c" }]}>Actualiza a Pro</Text>
-              <Text style={styles.planBadgeSub}>Desde $3.75/mes — sin límites</Text>
+              <Text style={styles.planBadgeSub}>Desde $5/mes — sin límites</Text>
             </View>
-          </View>
+          </TouchableOpacity>
         )}
 
         {/* User + logout */}
