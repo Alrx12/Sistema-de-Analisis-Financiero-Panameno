@@ -88,7 +88,7 @@ log "Prerequisites OK"
 # ── Listar backups disponibles ────────────────────────────────────────────────
 section "Backups disponibles en R2"
 
-AVAILABLE_BACKUPS=$(rclone lsf "${R2_REMOTE}:${R2_BUCKET}/${R2_DB_PREFIX}" 2>/dev/null | grep "\.sql\.gz$" | sort -r)
+AVAILABLE_BACKUPS=$(rclone lsf "${R2_REMOTE}:${R2_BUCKET}/${R2_DB_PREFIX}" 2>/dev/null | grep "\.dump$" | sort -r)
 
 if [[ -z "$AVAILABLE_BACKUPS" ]]; then
     echo "ERROR: No se encontraron backups en ${R2_REMOTE}:${R2_BUCKET}/${R2_DB_PREFIX}"
@@ -111,8 +111,8 @@ fi
 
 # ── Seleccionar backup a restaurar ────────────────────────────────────────────
 if [[ -n "$TARGET_DATE" ]]; then
-    # Los archivos tienen formato db_YYYY-MM-DD_HH-MM-SS.sql.gz — buscar por fecha
-    BACKUP_FILE=$(echo "$AVAILABLE_BACKUPS" | grep "^db_${TARGET_DATE}" | head -1)
+    # Los archivos tienen formato safpro_db_YYYY-MM-DD.dump — buscar por fecha
+    BACKUP_FILE=$(echo "$AVAILABLE_BACKUPS" | grep "safpro_db_${TARGET_DATE}" | head -1)
     if [[ -z "$BACKUP_FILE" ]]; then
         echo "ERROR: No existe backup para la fecha $TARGET_DATE"
         echo "  Backups disponibles:"
@@ -168,22 +168,26 @@ pass "DB de prueba '$TEST_DB' creada"
 section "Restaurando backup"
 
 START_RESTORE=$(date +%s)
-log "Restaurando con gunzip | psql..."
+log "Restaurando con pg_restore (formato custom -Fc)..."
 
 RESTORE_LOG="$TEMP_BACKUP_DIR/restore_stderr.log"
 
-if ! gunzip -c "$LOCAL_FILE" | psql \
+# El backup fue creado con pg_dump -Fc → se restaura con pg_restore (no gunzip|psql)
+if ! pg_restore \
         -h "$DB_HOST" \
         -p "$DB_PORT" \
         -U "$DB_USER" \
         -d "$TEST_DB" \
         --no-password \
-        -v ON_ERROR_STOP=0 \
+        --no-owner \
+        --no-privileges \
+        -v \
+        "$LOCAL_FILE" \
         > /dev/null 2>"$RESTORE_LOG"; then
-    RESTORE_ERRORS=$(grep -c "^psql:.*ERROR:" "$RESTORE_LOG" 2>/dev/null || echo 0)
+    RESTORE_ERRORS=$(grep -c "^pg_restore:.*error:" "$RESTORE_LOG" 2>/dev/null || echo 0)
     if [[ "$RESTORE_ERRORS" -gt 0 ]]; then
         fail "Restauración terminó con $RESTORE_ERRORS errores"
-        grep "^psql:.*ERROR:" "$RESTORE_LOG" | head -5 | sed 's/^/    /'
+        grep "^pg_restore:.*error:" "$RESTORE_LOG" | head -5 | sed 's/^/    /'
     else
         pass "Restauración completada (warnings no fatales ignorados)"
     fi

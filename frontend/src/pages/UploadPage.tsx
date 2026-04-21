@@ -82,8 +82,20 @@ export default function UploadPage() {
   }, [state, navigate])
 
   function handleFile(f: File) {
+    // Rechazar explícitamente imágenes, PDFs y documentos Word aunque tengan extensión renombrada
+    const blockedMimeTypes = [
+      "image/", "application/pdf",
+      "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml",
+      "video/", "audio/", "text/plain", "text/html",
+    ]
+    const mimeIsBlocked = blockedMimeTypes.some((t) => f.type.startsWith(t))
+    if (mimeIsBlocked) {
+      setState({ phase: "error", message: "Formato no válido. Solo se aceptan archivos .xlsx o .xls (Excel). No se aceptan imágenes, PDFs ni otros formatos." })
+      return
+    }
+    // Verificar extensión
     if (!f.name.match(/\.(xlsx|xls)$/i)) {
-      setState({ phase: "error", message: "Solo se aceptan archivos .xlsx o .xls" })
+      setState({ phase: "error", message: "Solo se aceptan archivos .xlsx o .xls (Excel). No se aceptan imágenes ni otros formatos." })
       return
     }
     setFile(f)
@@ -265,6 +277,7 @@ export default function UploadPage() {
               <div className="text-center">
                 <p className="text-sm font-medium">Arrastra tu archivo aquí</p>
                 <p className="text-xs text-muted-foreground">o haz clic para buscar</p>
+                <p className="text-xs text-muted-foreground mt-1 font-medium">Solo .xlsx o .xls — no se aceptan imágenes ni otros formatos</p>
               </div>
             )}
           </div>
