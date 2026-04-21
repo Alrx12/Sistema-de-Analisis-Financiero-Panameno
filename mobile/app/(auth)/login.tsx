@@ -11,7 +11,6 @@ import { useRouter } from "expo-router"
 import * as SecureStore from "expo-secure-store"
 import { login } from "@safpro/api/auth"
 import { getAuthStore } from "@safpro/stores"
-import { getMe } from "@safpro/api/users"
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "https://safpro.us/api/v1"
 const TOKEN_KEY = "safpro_access_token"
@@ -42,10 +41,7 @@ export default function LoginScreen() {
       await SecureStore.setItemAsync(TOKEN_KEY, res.access_token)
       getAuthStore().getState().setToken(res.access_token)
 
-      // Cargar datos del usuario
-      const user = await getMe()
-      getAuthStore().getState().setUser(user)
-
+      // Navegar — el dashboard carga el usuario via TanStack Query
       router.replace("/(tabs)/dashboard")
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Credenciales incorrectas"

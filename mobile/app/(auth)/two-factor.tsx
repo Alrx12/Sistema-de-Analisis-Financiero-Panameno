@@ -11,7 +11,6 @@ import {
 import { useRouter, useLocalSearchParams } from "expo-router"
 import * as SecureStore from "expo-secure-store"
 import { verify2FA } from "@safpro/api/auth"
-import { getMe } from "@safpro/api/users"
 import { getAuthStore } from "@safpro/stores"
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "https://safpro.us/api/v1"
@@ -42,9 +41,6 @@ export default function TwoFactorScreen() {
 
       await SecureStore.setItemAsync(TOKEN_KEY, res.access_token)
       getAuthStore().getState().setToken(res.access_token)
-
-      const user = await getMe()
-      getAuthStore().getState().setUser(user)
 
       router.replace("/(tabs)/dashboard")
     } catch (err: unknown) {
