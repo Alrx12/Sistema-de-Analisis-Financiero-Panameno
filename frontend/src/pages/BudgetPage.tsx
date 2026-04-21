@@ -422,6 +422,10 @@ export default function BudgetPage() {
   // Base para calcular porcentajes: usamos ingreso esperado si está disponible, si no el real
   const incomeBase = expectedIncome ?? totalIncome
 
+  // Balance real del mes y flag para lógica de "margen"
+  const balance           = totalIncome - totalExpenses
+  const isNegativeBalance = balance < 0
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64 text-muted-foreground text-sm">
@@ -794,12 +798,55 @@ export default function BudgetPage() {
         )}
       </div>
 
+      {/* ── Banner balance negativo ── */}
+      {isNegativeBalance && (
+        <div className="rounded-xl border border-red-300 bg-red-50 px-5 py-4 space-y-3">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-bold text-red-800">
+                ⚠️ Balance actual negativo: {formatCurrency(balance)}
+              </p>
+              <p className="text-xs text-red-700 mt-1 leading-relaxed">
+                Gastaste {formatCurrency(Math.abs(balance))} más de lo que ingresaste este mes.
+                El análisis 50/30/20 de abajo está proyectado sobre tu ingreso esperado
+                de {formatCurrency(incomeBase)}, no tu ingreso real actual.
+                El "margen disponible" que puedas ver en alguna categoría es <strong>teórico</strong> —
+                primero hay que llevar el balance a cero.
+              </p>
+            </div>
+          </div>
+          <div className="pl-8 space-y-1.5">
+            <p className="text-xs font-semibold text-red-800">Para recuperarte este mes:</p>
+            <ul className="space-y-1.5">
+              {[
+                expectedIncome && totalIncome < expectedIncome
+                  ? `Tienes ${formatCurrency(expectedIncome - totalIncome)} de ingreso esperado por llegar — cuando llegue, destina primero ${formatCurrency(Math.abs(balance))} a cubrir el déficit antes de cualquier gasto discrecional.`
+                  : `Revisa si hay ingresos pendientes por cobrar o registrar — un ingreso adicional puede revertir el balance.`,
+                needsBucket.categories[0]
+                  ? `Tu categoría más alta es "${capitalize(needsBucket.categories[0].name)}" (${formatCurrency(needsBucket.categories[0].amount)}) — revisa si hay restaurantes o compras clasificados ahí que podrían moverse a Deseos y darte más claridad.`
+                  : `Revisa si algún gasto de Necesidades tiene categoría incorrecta — reclasificarlo da más visibilidad.`,
+                `Pausa cualquier gasto en Deseos hasta que el balance vuelva a ser positivo.`,
+                `Meta inmediata: cerrar el mes en $0 o mejor. Una vez en positivo, el margen que ves en las categorías sí será real.`,
+              ].map((rec, i) => (
+                <li key={i} className="flex items-start gap-2 text-xs text-red-700">
+                  <span className="font-bold shrink-0 mt-0.5">{i + 1}.</span>
+                  <span>{rec}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
+
       {/* Distribución 50/30/20 */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Distribución de gastos — Regla 50/30/20</CardTitle>
           <p className="text-xs text-muted-foreground">
-            {incomeBase > 0
+            {isNegativeBalance
+              ? `Proyección sobre ingreso esperado de ${formatCurrency(incomeBase)} — balance real: ${formatCurrency(balance)}`
+              : incomeBase > 0
               ? `Basado en ${expectedIncome ? "tu ingreso esperado" : "tus ingresos detectados"} de ${formatCurrency(incomeBase)}`
               : "Basado en tus gastos totales"}
           </p>
@@ -1024,15 +1071,21 @@ export default function BudgetPage() {
                 : undefined
               const hasFinDobleConteo = !!(finCat && finCat.amount > bucket.actual * 0.25)
 
+              // Cuando el balance es negativo, "under" no es motivo de celebración
+              const underWithNegBalance = under && isNegativeBalance
+
               let icon     = "🟡"
               let colorCls = "border-amber-200 bg-amber-50/60"
               let textCls  = "text-amber-800"
-              if (over)        { icon = "🔴"; colorCls = "border-red-200 bg-red-50/60";       textCls = "text-red-800" }
-              else if (under)  { icon = "✅"; colorCls = "border-emerald-200 bg-emerald-50/60"; textCls = "text-emerald-800" }
+              if (over)                   { icon = "🔴"; colorCls = "border-red-200 bg-red-50/60";         textCls = "text-red-800" }
+              else if (underWithNegBalance){ icon = "⚠️"; colorCls = "border-orange-200 bg-orange-50/60";  textCls = "text-orange-800" }
+              else if (under)             { icon = "✅"; colorCls = "border-emerald-200 bg-emerald-50/60"; textCls = "text-emerald-800" }
 
               // Titular
               let headline = ""
-              if (under) {
+              if (underWithNegBalance) {
+                headline = `${bucket.emoji} ${bucket.label} — ${actualPct.toFixed(1)}% de meta ${bucket.target_pct}% ⚠️ Balance negativo activo`
+              } else if (under) {
                 headline = `${bucket.emoji} ${bucket.label} — ${actualPct.toFixed(1)}% de meta ${bucket.target_pct}% ✅ Tienes margen`
               } else if (over) {
                 headline = `${bucket.emoji} ${bucket.label} — ${actualPct.toFixed(1)}% vs meta ${bucket.target_pct}% (+${diffPts.toFixed(1)} pts, ${formatCurrency(overAmount)} de más)${hasFinDobleConteo ? " ⚠️ posible doble conteo" : ""}`
@@ -1045,7 +1098,9 @@ export default function BudgetPage() {
               let ctaText = ""
               let ctaHref = ""
 
-              if (under) {
+              if (underWithNegBalance) {
+                body = `Aunque no has gastado en ${bucket.label.toLowerCase()} (${actualPct.toFixed(1)}%), tu balance actual es ${formatCurrency(balance)}. El margen proyectado de ${formatCurrency(margin)} es teórico — en la práctica, ese dinero aún no existe porque los gastos superan lo ingresado. Espera a que el balance sea positivo antes de contar con ese margen.`
+              } else if (under) {
                 body = `Estás por debajo de tu meta. Tienes ${formatCurrency(margin)} disponibles antes de llegar al límite. Si aparece un gasto inesperado en ${bucket.label.toLowerCase()}, tienes cobertura. No necesitas cambiar nada aquí.`
               } else if (!over) {
                 body = `Estás dentro de tu meta del ${bucket.target_pct}%. Buen control — sigue así.`
