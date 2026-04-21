@@ -9,7 +9,8 @@ import {
   RefreshCw, Gamepad2, Shirt, Laptop, Dumbbell, Play, Coffee,
   Beer, Cat, CreditCard, AlertCircle, PiggyBank, TrendingUp,
   ArrowLeftRight, MoreHorizontal, Trash2, Loader2, ChevronLeft,
-  CheckCircle2,
+  CheckCircle2, Briefcase, FileText, Percent, Gift, Store, Tag,
+  BarChart2, RotateCcw, CalendarDays,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import {
@@ -28,48 +29,68 @@ interface CategoryConfig {
   color: string      // hex del ícono y borde activo
   bg: string         // bg claro para el círculo
   section: string
+  type: "gasto" | "ingreso" | "ambos"
 }
 
 const CATEGORIES: Record<string, CategoryConfig> = {
-  // Necesidades
-  supermercado:   { label: "Supermercado",   icon: ShoppingCart,    color: "#6366F1", bg: "#EEF2FF", section: "Necesidades" },
-  alimentacion:   { label: "Alimentación",   icon: ShoppingBag,     color: "#8B5CF6", bg: "#F3F0FF", section: "Necesidades" },
-  alquiler:       { label: "Alquiler",       icon: Home,            color: "#3B82F6", bg: "#EFF6FF", section: "Necesidades" },
-  hipoteca:       { label: "Hipoteca",       icon: Home,            color: "#2563EB", bg: "#DBEAFE", section: "Necesidades" },
-  servicios:      { label: "Servicios",      icon: Zap,             color: "#F59E0B", bg: "#FFFBEB", section: "Necesidades" },
-  agua:           { label: "Agua",           icon: Droplets,        color: "#0EA5E9", bg: "#F0F9FF", section: "Necesidades" },
-  luz:            { label: "Luz",            icon: Zap,             color: "#EAB308", bg: "#FEFCE8", section: "Necesidades" },
-  internet:       { label: "Internet",       icon: Wifi,            color: "#6366F1", bg: "#EEF2FF", section: "Necesidades" },
-  telefono:       { label: "Teléfono",       icon: Phone,           color: "#8B5CF6", bg: "#F3F0FF", section: "Necesidades" },
-  transporte:     { label: "Transporte",     icon: Bus,             color: "#0D9488", bg: "#F0FDFA", section: "Necesidades" },
-  gasolina:       { label: "Gasolina",       icon: Flame,           color: "#F97316", bg: "#FFF7ED", section: "Necesidades" },
-  salud:          { label: "Salud",          icon: Heart,           color: "#10B981", bg: "#ECFDF5", section: "Necesidades" },
-  educacion:      { label: "Educación",      icon: BookOpen,        color: "#6366F1", bg: "#EEF2FF", section: "Necesidades" },
-  hogar:          { label: "Hogar",          icon: Home,            color: "#7C3AED", bg: "#EDE9FE", section: "Necesidades" },
-  seguro:         { label: "Seguro",         icon: Shield,          color: "#3B82F6", bg: "#EFF6FF", section: "Necesidades" },
-  // Deseos
-  restaurantes:   { label: "Restaurantes",   icon: UtensilsCrossed, color: "#EC4899", bg: "#FDF2F8", section: "Deseos" },
-  entretenimiento:{ label: "Entretenim.",    icon: Film,            color: "#1D4ED8", bg: "#DBEAFE", section: "Deseos" },
-  compras:        { label: "Compras",        icon: ShoppingBag,     color: "#F97316", bg: "#FFF7ED", section: "Deseos" },
-  suscripciones:  { label: "Suscripciones",  icon: RefreshCw,       color: "#8B5CF6", bg: "#F3F0FF", section: "Deseos" },
-  ocio:           { label: "Ocio",           icon: Gamepad2,        color: "#EC4899", bg: "#FDF2F8", section: "Deseos" },
-  ropa:           { label: "Ropa",           icon: Shirt,           color: "#CA8A04", bg: "#FEF9C3", section: "Deseos" },
-  tecnologia:     { label: "Tecnología",     icon: Laptop,          color: "#1D4ED8", bg: "#DBEAFE", section: "Deseos" },
-  deporte:        { label: "Deporte",        icon: Dumbbell,        color: "#10B981", bg: "#ECFDF5", section: "Deseos" },
-  streaming:      { label: "Streaming",      icon: Play,            color: "#DC2626", bg: "#FEF2F2", section: "Deseos" },
-  cafe:           { label: "Café",           icon: Coffee,          color: "#92400E", bg: "#FEF3C7", section: "Deseos" },
-  bares:          { label: "Bares",          icon: Beer,            color: "#F59E0B", bg: "#FFFBEB", section: "Deseos" },
-  mascotas:       { label: "Mascotas",       icon: Cat,             color: "#065F46", bg: "#D1FAE5", section: "Deseos" },
-  // Financiero
-  cargo_financiero:{ label: "Cargo banco",   icon: CreditCard,      color: "#6B7280", bg: "#F9FAFB", section: "Financiero" },
-  deuda:          { label: "Deuda",          icon: AlertCircle,     color: "#DC2626", bg: "#FEF2F2", section: "Financiero" },
-  ahorro:         { label: "Ahorro",         icon: PiggyBank,       color: "#10B981", bg: "#ECFDF5", section: "Financiero" },
-  inversion:      { label: "Inversión",      icon: TrendingUp,      color: "#3B82F6", bg: "#EFF6FF", section: "Financiero" },
-  transferencias: { label: "Transferencias", icon: ArrowLeftRight,  color: "#8B5CF6", bg: "#F3F0FF", section: "Financiero" },
-  otros:          { label: "Otros",          icon: MoreHorizontal,  color: "#6B7280", bg: "#F9FAFB", section: "Otros" },
+  // ── Gastos: Necesidades ───────────────────────────────────────────────────
+  supermercado:    { label: "Supermercado",    icon: ShoppingCart,    color: "#6366F1", bg: "#EEF2FF", section: "Necesidades",      type: "gasto" },
+  alimentacion:    { label: "Alimentación",    icon: ShoppingBag,     color: "#8B5CF6", bg: "#F3F0FF", section: "Necesidades",      type: "gasto" },
+  alquiler:        { label: "Alquiler",        icon: Home,            color: "#3B82F6", bg: "#EFF6FF", section: "Necesidades",      type: "gasto" },
+  hipoteca:        { label: "Hipoteca",        icon: Home,            color: "#2563EB", bg: "#DBEAFE", section: "Necesidades",      type: "gasto" },
+  servicios:       { label: "Servicios",       icon: Zap,             color: "#F59E0B", bg: "#FFFBEB", section: "Necesidades",      type: "gasto" },
+  agua:            { label: "Agua",            icon: Droplets,        color: "#0EA5E9", bg: "#F0F9FF", section: "Necesidades",      type: "gasto" },
+  luz:             { label: "Luz",             icon: Zap,             color: "#EAB308", bg: "#FEFCE8", section: "Necesidades",      type: "gasto" },
+  internet:        { label: "Internet",        icon: Wifi,            color: "#6366F1", bg: "#EEF2FF", section: "Necesidades",      type: "gasto" },
+  telefono:        { label: "Teléfono",        icon: Phone,           color: "#8B5CF6", bg: "#F3F0FF", section: "Necesidades",      type: "gasto" },
+  transporte:      { label: "Transporte",      icon: Bus,             color: "#0D9488", bg: "#F0FDFA", section: "Necesidades",      type: "gasto" },
+  gasolina:        { label: "Gasolina",        icon: Flame,           color: "#F97316", bg: "#FFF7ED", section: "Necesidades",      type: "gasto" },
+  salud:           { label: "Salud",           icon: Heart,           color: "#10B981", bg: "#ECFDF5", section: "Necesidades",      type: "gasto" },
+  educacion:       { label: "Educación",       icon: BookOpen,        color: "#6366F1", bg: "#EEF2FF", section: "Necesidades",      type: "gasto" },
+  hogar:           { label: "Hogar",           icon: Home,            color: "#7C3AED", bg: "#EDE9FE", section: "Necesidades",      type: "gasto" },
+  seguro:          { label: "Seguro",          icon: Shield,          color: "#3B82F6", bg: "#EFF6FF", section: "Necesidades",      type: "gasto" },
+  // ── Gastos: Deseos ────────────────────────────────────────────────────────
+  restaurantes:    { label: "Restaurantes",    icon: UtensilsCrossed, color: "#EC4899", bg: "#FDF2F8", section: "Deseos",           type: "gasto" },
+  entretenimiento: { label: "Entretenim.",     icon: Film,            color: "#1D4ED8", bg: "#DBEAFE", section: "Deseos",           type: "gasto" },
+  compras:         { label: "Compras",         icon: ShoppingBag,     color: "#F97316", bg: "#FFF7ED", section: "Deseos",           type: "gasto" },
+  suscripciones:   { label: "Suscripciones",   icon: RefreshCw,       color: "#8B5CF6", bg: "#F3F0FF", section: "Deseos",           type: "gasto" },
+  ocio:            { label: "Ocio",            icon: Gamepad2,        color: "#EC4899", bg: "#FDF2F8", section: "Deseos",           type: "gasto" },
+  ropa:            { label: "Ropa",            icon: Shirt,           color: "#CA8A04", bg: "#FEF9C3", section: "Deseos",           type: "gasto" },
+  tecnologia:      { label: "Tecnología",      icon: Laptop,          color: "#1D4ED8", bg: "#DBEAFE", section: "Deseos",           type: "gasto" },
+  deporte:         { label: "Deporte",         icon: Dumbbell,        color: "#10B981", bg: "#ECFDF5", section: "Deseos",           type: "gasto" },
+  streaming:       { label: "Streaming",       icon: Play,            color: "#DC2626", bg: "#FEF2F2", section: "Deseos",           type: "gasto" },
+  cafe:            { label: "Café",            icon: Coffee,          color: "#92400E", bg: "#FEF3C7", section: "Deseos",           type: "gasto" },
+  bares:           { label: "Bares",           icon: Beer,            color: "#F59E0B", bg: "#FFFBEB", section: "Deseos",           type: "gasto" },
+  mascotas:        { label: "Mascotas",        icon: Cat,             color: "#065F46", bg: "#D1FAE5", section: "Deseos",           type: "gasto" },
+  // ── Gastos: Financiero ────────────────────────────────────────────────────
+  cargo_financiero:{ label: "Cargo banco",     icon: CreditCard,      color: "#6B7280", bg: "#F9FAFB", section: "Financiero",       type: "gasto" },
+  deuda:           { label: "Deuda",           icon: AlertCircle,     color: "#DC2626", bg: "#FEF2F2", section: "Financiero",       type: "gasto" },
+  // ── Ingresos: Trabajo ─────────────────────────────────────────────────────
+  salario:         { label: "Salario",         icon: Briefcase,       color: "#16A34A", bg: "#F0FDF4", section: "Trabajo",          type: "ingreso" },
+  honorarios:      { label: "Honorarios",      icon: FileText,        color: "#0D9488", bg: "#F0FDFA", section: "Trabajo",          type: "ingreso" },
+  comision:        { label: "Comisión",        icon: Percent,         color: "#F59E0B", bg: "#FFFBEB", section: "Trabajo",          type: "ingreso" },
+  bono:            { label: "Bono",            icon: Gift,            color: "#EC4899", bg: "#FDF2F8", section: "Trabajo",          type: "ingreso" },
+  // ── Ingresos: Negocio ─────────────────────────────────────────────────────
+  negocio:         { label: "Negocio",         icon: Store,           color: "#7C3AED", bg: "#EDE9FE", section: "Negocio",          type: "ingreso" },
+  venta:           { label: "Venta",           icon: Tag,             color: "#F97316", bg: "#FFF7ED", section: "Negocio",          type: "ingreso" },
+  // ── Ingresos: Pasivos ─────────────────────────────────────────────────────
+  alquiler_cobrado:{ label: "Alquiler cobrado",icon: Home,            color: "#3B82F6", bg: "#EFF6FF", section: "Ingresos pasivos", type: "ingreso" },
+  dividendos:      { label: "Dividendos",      icon: BarChart2,       color: "#6366F1", bg: "#EEF2FF", section: "Ingresos pasivos", type: "ingreso" },
+  rendimiento:     { label: "Rendimiento",     icon: TrendingUp,      color: "#10B981", bg: "#ECFDF5", section: "Ingresos pasivos", type: "ingreso" },
+  // ── Ingresos: Varios ──────────────────────────────────────────────────────
+  reembolso:       { label: "Reembolso",       icon: RotateCcw,       color: "#0EA5E9", bg: "#F0F9FF", section: "Ingresos varios",  type: "ingreso" },
+  regalo:          { label: "Regalo",          icon: Gift,            color: "#EC4899", bg: "#FDF2F8", section: "Ingresos varios",  type: "ingreso" },
+  pension:         { label: "Pensión",         icon: CalendarDays,    color: "#6B7280", bg: "#F9FAFB", section: "Ingresos varios",  type: "ingreso" },
+  otros_ingresos:  { label: "Otros ingresos",  icon: MoreHorizontal,  color: "#16A34A", bg: "#F0FDF4", section: "Ingresos varios",  type: "ingreso" },
+  // ── Ambos tipos ───────────────────────────────────────────────────────────
+  ahorro:          { label: "Ahorro",          icon: PiggyBank,       color: "#10B981", bg: "#ECFDF5", section: "Financiero",       type: "ambos" },
+  inversion:       { label: "Inversión",       icon: TrendingUp,      color: "#3B82F6", bg: "#EFF6FF", section: "Financiero",       type: "ambos" },
+  transferencias:  { label: "Transferencias",  icon: ArrowLeftRight,  color: "#8B5CF6", bg: "#F3F0FF", section: "Financiero",       type: "ambos" },
+  otros:           { label: "Otros",           icon: MoreHorizontal,  color: "#6B7280", bg: "#F9FAFB", section: "Otros",            type: "gasto" },
 }
 
-const SECTIONS = ["Necesidades", "Deseos", "Financiero", "Otros"]
+const SECTIONS_GASTO   = ["Necesidades", "Deseos", "Financiero", "Otros"]
+const SECTIONS_INGRESO = ["Trabajo", "Negocio", "Ingresos pasivos", "Ingresos varios", "Financiero"]
 
 // ─── Sub-componente: Numpad ───────────────────────────────────────────────────
 
@@ -127,13 +148,23 @@ function Numpad({ value, onChange }: { value: string; onChange: (v: string) => v
 
 function CategoryPicker({
   selected,
+  movType,
   onSelect,
   onClose,
 }: {
   selected: string
+  movType: "debito" | "credito"
   onSelect: (cat: string) => void
   onClose: () => void
 }) {
+  const tipoRegistro = movType === "debito" ? "gasto" : "ingreso"
+  const sections = movType === "debito" ? SECTIONS_GASTO : SECTIONS_INGRESO
+
+  // Filtra las categorías que corresponden al tipo activo (o "ambos")
+  const visibleCats = Object.entries(CATEGORIES).filter(
+    ([, c]) => c.type === tipoRegistro || c.type === "ambos"
+  )
+
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background animate-fade-up">
       {/* Header */}
@@ -141,13 +172,24 @@ function CategoryPicker({
         <button onClick={onClose} className="text-muted-foreground hover:text-foreground p-1 rounded-lg hover:bg-muted">
           <ChevronLeft className="h-5 w-5" />
         </button>
-        <h2 className="text-base font-semibold">Seleccionar categoría</h2>
+        <div>
+          <h2 className="text-base font-semibold">Seleccionar categoría</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Mostrando categorías de{" "}
+            <span className={cn(
+              "font-semibold",
+              movType === "debito" ? "text-destructive" : "text-green-600"
+            )}>
+              {movType === "debito" ? "💸 gasto" : "💰 ingreso"}
+            </span>
+          </p>
+        </div>
       </div>
 
       {/* Grid por secciones */}
       <div className="flex-1 overflow-y-auto p-4 space-y-5">
-        {SECTIONS.map((section) => {
-          const cats = Object.entries(CATEGORIES).filter(([, c]) => c.section === section)
+        {sections.map((section) => {
+          const cats = visibleCats.filter(([, c]) => c.section === section)
           if (cats.length === 0) return null
           return (
             <div key={section}>
@@ -267,6 +309,7 @@ export default function ManualEntryPage() {
     return (
       <CategoryPicker
         selected={category}
+        movType={movType}
         onSelect={setCategory}
         onClose={() => setView("entry")}
       />
@@ -369,7 +412,7 @@ export default function ManualEntryPage() {
           <div className="flex gap-2 p-1 bg-muted rounded-xl">
             <button
               type="button"
-              onClick={() => setMovType("debito")}
+              onClick={() => { if (movType !== "debito") { setMovType("debito"); setCategory("") } }}
               className={cn(
                 "flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all",
                 movType === "debito"
@@ -381,7 +424,7 @@ export default function ManualEntryPage() {
             </button>
             <button
               type="button"
-              onClick={() => setMovType("credito")}
+              onClick={() => { if (movType !== "credito") { setMovType("credito"); setCategory("") } }}
               className={cn(
                 "flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all",
                 movType === "credito"

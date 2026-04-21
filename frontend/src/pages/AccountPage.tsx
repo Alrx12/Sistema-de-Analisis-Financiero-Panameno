@@ -150,7 +150,7 @@ export default function AccountPage() {
   const [goalsOpen, setGoalsOpen]   = useState(false)
 
   // ── Extended profile state ─────────────────────────────────────────────────
-  const [dependentsCount, setDependentsCount] = useState<string>("0")
+  const [dependentsCount, setDependentsCount] = useState<string>("")
   const [housingType, setHousingType]         = useState<HousingType | null>(null)
   const [employmentType, setEmploymentType]   = useState<EmploymentType | null>(null)
   const [debtPayments, setDebtPayments]       = useState<string>("")
@@ -163,7 +163,7 @@ export default function AccountPage() {
     setIncome(profile.expected_monthly_income?.toString() ?? "")
     setGoals(profile.financial_goals ?? [])
     // Extended fields
-    setDependentsCount((profile.dependents_count ?? 0).toString())
+    setDependentsCount(profile.dependents_count ? profile.dependents_count.toString() : "")
     setHousingType(profile.housing_type ?? null)
     setEmploymentType(profile.employment_type ?? null)
     setDebtPayments(profile.monthly_debt_payments?.toString() ?? "")
@@ -712,60 +712,54 @@ export default function AccountPage() {
 
         <div className="space-y-3">
           {/* Borrar solo archivos Excel (deduplicación) */}
-          <div className="flex items-start justify-between gap-4 rounded-lg border border-amber-200 bg-amber-50/60 p-4">
-            <div className="space-y-1">
+          <div className="rounded-lg border border-amber-200 bg-amber-50/60 p-3">
+            <div className="flex items-start justify-between gap-3">
               <p className="text-sm font-semibold text-amber-800">Borrar archivos Excel subidos</p>
-              <p className="text-xs text-amber-700/80">
-                Elimina únicamente los archivos Excel originales que subiste.
-                Tus <strong>análisis, transacciones y categorías se conservan intactos</strong> — el dashboard sigue funcionando igual.
-                Úsalo si quieres volver a subir los mismos archivos sin recibir el error de "archivo duplicado".
-              </p>
+              <button
+                onClick={() => setConfirmUploads(true)}
+                className="shrink-0 flex items-center gap-1.5 rounded-lg border border-amber-400 bg-white px-3 py-1.5 text-xs font-medium text-amber-700 hover:bg-amber-50 transition-colors"
+              >
+                <FolderX className="h-3.5 w-3.5" />
+                Borrar archivos
+              </button>
             </div>
-            <button
-              onClick={() => setConfirmUploads(true)}
-              className="shrink-0 flex items-center gap-1.5 rounded-lg border border-amber-400 bg-white px-3 py-1.5 text-xs font-medium text-amber-700 hover:bg-amber-50 transition-colors"
-            >
-              <FolderX className="h-3.5 w-3.5" />
-              Borrar archivos
-            </button>
+            <p className="text-xs text-amber-700/80 mt-1.5">
+              Elimina los archivos Excel originales. Tus <strong>análisis, transacciones y categorías se conservan</strong> — el dashboard sigue igual. Úsalo para volver a subir sin error de duplicado.
+            </p>
           </div>
 
           {/* Eliminar análisis y transacciones */}
-          <div className="flex items-start justify-between gap-4 rounded-lg border border-orange-200 bg-orange-50/60 p-4">
-            <div className="space-y-1">
+          <div className="rounded-lg border border-orange-200 bg-orange-50/60 p-3">
+            <div className="flex items-start justify-between gap-3">
               <p className="text-sm font-semibold text-orange-800">Eliminar todos mis análisis</p>
-              <p className="text-xs text-orange-700/80">
-                Borra permanentemente todos tus análisis, transacciones y snapshots financieros.
-                También elimina los archivos Excel para que puedas <strong>volver a subirlos desde cero</strong>.
-                Tu perfil, Knowledge Base y categorías aprendidas <strong>se conservan</strong>.
-                Útil si quieres empezar con datos limpios.
-              </p>
+              <button
+                onClick={() => setConfirmAnalysis(true)}
+                className="shrink-0 flex items-center gap-1.5 rounded-lg border border-orange-400 bg-white px-3 py-1.5 text-xs font-medium text-orange-700 hover:bg-orange-50 transition-colors"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Eliminar análisis
+              </button>
             </div>
-            <button
-              onClick={() => setConfirmAnalysis(true)}
-              className="shrink-0 flex items-center gap-1.5 rounded-lg border border-orange-400 bg-white px-3 py-1.5 text-xs font-medium text-orange-700 hover:bg-orange-50 transition-colors"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-              Eliminar análisis
-            </button>
+            <p className="text-xs text-orange-700/80 mt-1.5">
+              Borra permanentemente análisis, transacciones y snapshots. También elimina los Excel para que puedas <strong>volver a subirlos desde cero</strong>. Tu perfil, KB y categorías <strong>se conservan</strong>.
+            </p>
           </div>
 
           {/* Eliminar cuenta */}
-          <div className="flex items-start justify-between gap-4 rounded-lg border border-red-200 bg-red-50/60 p-4">
-            <div className="space-y-1">
+          <div className="rounded-lg border border-red-200 bg-red-50/60 p-3">
+            <div className="flex items-start justify-between gap-3">
               <p className="text-sm font-semibold text-red-800">Eliminar mi cuenta</p>
-              <p className="text-xs text-red-700/80">
-                Borra permanentemente tu cuenta y <strong>absolutamente todo</strong> — análisis, transacciones,
-                perfil, Knowledge Base y archivos. Esta acción es irreversible y no se puede deshacer.
-              </p>
+              <button
+                onClick={() => { setConfirmText(""); setConfirmAccount(true) }}
+                className="shrink-0 flex items-center gap-1.5 rounded-lg border border-red-400 bg-white px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 transition-colors"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Eliminar cuenta
+              </button>
             </div>
-            <button
-              onClick={() => { setConfirmText(""); setConfirmAccount(true) }}
-              className="shrink-0 flex items-center gap-1.5 rounded-lg border border-red-400 bg-white px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 transition-colors"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-              Eliminar cuenta
-            </button>
+            <p className="text-xs text-red-700/80 mt-1.5">
+              Borra permanentemente tu cuenta y <strong>todo lo asociado</strong> — análisis, transacciones, perfil, KB y archivos. Acción irreversible.
+            </p>
           </div>
         </div>
       </div>

@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { formatCurrency, formatDate, capitalize, confidenceColor, economicTypeBadgeClass, truncate } from "@/lib/utils"
 import { cn } from "@/lib/utils"
-import { BUDGET_CATEGORIES } from "@/lib/categories"
+import { CATEGORIES_BY_TYPE } from "@/lib/categories"
 
 export default function TransactionsPage() {
   const { id } = useParams<{ id: string }>()
@@ -246,7 +246,10 @@ function TransactionRow({
                 <select
                   className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                   value={form.economic_type}
-                  onChange={(e) => setForm({ ...form, economic_type: e.target.value })}
+                  onChange={(e) => {
+                    // Al cambiar tipo, resetear la categoría para evitar valores inválidos
+                    setForm({ ...form, economic_type: e.target.value, budget_category: "" })
+                  }}
                 >
                   {["ingreso", "gasto", "cargo_financiero", "transferencia_propia", "transferencia_tercero", "reembolso"].map((v) => (
                     <option key={v} value={v}>{capitalize(v)}</option>
@@ -273,7 +276,10 @@ function TransactionRow({
                   onChange={(e) => setForm({ ...form, budget_category: e.target.value })}
                 >
                   <option value="">— Seleccionar —</option>
-                  {BUDGET_CATEGORIES.map((c) => (
+                  {(form.economic_type === "ingreso"
+                    ? CATEGORIES_BY_TYPE.ingreso
+                    : CATEGORIES_BY_TYPE.gasto
+                  ).map((c) => (
                     <option key={c} value={c}>
                       {capitalize(c.replace(/_/g, " "))}
                     </option>
