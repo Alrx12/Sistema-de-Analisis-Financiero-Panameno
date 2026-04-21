@@ -206,6 +206,17 @@ export default function SnapshotDetailScreen() {
         </ScrollView>
       ) : (
         <View style={{ flex: 1 }}>
+          {/* Botón pantalla completa con reclasificación */}
+          <TouchableOpacity
+            style={s.fullTxBtn}
+            onPress={() => router.push({ pathname: "/(tabs)/transactions/[id]", params: { id } })}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="list-outline" size={14} color="#a5b4fc" />
+            <Text style={s.fullTxBtnText}>Abrir vista completa con filtros y reclasificación</Text>
+            <Ionicons name="chevron-forward" size={14} color="#a5b4fc" />
+          </TouchableOpacity>
+
           {/* Search */}
           <View style={s.searchBox}>
             <Ionicons name="search-outline" size={16} color={DIM} style={{ marginRight: 8 }} />
@@ -263,6 +274,12 @@ export default function SnapshotDetailScreen() {
 
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: BG },
+  fullTxBtn: {
+    flexDirection: "row", alignItems: "center", gap: 8, justifyContent: "center",
+    backgroundColor: "rgba(99,102,241,0.1)", margin: 12, borderRadius: 10,
+    paddingVertical: 10, borderWidth: 1, borderColor: "rgba(99,102,241,0.2)",
+  },
+  fullTxBtnText: { color: "#a5b4fc", fontSize: 13, fontWeight: "600", flex: 1, textAlign: "center" },
 
   header: {
     backgroundColor: CARD,

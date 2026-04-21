@@ -25,37 +25,68 @@ const GREEN  = "#22c55e"
 const RED    = "#ef4444"
 
 // ── Categorías ────────────────────────────────────────────────────────────────
-type Category = { label: string; icon: string; color: string; section: string }
+type TipoCategoria = "gasto" | "ingreso" | "ambos"
+type Category = { label: string; icon: string; color: string; section: string; type: TipoCategoria }
 
 const CATEGORIES: Record<string, Category> = {
-  supermercado:    { label: "Supermercado",   icon: "cart-outline",        color: "#6366f1", section: "Necesidades" },
-  alimentacion:    { label: "Alimentación",   icon: "bag-outline",         color: "#8b5cf6", section: "Necesidades" },
-  alquiler:        { label: "Alquiler",       icon: "home-outline",        color: "#3b82f6", section: "Necesidades" },
-  servicios:       { label: "Servicios",      icon: "flash-outline",       color: "#f59e0b", section: "Necesidades" },
-  transporte:      { label: "Transporte",     icon: "bus-outline",         color: "#0d9488", section: "Necesidades" },
-  gasolina:        { label: "Gasolina",       icon: "flame-outline",       color: "#f97316", section: "Necesidades" },
-  salud:           { label: "Salud",          icon: "heart-outline",       color: "#10b981", section: "Necesidades" },
-  educacion:       { label: "Educación",      icon: "book-outline",        color: "#6366f1", section: "Necesidades" },
-  hogar:           { label: "Hogar",          icon: "construct-outline",   color: "#7c3aed", section: "Necesidades" },
-  seguro:          { label: "Seguro",         icon: "shield-outline",      color: "#3b82f6", section: "Necesidades" },
-  restaurantes:    { label: "Restaurantes",   icon: "restaurant-outline",  color: "#ec4899", section: "Deseos" },
-  entretenimiento: { label: "Entretenim.",    icon: "film-outline",        color: "#1d4ed8", section: "Deseos" },
-  compras:         { label: "Compras",        icon: "storefront-outline",  color: "#f97316", section: "Deseos" },
-  suscripciones:   { label: "Suscripciones",  icon: "refresh-outline",     color: "#8b5cf6", section: "Deseos" },
-  tecnologia:      { label: "Tecnología",     icon: "laptop-outline",      color: "#1d4ed8", section: "Deseos" },
-  streaming:       { label: "Streaming",      icon: "play-outline",        color: "#dc2626", section: "Deseos" },
-  cafe:            { label: "Café",           icon: "cafe-outline",        color: "#92400e", section: "Deseos" },
-  ropa:            { label: "Ropa",           icon: "shirt-outline",       color: "#ca8a04", section: "Deseos" },
-  mascotas:        { label: "Mascotas",       icon: "paw-outline",         color: "#065f46", section: "Deseos" },
-  cargo_financiero:{ label: "Cargo banco",   icon: "card-outline",        color: "#6b7280", section: "Financiero" },
-  deudas:          { label: "Deuda",          icon: "alert-circle-outline",color: "#dc2626", section: "Financiero" },
-  ahorro:          { label: "Ahorro",         icon: "save-outline",        color: "#10b981", section: "Financiero" },
-  inversion:       { label: "Inversión",      icon: "trending-up-outline", color: "#3b82f6", section: "Financiero" },
-  transferencias:  { label: "Transferencias", icon: "swap-horizontal-outline", color: "#8b5cf6", section: "Financiero" },
-  otros:           { label: "Otros",          icon: "ellipsis-horizontal-outline", color: "#6b7280", section: "Otros" },
+  // ── Gastos: Necesidades ───────────────────────────────────────────────────
+  supermercado:     { label: "Supermercado",    icon: "cart-outline",               color: "#6366f1", section: "Necesidades",      type: "gasto" },
+  alimentacion:     { label: "Alimentación",    icon: "bag-outline",                color: "#8b5cf6", section: "Necesidades",      type: "gasto" },
+  alquiler:         { label: "Alquiler",        icon: "home-outline",               color: "#3b82f6", section: "Necesidades",      type: "gasto" },
+  hipoteca:         { label: "Hipoteca",        icon: "business-outline",           color: "#2563eb", section: "Necesidades",      type: "gasto" },
+  servicios:        { label: "Servicios",       icon: "flash-outline",              color: "#f59e0b", section: "Necesidades",      type: "gasto" },
+  agua:             { label: "Agua",            icon: "water-outline",              color: "#0ea5e9", section: "Necesidades",      type: "gasto" },
+  luz:              { label: "Luz",             icon: "bulb-outline",               color: "#eab308", section: "Necesidades",      type: "gasto" },
+  internet:         { label: "Internet",        icon: "wifi-outline",               color: "#6366f1", section: "Necesidades",      type: "gasto" },
+  telefono:         { label: "Teléfono",        icon: "phone-portrait-outline",     color: "#8b5cf6", section: "Necesidades",      type: "gasto" },
+  transporte:       { label: "Transporte",      icon: "bus-outline",                color: "#0d9488", section: "Necesidades",      type: "gasto" },
+  gasolina:         { label: "Gasolina",        icon: "flame-outline",              color: "#f97316", section: "Necesidades",      type: "gasto" },
+  salud:            { label: "Salud",           icon: "heart-outline",              color: "#10b981", section: "Necesidades",      type: "gasto" },
+  educacion:        { label: "Educación",       icon: "book-outline",               color: "#6366f1", section: "Necesidades",      type: "gasto" },
+  hogar:            { label: "Hogar",           icon: "construct-outline",          color: "#7c3aed", section: "Necesidades",      type: "gasto" },
+  seguro:           { label: "Seguro",          icon: "shield-outline",             color: "#3b82f6", section: "Necesidades",      type: "gasto" },
+  // ── Gastos: Deseos ────────────────────────────────────────────────────────
+  restaurantes:     { label: "Restaurantes",    icon: "restaurant-outline",         color: "#ec4899", section: "Deseos",           type: "gasto" },
+  entretenimiento:  { label: "Entretenim.",     icon: "film-outline",               color: "#1d4ed8", section: "Deseos",           type: "gasto" },
+  compras:          { label: "Compras",         icon: "storefront-outline",         color: "#f97316", section: "Deseos",           type: "gasto" },
+  suscripciones:    { label: "Suscripciones",   icon: "refresh-outline",            color: "#8b5cf6", section: "Deseos",           type: "gasto" },
+  tecnologia:       { label: "Tecnología",      icon: "laptop-outline",             color: "#1d4ed8", section: "Deseos",           type: "gasto" },
+  streaming:        { label: "Streaming",       icon: "play-outline",               color: "#dc2626", section: "Deseos",           type: "gasto" },
+  cafe:             { label: "Café",            icon: "cafe-outline",               color: "#92400e", section: "Deseos",           type: "gasto" },
+  ropa:             { label: "Ropa",            icon: "shirt-outline",              color: "#ca8a04", section: "Deseos",           type: "gasto" },
+  ocio:             { label: "Ocio",            icon: "game-controller-outline",    color: "#ec4899", section: "Deseos",           type: "gasto" },
+  deporte:          { label: "Deporte",         icon: "barbell-outline",            color: "#10b981", section: "Deseos",           type: "gasto" },
+  bares:            { label: "Bares",           icon: "beer-outline",               color: "#f59e0b", section: "Deseos",           type: "gasto" },
+  mascotas:         { label: "Mascotas",        icon: "paw-outline",                color: "#065f46", section: "Deseos",           type: "gasto" },
+  // ── Gastos: Financiero ────────────────────────────────────────────────────
+  cargo_financiero: { label: "Cargo banco",     icon: "card-outline",               color: "#6b7280", section: "Financiero",       type: "gasto" },
+  deuda:            { label: "Deuda",           icon: "alert-circle-outline",       color: "#dc2626", section: "Financiero",       type: "gasto" },
+  otros:            { label: "Otros gastos",    icon: "ellipsis-horizontal-outline",color: "#6b7280", section: "Financiero",       type: "gasto" },
+  // ── Ingresos: Trabajo ─────────────────────────────────────────────────────
+  salario:          { label: "Salario",         icon: "briefcase-outline",          color: "#16a34a", section: "Trabajo",          type: "ingreso" },
+  honorarios:       { label: "Honorarios",      icon: "document-text-outline",      color: "#0d9488", section: "Trabajo",          type: "ingreso" },
+  comision:         { label: "Comisión",        icon: "percent-outline",            color: "#f59e0b", section: "Trabajo",          type: "ingreso" },
+  bono:             { label: "Bono",            icon: "gift-outline",               color: "#ec4899", section: "Trabajo",          type: "ingreso" },
+  // ── Ingresos: Negocio ─────────────────────────────────────────────────────
+  negocio:          { label: "Negocio",         icon: "storefront-outline",         color: "#7c3aed", section: "Negocio",          type: "ingreso" },
+  venta:            { label: "Venta",           icon: "pricetag-outline",           color: "#f97316", section: "Negocio",          type: "ingreso" },
+  // ── Ingresos: Pasivos ─────────────────────────────────────────────────────
+  alquiler_cobrado: { label: "Alq. cobrado",    icon: "home-outline",               color: "#3b82f6", section: "Ingresos pasivos", type: "ingreso" },
+  dividendos:       { label: "Dividendos",      icon: "bar-chart-outline",          color: "#6366f1", section: "Ingresos pasivos", type: "ingreso" },
+  rendimiento:      { label: "Rendimiento",     icon: "trending-up-outline",        color: "#10b981", section: "Ingresos pasivos", type: "ingreso" },
+  // ── Ingresos: Varios ──────────────────────────────────────────────────────
+  reembolso:        { label: "Reembolso",       icon: "return-down-back-outline",   color: "#0ea5e9", section: "Ingresos varios",  type: "ingreso" },
+  regalo:           { label: "Regalo",          icon: "gift-outline",               color: "#ec4899", section: "Ingresos varios",  type: "ingreso" },
+  pension:          { label: "Pensión",         icon: "calendar-outline",           color: "#6b7280", section: "Ingresos varios",  type: "ingreso" },
+  otros_ingresos:   { label: "Otros ingresos",  icon: "add-circle-outline",         color: "#16a34a", section: "Ingresos varios",  type: "ingreso" },
+  // ── Ambos tipos ───────────────────────────────────────────────────────────
+  ahorro:           { label: "Ahorro",          icon: "save-outline",               color: "#10b981", section: "Financiero",       type: "ambos" },
+  inversion:        { label: "Inversión",       icon: "trending-up-outline",        color: "#3b82f6", section: "Financiero",       type: "ambos" },
+  transferencias:   { label: "Transferencias",  icon: "swap-horizontal-outline",    color: "#8b5cf6", section: "Financiero",       type: "ambos" },
 }
 
-const SECTIONS = ["Necesidades", "Deseos", "Financiero", "Otros"]
+const SECTIONS_GASTO   = ["Necesidades", "Deseos", "Financiero"]
+const SECTIONS_INGRESO = ["Trabajo", "Negocio", "Ingresos pasivos", "Ingresos varios", "Financiero"]
 
 // ── API ───────────────────────────────────────────────────────────────────────
 async function createManualTx(data: {
@@ -120,9 +151,13 @@ const numStyles = StyleSheet.create({
 })
 
 // ── Category picker modal ─────────────────────────────────────────────────────
-function CategoryModal({ visible, selected, onSelect, onClose }: {
-  visible: boolean; selected: string; onSelect: (k: string) => void; onClose: () => void
+function CategoryModal({ visible, selected, txType, onSelect, onClose }: {
+  visible: boolean; selected: string; txType: "debito" | "credito"
+  onSelect: (k: string) => void; onClose: () => void
 }) {
+  const sections = txType === "debito" ? SECTIONS_GASTO : SECTIONS_INGRESO
+  const catType  = txType === "debito" ? "gasto" : "ingreso"
+
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <TouchableOpacity style={modalS.overlay} activeOpacity={1} onPress={onClose}>
@@ -130,8 +165,10 @@ function CategoryModal({ visible, selected, onSelect, onClose }: {
           <View style={modalS.handle} />
           <Text style={modalS.title}>Categoría</Text>
           <ScrollView showsVerticalScrollIndicator={false}>
-            {SECTIONS.map((section) => {
-              const items = Object.entries(CATEGORIES).filter(([, c]) => c.section === section)
+            {sections.map((section) => {
+              const items = Object.entries(CATEGORIES).filter(
+                ([, c]) => c.section === section && (c.type === catType || c.type === "ambos")
+              )
               return (
                 <View key={section}>
                   <Text style={modalS.sectionLabel}>{section}</Text>
@@ -304,6 +341,7 @@ export default function ManualScreen() {
       <CategoryModal
         visible={showCatModal}
         selected={category}
+        txType={type}
         onSelect={setCategory}
         onClose={() => setShowCatModal(false)}
       />
