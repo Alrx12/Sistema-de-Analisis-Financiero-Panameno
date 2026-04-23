@@ -11,11 +11,12 @@ import {
 import { Slot, usePathname, useRouter } from "expo-router"
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import { Ionicons } from "@expo/vector-icons"
-import { useRef, useState, useCallback } from "react"
+import { useRef, useState, useCallback, useEffect } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { getMe } from "@safpro/api/users"
+import { getMe, getProfile } from "@safpro/api/users"
 import * as SecureStore from "expo-secure-store"
 import { getAuthStore } from "@safpro/stores"
+import { clearPushToken } from "@safpro/api/notifications"
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const SIDEBAR_BG = "#0d1426"
@@ -36,6 +37,7 @@ type NavItem = {
   icon: string
   iconFocused: string
   pro?: boolean
+  admin?: boolean
 }
 
 const NAV_SECTIONS: { label: string; items: NavItem[] }[] = [
@@ -60,12 +62,14 @@ const NAV_SECTIONS: { label: string; items: NavItem[] }[] = [
     items: [
       { route: "/(tabs)/retrain",      label: "Entrenamiento", icon: "sparkles-outline",   iconFocused: "sparkles",    pro: true },
       { route: "/(tabs)/simulaciones", label: "Simulaciones",  icon: "flask-outline",      iconFocused: "flask",       pro: true },
+      { route: "/(tabs)/kb",           label: "Knowledge Base", icon: "library-outline",   iconFocused: "library",     admin: true },
     ],
   },
   {
     label: "Soporte",
     items: [
-      { route: "/(tabs)/ayuda", label: "Ayuda y FAQ", icon: "help-circle-outline", iconFocused: "help-circle" },
+      { route: "/(tabs)/ayuda",  label: "Ayuda y FAQ",    icon: "help-circle-outline", iconFocused: "help-circle" },
+      { route: "/(tabs)/admin",  label: "Panel Admin",    icon: "shield-outline",       iconFocused: "shield",       admin: true },
     ],
   },
 ]
@@ -88,6 +92,7 @@ function Sidebar({
   const plan     = user?.plan ?? "free"
   const isPro    = plan === "pro"
   const isFF     = plan === "friends_and_family"
+  const isAdmin  = user?.is_admin === true
   const initials = user?.full_name
     ? user.full_name.split(" ").map((n: string) => n[0]).slice(0, 2).join("").toUpperCase()
     : "?"
@@ -99,6 +104,8 @@ function Sidebar({
 
   async function handleLogout() {
     onClose()
+    // Borrar push token del servidor antes de eliminar el JWT local
+    clearPushToken().catch(() => {})
     await SecureStore.deleteItemAsync(TOKEN_KEY)
     getAuthStore().getState().logout()
     router.replace("/(auth)/login")
@@ -160,7 +167,9 @@ function Sidebar({
           {NAV_SECTIONS.map((section) => (
             <View key={section.label}>
               <Text style={styles.sectionLabel}>{section.label}</Text>
-              {section.items.map((item) => {
+              {section.items
+              .filter((item) => !item.admin || isAdmin)
+              .map((item) => {
                 const active = isActive(item.route)
                 return (
                   <TouchableOpacity
@@ -179,6 +188,9 @@ function Sidebar({
                     </Text>
                     {item.pro && plan === "free" && (
                       <Ionicons name="lock-closed" size={12} color={DIM} />
+                    )}
+                    {item.admin && (
+                      <Ionicons name="shield-checkmark" size={12} color="#fbbf24" />
                     )}
                   </TouchableOpacity>
                 )
@@ -270,8 +282,24 @@ function AppHeader({ onOpen }: { onOpen: () => void }) {
 
 // ── Root layout ───────────────────────────────────────────────────────────────
 export default function AppShellLayout() {
+  const router    = useRouter()
   const [open, setOpen] = useState(false)
   const slideAnim = useRef(new Animated.Value(0)).current
+
+  // ── Redirect to onboarding if not completed yet ──────────────────────────
+  const { data: profile } = useQuery({
+    queryKey: ["profile"],
+    queryFn: getProfile,
+    staleTime: 1000 * 60 * 5,
+    retry: 1,
+  })
+
+  useEffect(() => {
+    if (profile && profile.onboarding_completed === false) {
+      router.replace("/onboarding")
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.onboarding_completed])
 
   const openSidebar = useCallback(() => {
     setOpen(true)

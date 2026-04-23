@@ -385,6 +385,29 @@ export interface GoalUpdate {
   deadline?: string | null
 }
 
+// ─── Transaction Search (cross-snapshot) ─────────────────────────────────────
+
+export interface TransactionSearchResult extends Transaction {
+  bank_account_id: string | null
+}
+
+export interface TransactionSearchResponse {
+  transactions: TransactionSearchResult[]
+  total: number
+  limit: number
+  offset: number
+}
+
+export interface TransactionSearchParams {
+  q?: string
+  budget_category?: string
+  year?: number
+  month?: number
+  bank_account_id?: string
+  limit?: number
+  offset?: number
+}
+
 // ─── API Error ────────────────────────────────────────────────────────────────
 
 export interface ApiError {

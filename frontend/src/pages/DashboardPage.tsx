@@ -1,23 +1,26 @@
-import { type ReactNode, useState, useMemo } from "react"
+import { type ReactNode, useState, useMemo, useCallback } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Link, useNavigate } from "react-router-dom"
 import {
   TrendingUp, TrendingDown, Wallet, AlertTriangle,
   Upload, ArrowRight, BarChart2, Building2, Layers, ShoppingBag,
   TrendingUp as SavingsIcon, Activity, DollarSign,
+  Search, ChevronDown, ChevronUp,
 } from "lucide-react"
 import { listAnalysis, getAggregatedSummary } from "@/api/analysis"
 import { getProfile } from "@/api/profile"
+import { searchTransactions } from "@/api/transactions"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
 import { formatCurrency, capitalize } from "@/lib/utils"
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
   PieChart, Pie, Legend, ComposedChart, CartesianGrid, Line,
   Area, AreaChart, ReferenceLine, LabelList,
 } from "recharts"
-import type { AnalysisSnapshot, AggregatedSummary } from "@/types"
+import type { AnalysisSnapshot, AggregatedSummary, TransactionSearchResult } from "@/types"
 
 // ─── Paleta ──────────────────────────────────────────────────────────────────
 const CAT_COLORS = ["#3b82f6","#10b981","#f59e0b","#ef4444","#8b5cf6","#06b6d4","#f97316","#84cc16"]
@@ -71,6 +74,13 @@ const BROLE_COLORS: Record<string, string> = {
 }
 
 const MONTH_NAMES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"]
+
+const SEARCH_CATEGORIES = [
+  "restaurantes", "supermercado", "transporte", "suscripciones",
+  "servicios", "salud", "entretenimiento", "educacion",
+  "ropa", "tecnologia", "deudas", "ahorro", "transferencias", "otros",
+]
+const SEARCH_PAGE_SIZE = 20
 
 // ─── Helpers de fecha ─────────────────────────────────────────────────────────
 function parseDate(s: string | null | undefined): Date | null {
@@ -197,6 +207,49 @@ export default function DashboardPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   // "both" | "income" | "expenses"
   const [selectedMetric, setSelectedMetric]     = useState<"both" | "income" | "expenses">("both")
+
+  // ── Búsqueda cross-snapshot ────────────────────────────────────────────────
+  const [searchOpen,     setSearchOpen]     = useState(false)
+  const [searchInput,    setSearchInput]    = useState("")
+  const [searchCategory, setSearchCategory] = useState<string | null>(null)
+  const [searchMonth,    setSearchMonth]    = useState<number | null>(null)
+  const [searchBankId,   setSearchBankId]   = useState<string | null>(null)
+  const [searchLimit,    setSearchLimit]    = useState(SEARCH_PAGE_SIZE)
+  const [committed, setCommitted] = useState<{
+    q: string; category: string | null; year: number | null
+    month: number | null; bankId: string | null
+  } | null>(null)
+
+  const commitSearch = useCallback(() => {
+    setSearchLimit(SEARCH_PAGE_SIZE)
+    setCommitted({
+      q: searchInput.trim(),
+      category: searchCategory,
+      year: selectedYear,
+      month: searchMonth,
+      bankId: searchBankId,
+    })
+  }, [searchInput, searchCategory, selectedYear, searchMonth, searchBankId])
+
+  const hasCommitted = committed !== null && (
+    !!committed.q || !!committed.category || !!committed.year ||
+    !!committed.month || !!committed.bankId
+  )
+
+  const { data: searchData, isFetching: searchLoading } = useQuery({
+    queryKey: ["tx-search", committed, searchLimit],
+    queryFn: () => searchTransactions({
+      q:               committed!.q || undefined,
+      budget_category: committed!.category ?? undefined,
+      year:            committed!.year    ?? undefined,
+      month:           committed!.month   ?? undefined,
+      bank_account_id: committed!.bankId  ?? undefined,
+      limit:           searchLimit,
+      offset:          0,
+    }),
+    enabled: hasCommitted,
+    staleTime: 30_000,
+  })
 
   // ── Años disponibles ──────────────────────────────────────────────────────
   const availableYears = useMemo(() => {
@@ -1031,6 +1084,165 @@ export default function DashboardPage() {
               </div>
             ))}
         </CardContent>
+      </Card>
+
+      {/* ── Buscar transacciones (cross-snapshot) ── */}
+      <Card className="zoho-card border-0">
+        <CardHeader
+          className="flex-row items-center justify-between space-y-0 pb-0 cursor-pointer select-none"
+          onClick={() => setSearchOpen(o => !o)}
+        >
+          <CardTitle className="text-sm font-semibold flex items-center gap-2">
+            <Search className="h-4 w-4 text-primary" />
+            Buscar transacciones
+          </CardTitle>
+          {searchOpen
+            ? <ChevronUp className="h-4 w-4 text-muted-foreground" />
+            : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+        </CardHeader>
+
+        {searchOpen && (
+          <CardContent className="pt-4 space-y-3">
+            {/* ─ Texto + botón ─ */}
+            <div className="flex gap-2">
+              <Input
+                placeholder="ej. Netflix, UBER, supermercado…"
+                value={searchInput}
+                onChange={e => setSearchInput(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && commitSearch()}
+                className="flex-1"
+              />
+              <Button onClick={commitSearch} size="sm">Buscar</Button>
+            </div>
+
+            {/* ─ Categorías ─ */}
+            <div className="flex flex-wrap gap-1.5">
+              <button
+                onClick={() => setSearchCategory(null)}
+                className={`filter-pill ${!searchCategory ? "active" : ""}`}
+              >
+                Todas
+              </button>
+              {SEARCH_CATEGORIES.map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => setSearchCategory(searchCategory === cat ? null : cat)}
+                  className={`filter-pill ${searchCategory === cat ? "active" : ""}`}
+                >
+                  {CAT_EMOJI[cat] ?? "📦"} {capitalize(cat.replace(/_/g, " "))}
+                </button>
+              ))}
+            </div>
+
+            {/* ─ Mes (usa el año del filtro principal) ─ */}
+            {selectedYear && availableMonths.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 items-center">
+                <span className="text-xs text-muted-foreground shrink-0">Mes:</span>
+                <button
+                  onClick={() => setSearchMonth(null)}
+                  className={`filter-pill ${!searchMonth ? "active" : ""}`}
+                >
+                  Todos
+                </button>
+                {availableMonths.map(m => (
+                  <button
+                    key={m}
+                    onClick={() => setSearchMonth(searchMonth === m ? null : m)}
+                    className={`filter-pill ${searchMonth === m ? "active" : ""}`}
+                  >
+                    {MONTH_NAMES[m - 1]}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* ─ Banco ─ */}
+            {bankGroups.filter(g => g.key !== "sin-banco").length > 1 && (
+              <div className="flex flex-wrap gap-1.5 items-center">
+                <span className="text-xs text-muted-foreground shrink-0">Banco:</span>
+                <button
+                  onClick={() => setSearchBankId(null)}
+                  className={`filter-pill ${!searchBankId ? "active" : ""}`}
+                >
+                  Todos
+                </button>
+                {bankGroups.filter(g => g.key !== "sin-banco").map(g => (
+                  <button
+                    key={g.key}
+                    onClick={() => setSearchBankId(searchBankId === g.key ? null : g.key)}
+                    className={`filter-pill ${searchBankId === g.key ? "active" : ""}`}
+                  >
+                    {g.label}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* ─ Spinner ─ */}
+            {searchLoading && (
+              <div className="flex justify-center py-4">
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              </div>
+            )}
+
+            {/* ─ Resultados ─ */}
+            {!searchLoading && searchData && (
+              <div className="space-y-2 pt-1">
+                <p className="text-xs text-muted-foreground">
+                  {searchData.total === 0
+                    ? "Sin resultados — intenta con otros filtros"
+                    : `${searchData.total} resultado${searchData.total !== 1 ? "s" : ""}`}
+                </p>
+                {searchData.transactions.map((tx: TransactionSearchResult) => {
+                  const isIncome = tx.amount > 0
+                  const emoji = CAT_EMOJI[tx.budget_category ?? ""] ?? (isIncome ? "💰" : "📦")
+                  const bankLabel = bankGroups.find(g => g.key === tx.bank_account_id)?.label
+                  return (
+                    <div
+                      key={tx.transaction_id}
+                      className="flex items-center gap-3 rounded-lg border border-border bg-background px-3 py-2.5 text-sm"
+                    >
+                      <span className="text-lg shrink-0">{emoji}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate leading-tight">{tx.detail}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1.5 flex-wrap">
+                          {tx.date && (
+                            <span>
+                              {new Date(tx.date + "T12:00:00").toLocaleDateString("es-PA", {
+                                day: "2-digit", month: "short", year: "2-digit"
+                              })}
+                            </span>
+                          )}
+                          {tx.budget_category && (
+                            <span className="bg-muted rounded px-1.5 py-0.5">
+                              {capitalize(tx.budget_category.replace(/_/g, " "))}
+                            </span>
+                          )}
+                          {bankLabel && (
+                            <span className="bg-muted rounded px-1.5 py-0.5">{bankLabel}</span>
+                          )}
+                        </p>
+                      </div>
+                      <span className={`font-semibold shrink-0 text-right tabular-nums ${tx.amount >= 0 ? "text-green-600" : "text-red-500"}`}>
+                        {tx.amount >= 0 ? "+" : ""}{formatCurrency(Math.abs(tx.amount))}
+                      </span>
+                    </div>
+                  )
+                })}
+                {searchData.transactions.length < searchData.total && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => setSearchLimit(l => l + SEARCH_PAGE_SIZE)}
+                  >
+                    Cargar más ({searchData.transactions.length} de {searchData.total})
+                  </Button>
+                )}
+              </div>
+            )}
+          </CardContent>
+        )}
       </Card>
 
       {/* ── Enlace ── */}

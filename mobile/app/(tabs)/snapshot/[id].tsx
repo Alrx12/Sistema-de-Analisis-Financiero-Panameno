@@ -13,7 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context"
 import { useLocalSearchParams, useRouter } from "expo-router"
 import { useQuery } from "@tanstack/react-query"
 import { Ionicons } from "@expo/vector-icons"
-import { getAnalysis, getTransactions } from "@safpro/api/analysis"
+import { getAnalysis, getTransactions, getConfidenceStats } from "@safpro/api/analysis"
 import type { Transaction } from "@safpro/types"
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
@@ -67,7 +67,7 @@ const REC_COLORS = {
 export default function SnapshotDetailScreen() {
   const { id }  = useLocalSearchParams<{ id: string }>()
   const router  = useRouter()
-  const [tab, setTab] = useState<"overview" | "transactions">("overview")
+  const [tab, setTab] = useState<"overview" | "transactions" | "calidad">("overview")
   const [search, setSearch] = useState("")
 
   const { data: snapshot, isLoading: loadingSnap } = useQuery({
@@ -80,6 +80,12 @@ export default function SnapshotDetailScreen() {
     queryKey: ["transactions", id],
     queryFn: () => getTransactions(id),
     enabled: !!id && tab === "transactions",
+  })
+
+  const { data: confStats, isLoading: loadingConf } = useQuery({
+    queryKey: ["confidence-stats", id],
+    queryFn: () => getConfidenceStats(id!),
+    enabled: !!id && tab === "calidad",
   })
 
   const filteredTxs = (txs ?? []).filter((t) =>
@@ -133,7 +139,11 @@ export default function SnapshotDetailScreen() {
 
       {/* Tabs */}
       <View style={s.tabRow}>
-        {(["overview", "transactions"] as const).map((t) => (
+        {([
+          { key: "overview",      label: "Resumen" },
+          { key: "calidad",       label: "Calidad" },
+          { key: "transactions",  label: `Txs (${snapshot.total_transactions})` },
+        ] as const).map(({ key: t, label }) => (
           <TouchableOpacity
             key={t}
             style={[s.tabBtn, tab === t && s.tabBtnActive]}
@@ -141,13 +151,125 @@ export default function SnapshotDetailScreen() {
             activeOpacity={0.75}
           >
             <Text style={[s.tabBtnText, tab === t && s.tabBtnTextActive]}>
-              {t === "overview" ? "Resumen" : `Transacciones (${snapshot.total_transactions})`}
+              {label}
             </Text>
           </TouchableOpacity>
         ))}
       </View>
 
-      {tab === "overview" ? (
+      {tab === "calidad" ? (
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scrollContent}>
+          {loadingConf ? (
+            <ActivityIndicator color={INDIGO} style={{ marginTop: 60 }} size="large" />
+          ) : confStats ? (
+            <>
+              {/* Confianza promedio */}
+              <View style={s.section}>
+                <Text style={s.sectionTitle}>Confianza promedio</Text>
+                <View style={s.confRow}>
+                  <Text style={s.confPctText}>
+                    {Math.round(confStats.avg_confidence * 100)}%
+                  </Text>
+                  <View style={s.confBarOuter}>
+                    <View
+                      style={[
+                        s.confBarFill,
+                        {
+                          width: `${Math.round(confStats.avg_confidence * 100)}%` as `${number}%`,
+                          backgroundColor:
+                            confStats.avg_confidence >= 0.85 ? GREEN :
+                            confStats.avg_confidence >= 0.65 ? "#f59e0b" : RED,
+                        },
+                      ]}
+                    />
+                  </View>
+                </View>
+                <Text style={s.confHint}>
+                  {confStats.avg_confidence >= 0.85
+                    ? "✅ Excelente — el sistema categoriza con alta precisión."
+                    : confStats.avg_confidence >= 0.65
+                    ? "⚠️ Aceptable — hay margen de mejora con entrenamiento."
+                    : "🔴 Baja confianza — se recomienda entrenar el sistema."}
+                </Text>
+              </View>
+
+              {/* KPIs de revisión */}
+              <View style={s.kpiRow}>
+                <View style={[s.kpiCard, { borderTopColor: confStats.requires_review_count > 0 ? "#f59e0b" : GREEN }]}>
+                  <Text style={s.kpiLabel}>REQUIEREN REVISIÓN</Text>
+                  <Text style={[s.kpiValue, { color: confStats.requires_review_count > 0 ? "#f59e0b" : GREEN }]}>
+                    {confStats.requires_review_count}
+                  </Text>
+                  <Text style={s.kpiSub}>{confStats.requires_review_pct.toFixed(1)}% del total</Text>
+                </View>
+                <View style={[s.kpiCard, { borderTopColor: confStats.fallback_count > 0 ? RED : GREEN }]}>
+                  <Text style={s.kpiLabel}>FALLBACK</Text>
+                  <Text style={[s.kpiValue, { color: confStats.fallback_count > 0 ? RED : GREEN }]}>
+                    {confStats.fallback_count}
+                  </Text>
+                  <Text style={s.kpiSub}>{confStats.fallback_pct.toFixed(1)}% del total</Text>
+                </View>
+              </View>
+
+              {/* Por método */}
+              {Object.keys(confStats.by_method).length > 0 && (
+                <View style={s.section}>
+                  <Text style={s.sectionTitle}>Por método de clasificación</Text>
+                  {Object.entries(confStats.by_method)
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([method, count]) => {
+                      const pct = Math.round((count / confStats.total) * 100)
+                      const label = method
+                        .replace("kb_personal", "KB Personal")
+                        .replace("kb_global", "KB Global")
+                        .replace("builtin", "Regla incorporada")
+                        .replace("fallback", "Fallback")
+                        .replace("pattern_personal", "Patrón personal")
+                        .replace("pattern_global", "Patrón global")
+                      return (
+                        <View key={method} style={s.methodRow}>
+                          <View style={{ flex: 1 }}>
+                            <View style={s.methodHeader}>
+                              <Text style={s.methodLabel}>{label}</Text>
+                              <Text style={s.methodCount}>{count} · {pct}%</Text>
+                            </View>
+                            <View style={s.catBar}>
+                              <View
+                                style={[
+                                  s.catBarFill,
+                                  {
+                                    width: `${pct}%` as `${number}%`,
+                                    backgroundColor:
+                                      method === "fallback" ? RED :
+                                      method.startsWith("kb") ? GREEN : INDIGO,
+                                  },
+                                ]}
+                              />
+                            </View>
+                          </View>
+                        </View>
+                      )
+                    })}
+                </View>
+              )}
+
+              {/* CTA a Entrenamiento */}
+              {confStats.fallback_count > 0 && (
+                <View style={s.ctaBanner}>
+                  <Ionicons name="sparkles-outline" size={18} color="#fbbf24" />
+                  <Text style={s.ctaBannerText}>
+                    Hay {confStats.fallback_count} transacciones sin clasificar. Entrena el sistema en la pantalla de Entrenamiento.
+                  </Text>
+                </View>
+              )}
+            </>
+          ) : (
+            <View style={{ alignItems: "center", padding: 40 }}>
+              <Text style={{ color: MUTED }}>No hay datos de calidad disponibles.</Text>
+            </View>
+          )}
+        </ScrollView>
+      ) : tab === "overview" ? (
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scrollContent}>
           {/* KPIs */}
           <View style={s.kpiRow}>
@@ -320,6 +442,28 @@ const s = StyleSheet.create({
   },
   kpiLabel: { color: MUTED, fontSize: 9, fontWeight: "700", letterSpacing: 1 },
   kpiValue: { fontSize: 13, fontWeight: "800", marginTop: 4 },
+  kpiSub:   { color: DIM as string, fontSize: 10, marginTop: 2 },
+
+  // Calidad tab
+  confRow: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 8 },
+  confPctText: { color: TEXT, fontSize: 28, fontWeight: "800", width: 60 },
+  confBarOuter: {
+    flex: 1, height: 10, backgroundColor: "rgba(255,255,255,0.08)",
+    borderRadius: 5, overflow: "hidden",
+  },
+  confBarFill: { height: "100%", borderRadius: 5 },
+  confHint: { color: MUTED, fontSize: 12, lineHeight: 17 },
+  methodRow: { marginBottom: 10 },
+  methodHeader: { flexDirection: "row", justifyContent: "space-between", marginBottom: 4 },
+  methodLabel: { color: TEXT, fontSize: 13, fontWeight: "600", textTransform: "capitalize" },
+  methodCount: { color: MUTED, fontSize: 12 },
+  ctaBanner: {
+    flexDirection: "row", gap: 10, alignItems: "flex-start",
+    backgroundColor: "rgba(251,191,36,0.08)",
+    borderRadius: 10, padding: 14,
+    borderWidth: 1, borderColor: "rgba(251,191,36,0.2)",
+  },
+  ctaBannerText: { color: "#fcd34d", fontSize: 13, flex: 1, lineHeight: 18 },
 
   // Section
   section: {

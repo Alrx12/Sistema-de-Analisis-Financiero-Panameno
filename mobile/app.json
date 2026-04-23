@@ -19,9 +19,33 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#1c2b4b"
+        "backgroundColor": "#070c18"
       },
-      "package": "com.safpro.app"
+      "package": "com.safpro.app",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "data": [{ "scheme": "safpro" }],
+          "category": ["BROWSABLE", "DEFAULT"]
+        },
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "safpro.us",
+              "pathPrefix": "/verify-email"
+            },
+            {
+              "scheme": "https",
+              "host": "safpro.us",
+              "pathPrefix": "/payment-success"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "web": {
       "bundler": "metro"
@@ -35,7 +59,17 @@
           "iCloudContainerEnvironment": "Production"
         }
       ],
-      "expo-font"
+      "expo-font",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#6366f1",
+          "sounds": [],
+          "androidMode": "default",
+          "androidCollapsedTitle": "SAFPRO"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

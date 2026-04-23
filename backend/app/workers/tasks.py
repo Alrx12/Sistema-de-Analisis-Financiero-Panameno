@@ -156,6 +156,19 @@ def process_file_task(
             metadata={"job_id": job_id, "filename": original_filename},
         )
 
+        # Push notification al usuario si tiene token registrado
+        push_token = getattr(user, "expo_push_token", None)
+        if push_token:
+            from app.services.push_notification_service import (
+                notify_job_completed,
+                notify_job_failed,
+            )
+            if pipeline_status == "success":
+                notify_job_completed(push_token, original_filename)
+            else:
+                error_detail = getattr(job, "error_message", "") or ""
+                notify_job_failed(push_token, original_filename, error_detail)
+
         # Alerta admin si hay 2+ errores consecutivos para este usuario
         if pipeline_status == "error":
             _maybe_alert_admin_on_failure(db, user, job, original_filename)

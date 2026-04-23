@@ -24,6 +24,7 @@ from app.core.security import (
     generate_totp_secret,
     get_totp_provisioning_uri,
     hash_password,
+    is_mobile_oauth_state,
     verify_oauth_state,
     verify_password,
     verify_totp,
@@ -452,15 +453,19 @@ GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo"
 
 
 @router.get("/google")
-def google_login() -> RedirectResponse:
-    """Inicia el flujo OAuth con Google. Redirige al usuario a Google."""
+def google_login(mobile: bool = False) -> RedirectResponse:
+    """Inicia el flujo OAuth con Google. Redirige al usuario a Google.
+
+    Parámetro mobile=true: el callback redirigirá a safpro://oauth-callback
+    para que expo-web-browser pueda capturar el token (app nativa Android/iOS).
+    """
     if not settings.google_client_id:
         raise HTTPException(
             status_code=status.HTTP_501_NOT_IMPLEMENTED,
             detail="Google OAuth no está configurado (GOOGLE_CLIENT_ID faltante).",
         )
 
-    state = create_oauth_state("google")
+    state = create_oauth_state("google", mobile=mobile)
     callback_url = f"{settings.backend_base}/api/v1/auth/google/callback"
 
     params = (
@@ -560,6 +565,9 @@ def google_callback(code: str | None = None, state: str | None = None, error: st
         plan=getattr(user, "plan", None),
         metadata={"method": "oauth_google"},
     )
+    # Si el flujo viene de la app mobile, redirigir al scheme nativo
+    if is_mobile_oauth_state(state):
+        return RedirectResponse(url=f"safpro://oauth-callback?token={token}")
     return RedirectResponse(url=f"{frontend_callback}?token={token}")
 
 
@@ -572,15 +580,19 @@ GITHUB_EMAILS_URL = "https://api.github.com/user/emails"
 
 
 @router.get("/github")
-def github_login() -> RedirectResponse:
-    """Inicia el flujo OAuth con GitHub. Redirige al usuario a GitHub."""
+def github_login(mobile: bool = False) -> RedirectResponse:
+    """Inicia el flujo OAuth con GitHub. Redirige al usuario a GitHub.
+
+    Parámetro mobile=true: el callback redirigirá a safpro://oauth-callback
+    para que expo-web-browser pueda capturar el token (app nativa Android/iOS).
+    """
     if not settings.github_client_id:
         raise HTTPException(
             status_code=status.HTTP_501_NOT_IMPLEMENTED,
             detail="GitHub OAuth no está configurado (GITHUB_CLIENT_ID faltante).",
         )
 
-    state = create_oauth_state("github")
+    state = create_oauth_state("github", mobile=mobile)
     callback_url = f"{settings.backend_base}/api/v1/auth/github/callback"
 
     params = (
@@ -693,4 +705,7 @@ def github_callback(code: str | None = None, state: str | None = None, error: st
         plan=getattr(user, "plan", None),
         metadata={"method": "oauth_github"},
     )
+    # Si el flujo viene de la app mobile, redirigir al scheme nativo
+    if is_mobile_oauth_state(state):
+        return RedirectResponse(url=f"safpro://oauth-callback?token={token}")
     return RedirectResponse(url=f"{frontend_callback}?token={token}")

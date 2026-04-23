@@ -74,13 +74,15 @@ def active_processor() -> str | None:
 # CHECKOUT — punto de entrada unificado
 # ══════════════════════════════════════════════════════════════════════════════
 
-def create_checkout_url(user: User, interval: str) -> str:
+def create_checkout_url(user: User, interval: str, return_url: str | None = None) -> str:
     """
     Genera la URL de checkout para el procesador activo.
 
     Args:
-        user     : Usuario autenticado que quiere suscribirse.
-        interval : "monthly" | "annual"
+        user       : Usuario autenticado que quiere suscribirse.
+        interval   : "monthly" | "annual"
+        return_url : URL de retorno personalizada tras el pago (ej. deep link mobile
+                     "safpro://payment-success"). Si None, usa {frontend_base}/upgrade/success.
 
     Returns:
         URL al hosted checkout (PayPal approval page o dLocal Go subscribe_url).
@@ -94,9 +96,9 @@ def create_checkout_url(user: User, interval: str) -> str:
 
     processor = active_processor()
     if processor == "paypal":
-        return _paypal_create_checkout_url(user, interval)
+        return _paypal_create_checkout_url(user, interval, return_url)
     elif processor == "dlocalgo":
-        return _dlocalgo_create_checkout_url(user, interval)
+        return _dlocalgo_create_checkout_url(user, interval, return_url)
     else:
         raise RuntimeError(
             "No hay procesador de pagos configurado. "
@@ -160,7 +162,7 @@ def _paypal_headers(token: str) -> dict[str, str]:
     }
 
 
-def _paypal_create_checkout_url(user: User, interval: str) -> str:
+def _paypal_create_checkout_url(user: User, interval: str, return_url: str | None = None) -> str:
     """
     Crea una suscripción en PayPal y devuelve la URL de aprobación.
 
@@ -170,6 +172,8 @@ def _paypal_create_checkout_url(user: User, interval: str) -> str:
       3. Extraer link rel="approve" → URL del checkout
 
     custom_id se usa en el webhook para identificar al usuario sin depender del email.
+    return_url permite al cliente (ej. mobile) especificar una URL/deep-link de retorno
+    personalizada. Si None, se usa {frontend_base}/upgrade/success.
     """
     plan_id = (
         settings.paypal_plan_id_monthly if interval == "monthly"
@@ -202,7 +206,7 @@ def _paypal_create_checkout_url(user: User, interval: str) -> str:
                 "payer_selected": "PAYPAL",
                 "payee_preferred": "IMMEDIATE_PAYMENT_REQUIRED",
             },
-            "return_url": f"{settings.frontend_base}/upgrade/success",
+            "return_url": return_url or f"{settings.frontend_base}/upgrade/success",
             "cancel_url": f"{settings.frontend_base}/upgrade?cancelled=1",
         },
     }
@@ -472,7 +476,7 @@ def _dlocalgo_headers() -> dict[str, str]:
     }
 
 
-def _dlocalgo_create_checkout_url(user: User, interval: str) -> str:
+def _dlocalgo_create_checkout_url(user: User, interval: str, return_url: str | None = None) -> str:
     """Construye la URL de checkout de dLocal Go para la suscripción."""
     _require_dlocalgo_config()
 
@@ -512,7 +516,7 @@ def _dlocalgo_create_checkout_url(user: User, interval: str) -> str:
     params = urlencode({
         "external_id": str(user.user_id),
         "email": user.email,
-        "redirect_url": f"{settings.frontend_base}/upgrade/success",
+        "redirect_url": return_url or f"{settings.frontend_base}/upgrade/success",
         "cancel_url": f"{settings.frontend_base}/upgrade?cancelled=1",
     }, quote_via=quote)
     separator = "&" if "?" in subscribe_url else "?"

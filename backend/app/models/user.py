@@ -46,6 +46,11 @@ class User(Base):
     # Stripe — LEGACY (no usar para nuevos pagos, conservar para usuarios migrados)
     stripe_customer_id: Mapped[str | None] = mapped_column(String(100), nullable=True, unique=True)
 
+    # Push Notifications (Expo)
+    # Formato: "ExponentPushToken[xxxxxxxxxxxxxxxxxxxxx]"
+    # Solo presente si el usuario tiene la app móvil y otorgó permisos.
+    expo_push_token: Mapped[str | None] = mapped_column(String(200), nullable=True)
+
     # Administración
     is_admin: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     is_suspended: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)

@@ -19,3 +19,13 @@ export async function updateProfile(data: UserProfileUpdate): Promise<UserProfil
 export async function deleteAccount(): Promise<void> {
   await getApiClient().delete("/users/me")
 }
+
+export async function deleteAllAnalysis(): Promise<{
+  message: string
+  snapshots_deleted: number
+  transactions_deleted: number
+  files_deleted: number
+}> {
+  const res = await getApiClient().delete("/analysis/all")
+  return res.data
+}

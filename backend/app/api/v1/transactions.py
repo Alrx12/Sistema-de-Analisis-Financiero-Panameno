@@ -3,12 +3,13 @@ from collections import defaultdict
 from typing import Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
-from sqlalchemy import and_, or_, update
+from sqlalchemy import and_, extract, or_, update
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
+from app.models.analysis_snapshot import AnalysisSnapshot
 from app.models.analysis_transaction import AnalysisTransaction
 from app.models.user import User
 from app.schemas.analysis_transaction import AnalysisTransactionResponse
@@ -26,6 +27,91 @@ from app.services.transaction_service import reclassify_transaction
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+# ─── Schema para búsqueda cross-snapshot ─────────────────────────────────────
+
+class TransactionSearchResult(AnalysisTransactionResponse):
+    """Extiende AnalysisTransactionResponse con contexto del snapshot."""
+    bank_account_id: UUID | None = None
+
+
+class TransactionSearchResponse(BaseModel):
+    transactions: list[TransactionSearchResult]
+    total: int
+    limit: int
+    offset: int
+
+
+# ─── GET /search ──────────────────────────────────────────────────────────────
+
+@router.get(
+    "/search",
+    response_model=TransactionSearchResponse,
+    summary="Búsqueda de transacciones cross-snapshot",
+)
+def search_transactions(
+    q: str | None = Query(default=None, description="Texto libre sobre el descriptor"),
+    budget_category: str | None = Query(default=None),
+    year: int | None = Query(default=None),
+    month: int | None = Query(default=None, ge=1, le=12),
+    bank_account_id: UUID | None = Query(default=None),
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> TransactionSearchResponse:
+    """
+    Busca transacciones individuales a través de todos los snapshots del usuario.
+    Soporta filtros combinados: texto libre, categoría, año/mes y banco.
+    Al menos un parámetro de filtro es recomendable para evitar resultados masivos.
+    """
+    base_q = (
+        db.query(AnalysisTransaction, AnalysisSnapshot.bank_account_id)
+        .join(
+            AnalysisSnapshot,
+            AnalysisTransaction.snapshot_id == AnalysisSnapshot.snapshot_id,
+        )
+        .filter(AnalysisTransaction.user_id == current_user.user_id)
+    )
+
+    if q:
+        base_q = base_q.filter(AnalysisTransaction.detail.ilike(f"%{q}%"))
+    if budget_category:
+        base_q = base_q.filter(AnalysisTransaction.budget_category == budget_category)
+    if year:
+        base_q = base_q.filter(extract("year", AnalysisTransaction.date) == year)
+    if month:
+        base_q = base_q.filter(extract("month", AnalysisTransaction.date) == month)
+    if bank_account_id:
+        base_q = base_q.filter(AnalysisSnapshot.bank_account_id == bank_account_id)
+
+    total = base_q.count()
+
+    rows = (
+        base_q
+        .order_by(
+            AnalysisTransaction.date.desc().nullslast(),
+            AnalysisTransaction.created_at.desc(),
+        )
+        .limit(limit)
+        .offset(offset)
+        .all()
+    )
+
+    results: list[TransactionSearchResult] = []
+    for tx, acct_id in rows:
+        item = TransactionSearchResult.model_validate(tx)
+        item.requires_review = float(tx.confidence) < 0.8
+        item.bank_account_id = acct_id
+        results.append(item)
+
+    return TransactionSearchResponse(
+        transactions=results,
+        total=total,
+        limit=limit,
+        offset=offset,
+    )
 
 
 # ─── Schemas internos para review-groups ──────────────────────────────────────

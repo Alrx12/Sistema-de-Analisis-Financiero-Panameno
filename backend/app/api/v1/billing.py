@@ -34,7 +34,8 @@ router = APIRouter()
 # ── Schemas ──────────────────────────────────────────────────────────────────
 
 class CheckoutRequest(BaseModel):
-    interval: str  # "monthly" | "annual"
+    interval: str           # "monthly" | "annual"
+    return_url: str | None = None  # opcional: deep link de retorno (ej. "safpro://payment-success")
 
 
 class CheckoutResponse(BaseModel):
@@ -46,7 +47,8 @@ class BillingStatusResponse(BaseModel):
     plan: str
     subscription_expires_at: str | None   # ISO-8601 o null
     has_active_subscription: bool         # True si paypal_subscription_id o dlocalgo_subscription_id no son null
-    processor: str | None                 # "paypal" | "dlocalgo" | null
+    processor: str | None                 # procesador del usuario ("paypal" | "dlocalgo" | null)
+    available_processor: str | None       # procesador activo de la plataforma (para mostrar precios correctos)
 
 
 # ── Endpoints ────────────────────────────────────────────────────────────────
@@ -92,7 +94,7 @@ def create_checkout_session(
         )
 
     try:
-        url = billing_service.create_checkout_url(current_user, payload.interval)
+        url = billing_service.create_checkout_url(current_user, payload.interval, payload.return_url)
     except (RuntimeError, ValueError) as exc:
         logger.error("Error generando checkout URL (%s): %s", processor, exc)
         raise HTTPException(
@@ -296,4 +298,5 @@ def billing_status(
         subscription_expires_at=expires_str,
         has_active_subscription=has_active,
         processor=user_processor,
+        available_processor=billing_service.active_processor(),
     )

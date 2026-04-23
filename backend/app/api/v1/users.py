@@ -45,6 +45,26 @@ def update_me(
     return UserResponse.model_validate(current_user)
 
 
+class PushTokenRequest(BaseModel):
+    token: str | None = Field(default=None, max_length=200)
+
+
+@router.put("/push-token", status_code=200, summary="Registrar o borrar token de push notifications")
+def update_push_token(
+    body: PushTokenRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> dict:
+    """Guarda (o borra) el Expo Push Token del usuario.
+
+    - Enviar `token: "ExponentPushToken[...]"` para registrarlo.
+    - Enviar `token: null` para borrarlo (ej: al cerrar sesión).
+    """
+    current_user.expo_push_token = body.token
+    db.commit()
+    return {"message": "Push token actualizado.", "registered": body.token is not None}
+
+
 @router.delete("/me", status_code=200, summary="Eliminar cuenta del usuario")
 def delete_my_account(
     db: Session = Depends(get_db),

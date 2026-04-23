@@ -145,6 +145,11 @@ async def upload_file(
             "upload_limit_reached | user_id=%s plan=%s count=%d limit=%d",
             current_user.user_id, user_plan, upload_count, upload_limit,
         )
+        # Push notification de límite alcanzado
+        push_token = getattr(current_user, "expo_push_token", None)
+        if push_token:
+            from app.services.push_notification_service import notify_upload_limit_warning
+            notify_upload_limit_warning(push_token, upload_count, upload_limit)
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail={

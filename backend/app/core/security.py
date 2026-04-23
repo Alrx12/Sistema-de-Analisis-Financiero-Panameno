@@ -170,14 +170,19 @@ _OAUTH_STATE_EXPIRE_MINUTES = 10
 _OAUTH_STATE_PURPOSE = "oauth_state"
 
 
-def create_oauth_state(provider: str) -> str:
-    """Genera un JWT firmado como parámetro state para OAuth (protección CSRF)."""
+def create_oauth_state(provider: str, mobile: bool = False) -> str:
+    """Genera un JWT firmado como parámetro state para OAuth (protección CSRF).
+
+    Si mobile=True, el callback redirigirá al scheme nativo safpro:// en lugar
+    del frontend web, para que expo-web-browser capture el resultado.
+    """
     expire = datetime.now(timezone.utc) + timedelta(minutes=_OAUTH_STATE_EXPIRE_MINUTES)
     payload: dict[str, Any] = {
         "exp": expire,
         "purpose": _OAUTH_STATE_PURPOSE,
         "provider": provider,
         "nonce": secrets.token_hex(8),
+        "mobile": mobile,
     }
     return jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
 
@@ -190,6 +195,15 @@ def verify_oauth_state(state: str, expected_provider: str) -> bool:
             payload.get("purpose") == _OAUTH_STATE_PURPOSE
             and payload.get("provider") == expected_provider
         )
+    except Exception:
+        return False
+
+
+def is_mobile_oauth_state(state: str) -> bool:
+    """Retorna True si el state fue creado para el flujo OAuth mobile (app nativa)."""
+    try:
+        payload = jwt.decode(state, settings.secret_key, algorithms=[settings.algorithm])
+        return bool(payload.get("mobile", False))
     except Exception:
         return False
 

@@ -11,6 +11,7 @@ from slowapi.errors import RateLimitExceeded
 from sqlalchemy import text
 
 from app.api.router import api_router
+from app.api.v1.well_known import router as well_known_router
 from app.core.config import settings
 from app.core.database import engine
 from app.core.limiter import limiter
@@ -162,3 +163,8 @@ async def security_headers_middleware(request: Request, call_next: object) -> Re
 
 # ── Router ───────────────────────────────────────────────────────────────────
 app.include_router(api_router, prefix=settings.api_v1_prefix)
+
+# ── .well-known (App Links Android) — montado en raíz, sin prefijo /api/v1 ──
+# Sirve /.well-known/assetlinks.json para que Android verifique los App Links.
+# Ver backend/app/api/v1/well_known.py para instrucciones de configuración.
+app.include_router(well_known_router)

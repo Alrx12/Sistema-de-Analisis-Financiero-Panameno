@@ -45,7 +45,7 @@ const navSections = [
   {
     label: "Inteligencia",
     items: [
-      { to: "/kb",      label: "Knowledge Base",  icon: Brain,    end: false, pro: false },
+      { to: "/kb",      label: "Knowledge Base",  icon: Brain,    end: false, pro: false, admin: true },
       { to: "/retrain",      label: "Entrenamiento",  icon: Sparkles,      end: false, pro: true },
       { to: "/simulaciones", label: "Simulaciones",   icon: FlaskConical,  end: false, pro: true },
     ],
@@ -124,7 +124,7 @@ export default function AppShell() {
           {navSections.map((section) => (
             <div key={section.label}>
               <div className="sidebar-section-label">{section.label}</div>
-              {section.items.map(({ to, label, icon: Icon, end, pro }) => (
+              {section.items.filter((item: any) => !item.admin || isAdmin).map(({ to, label, icon: Icon, end, pro }: any) => (
                 <NavLink
                   key={to}
                   to={to}

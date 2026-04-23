@@ -9,17 +9,52 @@ import {
 } from "react-native"
 import { useRouter } from "expo-router"
 import * as SecureStore from "expo-secure-store"
+import * as WebBrowser from "expo-web-browser"
 import { login } from "@safpro/api/auth"
 import { getAuthStore } from "@safpro/stores"
+import { useQueryClient } from "@tanstack/react-query"
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "https://safpro.us/api/v1"
-const TOKEN_KEY = "safpro_access_token"
+const API_URL    = process.env.EXPO_PUBLIC_API_URL ?? "https://safpro.us/api/v1"
+const BASE_URL   = "https://safpro.us"
+const TOKEN_KEY  = "safpro_access_token"
+const REDIRECT   = "safpro://oauth-callback"
 
 export default function LoginScreen() {
-  const router = useRouter()
-  const [email, setEmail] = useState("")
+  const router      = useRouter()
+  const queryClient = useQueryClient()
+  const [email, setEmail]       = useState("")
   const [password, setPassword] = useState("")
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading]   = useState(false)
+  const [oauthLoading, setOauthLoading] = useState<"google" | "github" | null>(null)
+
+  async function handleOAuth(provider: "google" | "github") {
+    setOauthLoading(provider)
+    try {
+      const authUrl = `${BASE_URL}/api/v1/auth/${provider}?mobile=true`
+      const result  = await WebBrowser.openAuthSessionAsync(authUrl, REDIRECT)
+
+      if (result.type !== "success") return   // usuario canceló
+
+      // Extraer token de la URL de retorno: safpro://oauth-callback?token=XXX
+      const url   = result.url
+      const match = url.match(/[?&]token=([^&]+)/)
+      if (!match) {
+        Alert.alert("Error", "No se recibió token del proveedor.")
+        return
+      }
+      const token = decodeURIComponent(match[1])
+
+      await SecureStore.setItemAsync(TOKEN_KEY, token)
+      getAuthStore().getState().setToken(token)
+      await queryClient.invalidateQueries({ queryKey: ["me"] })
+      router.replace("/(tabs)/dashboard")
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Error al iniciar sesión con OAuth"
+      Alert.alert("Error", msg)
+    } finally {
+      setOauthLoading(null)
+    }
+  }
 
   async function handleLogin() {
     if (!email || !password) {
@@ -102,7 +137,44 @@ export default function LoginScreen() {
           <Text style={styles.link}>¿Olvidaste tu contraseña?</Text>
         </TouchableOpacity>
 
-        <View style={styles.divider} />
+        <View style={styles.divider}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>o continúa con</Text>
+          <View style={styles.dividerLine} />
+        </View>
+
+        {/* Botones OAuth */}
+        <TouchableOpacity
+          style={[styles.oauthBtn, oauthLoading === "google" && styles.btnDisabled]}
+          onPress={() => handleOAuth("google")}
+          disabled={oauthLoading !== null}
+          activeOpacity={0.8}
+        >
+          {oauthLoading === "google"
+            ? <ActivityIndicator color="#4285F4" size="small" />
+            : <>
+                <Text style={styles.oauthIcon}>G</Text>
+                <Text style={styles.oauthText}>Google</Text>
+              </>
+          }
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.oauthBtn, oauthLoading === "github" && styles.btnDisabled, { marginTop: 8 }]}
+          onPress={() => handleOAuth("github")}
+          disabled={oauthLoading !== null}
+          activeOpacity={0.8}
+        >
+          {oauthLoading === "github"
+            ? <ActivityIndicator color="#1c2b4b" size="small" />
+            : <>
+                <Text style={styles.oauthIcon}>⌥</Text>
+                <Text style={styles.oauthText}>GitHub</Text>
+              </>
+          }
+        </TouchableOpacity>
+
+        <View style={styles.divider2} />
 
         <TouchableOpacity onPress={() => router.push("/(auth)/register")}>
           <Text style={styles.registerText}>
@@ -188,9 +260,46 @@ const styles = StyleSheet.create({
     textDecorationLine: "underline",
   },
   divider: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 16,
+    gap: 8,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: "#e5e7eb",
+  },
+  dividerText: {
+    color: "#9ca3af",
+    fontSize: 12,
+    flexShrink: 0,
+  },
+  divider2: {
     height: 1,
     backgroundColor: "#e5e7eb",
     marginVertical: 16,
+  },
+  oauthBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+    borderRadius: 10,
+    paddingVertical: 12,
+    backgroundColor: "#f9fafb",
+  },
+  oauthIcon: {
+    fontSize: 15,
+    fontWeight: "800",
+    color: "#374151",
+  },
+  oauthText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#374151",
   },
   registerText: {
     textAlign: "center",

@@ -14,6 +14,7 @@ class UserResponse(BaseModel):
     is_admin: bool
     is_verified: bool
     totp_enabled: bool
+    expo_push_token: str | None = None
     created_at: datetime
 
     model_config = {"from_attributes": True}

@@ -268,7 +268,7 @@ export default function ManualScreen() {
         <View style={styles.typeToggle}>
           <TouchableOpacity
             style={[styles.typeBtn, isGasto && { backgroundColor: "rgba(239,68,68,0.15)", borderColor: "rgba(239,68,68,0.4)" }]}
-            onPress={() => setType("debito")}
+            onPress={() => { setType("debito"); setCategory("") }}
             activeOpacity={0.8}
           >
             <Ionicons name="arrow-down-circle" size={18} color={isGasto ? RED : MUTED} />
@@ -276,7 +276,7 @@ export default function ManualScreen() {
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.typeBtn, !isGasto && { backgroundColor: "rgba(34,197,94,0.15)", borderColor: "rgba(34,197,94,0.4)" }]}
-            onPress={() => setType("credito")}
+            onPress={() => { setType("credito"); setCategory("") }}
             activeOpacity={0.8}
           >
             <Ionicons name="arrow-up-circle" size={18} color={!isGasto ? GREEN : MUTED} />

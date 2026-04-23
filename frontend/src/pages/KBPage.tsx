@@ -1,12 +1,14 @@
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Brain, Search, Trash2, AlertTriangle, CheckCircle2, Globe, BookOpen, Zap, Lock } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 import { listKB, listGlobalKB, deleteKBEntry, previewCanonical } from "@/api/kb"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { capitalize } from "@/lib/utils"
 import { toast } from "@/components/ui/toast"
+import { useAuthStore } from "@/stores/authStore"
 import type { KBEntry } from "@/types"
 
 // ─── Paleta de colores ────────────────────────────────────────────────────────
@@ -272,6 +274,17 @@ type Tab = "personal" | "global"
 export default function KBPage() {
   const queryClient = useQueryClient()
   const [activeTab, setActiveTab] = useState<Tab>("personal")
+  const user     = useAuthStore((s) => s.user)
+  const navigate = useNavigate()
+
+  // Only admins can view the Knowledge Base
+  useEffect(() => {
+    if (user !== undefined && user?.is_admin !== true) {
+      navigate("/", { replace: true })
+    }
+  }, [user, navigate])
+
+  if (user?.is_admin !== true) return null
 
   const { data: personal, isLoading: loadingPersonal, isError: errorPersonal } = useQuery({
     queryKey: ["kb"],

@@ -2,6 +2,7 @@
 export { createApiClient, getApiClient } from "./client"
 export * from "./auth"
 export * from "./analysis"
+export * from "./billing"
 export * from "./files"
 export * from "./users"
 export * from "./transactions"

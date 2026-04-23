@@ -7,6 +7,7 @@ import {
 } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { Ionicons } from "@expo/vector-icons"
+import { useRouter } from "expo-router"
 
 const FAQS = [
   {
@@ -73,6 +74,21 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 }
 
 export default function AyudaScreen() {
+  const router = useRouter()
+
+  // Mapa de rutas nativas para los links legales
+  const LEGAL_LINKS: Array<{
+    label: string
+    icon: "shield-checkmark-outline" | "document-text-outline" | "help-circle-outline" | "mail-outline"
+    route: string
+    external?: boolean
+  }> = [
+    { label: "Política de Privacidad", icon: "shield-checkmark-outline", route: "/privacy" },
+    { label: "Términos de Servicio",   icon: "document-text-outline",    route: "/terms" },
+    { label: "Preguntas Frecuentes",   icon: "help-circle-outline",      route: "/faq" },
+    { label: "Contacto",               icon: "mail-outline",             route: "/contacto" },
+  ]
+
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
@@ -84,7 +100,7 @@ export default function AyudaScreen() {
         {/* Banner de contacto */}
         <TouchableOpacity
           style={styles.contactBanner}
-          onPress={() => Linking.openURL("mailto:admin@safpro.us")}
+          onPress={() => router.push("/contacto" as any)}
         >
           <Ionicons name="mail-outline" size={20} color="#e05c19" />
           <View style={{ flex: 1 }}>
@@ -115,6 +131,23 @@ export default function AyudaScreen() {
               <View style={[styles.bankDot, { backgroundColor: b.color }]} />
               <Text style={styles.bankName}>{b.name}</Text>
             </View>
+          ))}
+        </View>
+
+        {/* Legal y contacto */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Legal y contacto</Text>
+          {LEGAL_LINKS.map(({ label, icon, route }) => (
+            <TouchableOpacity
+              key={route}
+              style={styles.legalRow}
+              onPress={() => router.push(route as any)}
+              activeOpacity={0.7}
+            >
+              <Ionicons name={icon} size={16} color="#6366f1" />
+              <Text style={styles.legalLabel}>{label}</Text>
+              <Ionicons name="chevron-forward" size={13} color="rgba(255,255,255,0.28)" />
+            </TouchableOpacity>
           ))}
         </View>
 
@@ -202,5 +235,14 @@ const styles = StyleSheet.create({
   bankRow:  { flexDirection: "row", alignItems: "center", paddingVertical: 6 },
   bankDot:  { width: 10, height: 10, borderRadius: 5, marginRight: 10 },
   bankName: { color: "#f1f5f9", fontSize: 14 },
+  legalRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255,255,255,0.07)",
+  },
+  legalLabel: { color: "#f1f5f9", fontSize: 14, flex: 1 },
   footer:   { color: "rgba(255,255,255,0.28)", textAlign: "center", fontSize: 12 },
 })

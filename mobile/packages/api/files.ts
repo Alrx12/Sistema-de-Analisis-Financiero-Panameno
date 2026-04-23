@@ -53,3 +53,12 @@ export async function listJobs(): Promise<ProcessingJob[]> {
   const res = await getApiClient().get<ProcessingJob[]>("/jobs/")
   return res.data
 }
+
+export async function deleteUploads(): Promise<{
+  message: string
+  records_deleted: number
+  files_deleted: number
+}> {
+  const res = await getApiClient().delete("/files/uploads")
+  return res.data
+}

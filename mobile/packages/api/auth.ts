@@ -102,6 +102,19 @@ export async function verify2FA(
   return res.data
 }
 
+// ── Cambio de contraseña ─────────────────────────────────────────────────────
+
+export async function changePassword(
+  current_password: string,
+  new_password: string
+): Promise<{ message: string }> {
+  const res = await getApiClient().post("/auth/change-password", {
+    current_password,
+    new_password,
+  })
+  return res.data
+}
+
 // ── Verificación de email ────────────────────────────────────────────────────
 
 export async function verifyEmail(
