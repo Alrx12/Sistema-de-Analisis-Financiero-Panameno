@@ -36,7 +36,7 @@ router = APIRouter()
 # ── SHA-256 del keystore de release ──────────────────────────────────────────
 # Reemplaza este valor con el SHA-256 real al generar el keystore de release.
 # Formato: "XX:XX:XX:..." (cada byte separado por ":", mayúsculas, sin espacios)
-RELEASE_SHA256 = "PLACEHOLDER_SHA256_FINGERPRINT"
+RELEASE_SHA256 = "60:4B:84:16:8F:D1:CD:CC:9B:9C:6A:22:B0:3C:BA:A9:AC:E0:EB:57:17:AA:9C:6B:DC:C6:F2:85:BB:B1:FB:04"
 
 # SHA-256 del keystore de DEBUG (para desarrollo/testing en dispositivos físicos).
 # Lo puedes obtener con:

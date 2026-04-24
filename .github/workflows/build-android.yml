@@ -1,7 +1,16 @@
 name: Build Android APK
 
 on:
-  workflow_dispatch:   # Se activa manualmente desde GitHub Actions
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Tipo de build'
+        required: true
+        default: 'release'
+        type: choice
+        options:
+          - release
+          - debug
 
 jobs:
   build:
@@ -12,7 +21,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # Necesario para que git funcione correctamente en pasos de build
+          fetch-depth: 0
 
       - name: Setup Node.js 20
         uses: actions/setup-node@v4
@@ -45,7 +54,43 @@ jobs:
           NODE_ENV: production
         run: npx expo prebuild --platform android --no-install
 
+      # ── RELEASE: decodificar keystore desde GitHub Secret ──────────────────
+      - name: Decode keystore (solo en release)
+        if: github.event.inputs.build_type == 'release'
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > mobile/android/app/safpro-release.keystore
+
+      - name: Build release APK (firmado con keystore de release)
+        if: github.event.inputs.build_type == 'release'
+        working-directory: mobile/android
+        env:
+          JAVA_OPTS: "-Xmx4g -XX:MaxMetaspaceSize=512m"
+          EXPO_PUBLIC_API_URL: https://safpro.us/api/v1
+          NODE_ENV: production
+          KEYSTORE_FILE: safpro-release.keystore
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          ./gradlew assembleRelease \
+            -Pandroid.injected.signing.store.file=$PWD/app/safpro-release.keystore \
+            -Pandroid.injected.signing.store.password="$KEYSTORE_PASSWORD" \
+            -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
+            -Pandroid.injected.signing.key.password="$KEY_PASSWORD" \
+            --no-daemon --stacktrace
+
+      - name: Upload release APK artifact
+        if: github.event.inputs.build_type == 'release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: safpro-release-apk
+          path: mobile/android/app/build/outputs/apk/release/app-release.apk
+          retention-days: 30
+          if-no-files-found: error
+
+      # ── DEBUG: build sin firma de release ──────────────────────────────────
       - name: Build debug APK (firmado con debug key)
+        if: github.event.inputs.build_type == 'debug'
         working-directory: mobile/android
         env:
           JAVA_OPTS: "-Xmx4g -XX:MaxMetaspaceSize=512m"
@@ -53,7 +98,8 @@ jobs:
           NODE_ENV: production
         run: ./gradlew assembleDebug --no-daemon --stacktrace
 
-      - name: Upload APK artifact
+      - name: Upload debug APK artifact
+        if: github.event.inputs.build_type == 'debug'
         uses: actions/upload-artifact@v4
         with:
           name: safpro-debug-apk
