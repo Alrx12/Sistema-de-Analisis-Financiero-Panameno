@@ -45,7 +45,7 @@ from app.schemas.auth import (
     VerifyEmailRequest,
 )
 from app.schemas.user import UserResponse
-from app.services.email_service import send_reset_email, send_verification_email
+from app.services.email_service import send_reset_email, send_verification_email, send_password_changed_email
 from app.services.analytics_service import track_event
 from app.core.logging_config import audit_logger
 
@@ -308,6 +308,23 @@ def change_password(
     db.add(current_user)
     db.commit()
     logger.info("Contraseña cambiada para user_id=%s", current_user.user_id)
+    audit_logger.info("password_changed | user_id=%s", current_user.user_id)
+
+    # Notificación de seguridad (fire-and-forget)
+    import threading
+    threading.Thread(
+        target=send_password_changed_email,
+        args=(current_user.email, current_user.full_name or "Usuario"),
+        daemon=True,
+    ).start()
+
+    # Analytics
+    track_event(
+        user_id=current_user.user_id,
+        event_type="password_changed",
+        plan=getattr(current_user, "plan", "free"),
+        metadata={"method": "change_password"},
+    )
 
     return {"message": "Contraseña actualizada correctamente."}
 

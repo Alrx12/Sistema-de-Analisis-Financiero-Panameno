@@ -198,14 +198,21 @@ export default function UploadScreen() {
 
   // ── Trust Layer — mostrar solo la primera vez ────────────────────────────
   const [trustVisible, setTrustVisible] = useState(false)
+  const [trustChecked, setTrustChecked] = useState(false)
   useEffect(() => {
-    AsyncStorage.getItem(TRUST_KEY).then((val) => {
-      if (!val) setTrustVisible(true)
-    })
+    AsyncStorage.getItem(TRUST_KEY)
+      .then((val) => {
+        if (!val) setTrustVisible(true)
+      })
+      .catch(() => {
+        // Si AsyncStorage falla, mostrar el modal por defecto
+        setTrustVisible(true)
+      })
+      .finally(() => setTrustChecked(true))
   }, [])
   function dismissTrust() {
     setTrustVisible(false)
-    AsyncStorage.setItem(TRUST_KEY, "1")
+    AsyncStorage.setItem(TRUST_KEY, "1").catch(() => {})
   }
 
   // ── Upload status (badge) ─────────────────────────────────────────────────

@@ -6,7 +6,7 @@
  */
 import {
   Animated, Dimensions, StyleSheet, Text, Linking,
-  TouchableOpacity, TouchableWithoutFeedback, View,
+  TouchableOpacity, TouchableWithoutFeedback, View, ScrollView,
 } from "react-native"
 import { Slot, usePathname, useRouter } from "expo-router"
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
@@ -162,8 +162,8 @@ function Sidebar({
           </TouchableOpacity>
         </View>
 
-        {/* Nav sections */}
-        <View style={{ flex: 1 }}>
+        {/* Nav sections — ScrollView para que el badge no quede tapado */}
+        <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
           {NAV_SECTIONS.map((section) => (
             <View key={section.label}>
               <Text style={styles.sectionLabel}>{section.label}</Text>
@@ -197,13 +197,13 @@ function Sidebar({
               })}
             </View>
           ))}
-        </View>
+        </ScrollView>
 
         {/* Plan badge */}
         {isPro && (
           <TouchableOpacity
             style={styles.planBadge}
-            onPress={() => { onClose(); Linking.openURL("https://safpro.us/upgrade") }}
+            onPress={() => { navigate("/upgrade") }}
             activeOpacity={0.8}
           >
             <Ionicons name="star" size={14} color="#fbbf24" />
@@ -225,7 +225,7 @@ function Sidebar({
         {plan === "free" && (
           <TouchableOpacity
             style={[styles.planBadge, { borderColor: "rgba(224,92,25,0.3)", backgroundColor: "rgba(224,92,25,0.08)" }]}
-            onPress={() => { onClose(); Linking.openURL("https://safpro.us/upgrade") }}
+            onPress={() => { navigate("/upgrade") }}
             activeOpacity={0.8}
           >
             <Ionicons name="flash" size={14} color="#f97316" />

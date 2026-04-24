@@ -14,6 +14,8 @@ import {
   StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform,
 } from "react-native"
 import { useRouter } from "expo-router"
+import { useQueryClient } from "@tanstack/react-query"
+import { Ionicons } from "@expo/vector-icons"
 import { updateProfile } from "@safpro/api/users"
 
 // ── Tipos ────────────────────────────────────────────────────────────────────
@@ -108,7 +110,8 @@ const GREEN  = "#22c55e"
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function OnboardingScreen() {
-  const router = useRouter()
+  const router      = useRouter()
+  const queryClient = useQueryClient()
 
   const [step,     setStep]     = useState<Step>(1)
   const [industry, setIndustry] = useState<IndustryType | null>(null)
@@ -128,6 +131,8 @@ export default function OnboardingScreen() {
         financial_goals: goals,
         onboarding_completed: true,
       })
+      // Invalidar cache para que _layout.tsx no redirija de vuelta al onboarding
+      await queryClient.invalidateQueries({ queryKey: ["profile"] })
     } catch { /* avanzar igualmente si falla */ }
     finally {
       setSaving(false)
@@ -135,9 +140,12 @@ export default function OnboardingScreen() {
     }
   }
 
-  function skipOnboarding() {
+  async function skipOnboarding() {
     // Marcar completado sin guardar selecciones
-    updateProfile({ onboarding_completed: true }).catch(() => {})
+    try {
+      await updateProfile({ onboarding_completed: true })
+      await queryClient.invalidateQueries({ queryKey: ["profile"] })
+    } catch { /* ignorar errores al saltar */ }
     router.replace("/(tabs)/upload")
   }
 
@@ -219,8 +227,11 @@ export default function OnboardingScreen() {
                     onPress={() => setIndustry(value)}
                     style={[s.industryBtn, sel && s.industryBtnSel]}
                   >
-                    <Text style={s.industryEmoji}>{emoji}</Text>
-                    <Text style={[s.industryLabel, sel && s.industryLabelSel]}>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                      <Text style={s.industryEmoji}>{emoji}</Text>
+                      {sel && <Ionicons name="checkmark-circle" size={14} color={INDIGO} />}
+                    </View>
+                    <Text style={[s.industryLabel, sel && s.industryLabelSel]} numberOfLines={2}>
                       {label}
                     </Text>
                     {independent && (
@@ -511,18 +522,17 @@ const s = StyleSheet.create({
   grid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   industryBtn: {
     width: "47%",
-    flexDirection: "row", alignItems: "center", gap: 6,
+    flexDirection: "column", alignItems: "flex-start", gap: 4,
     padding: 12, borderRadius: 10,
     borderWidth: 1.5, borderColor: BORDER,
     backgroundColor: CARD,
-    flexWrap: "wrap",
   },
   industryBtnSel: {
     borderColor: INDIGO,
     backgroundColor: "rgba(99,102,241,0.12)",
   },
   industryEmoji: { fontSize: 18, lineHeight: 22 },
-  industryLabel: { flex: 1, fontSize: 13, color: TEXT },
+  industryLabel: { fontSize: 13, color: TEXT, flexShrink: 1 },
   industryLabelSel: { color: INDIGO, fontWeight: "600" },
   badge: {
     paddingHorizontal: 6, paddingVertical: 2, borderRadius: 999,

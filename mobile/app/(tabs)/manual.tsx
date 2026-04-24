@@ -6,7 +6,7 @@
 import { useState } from "react"
 import {
   View, Text, TouchableOpacity, StyleSheet,
-  ScrollView, ActivityIndicator, Modal, FlatList, Alert,
+  ScrollView, ActivityIndicator, Modal, FlatList, Alert, TextInput,
 } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
@@ -215,6 +215,7 @@ export default function ManualScreen() {
   const [type, setType]           = useState<"debito" | "credito">("debito")
   const [amount, setAmount]       = useState("0")
   const [category, setCategory]   = useState("")
+  const [description, setDescription] = useState("")
   const [showCatModal, setShowCatModal] = useState(false)
   const [saving, setSaving]       = useState(false)
   const [showHistory, setShowHistory] = useState(false)
@@ -235,7 +236,7 @@ export default function ManualScreen() {
     try {
       await createManualTx({
         date: today,
-        detail: catConfig?.label ?? category,
+        detail: description.trim() || catConfig?.label || category,
         amount: amountNum,
         movement_type: type,
         budget_category: category,
@@ -244,6 +245,7 @@ export default function ManualScreen() {
       queryClient.invalidateQueries({ queryKey: ["manual-txs"] })
       setAmount("0")
       setCategory("")
+      setDescription("")
       Alert.alert("✅ Guardado", `${isGasto ? "Gasto" : "Ingreso"} de $${amountNum.toFixed(2)} registrado.`)
     } catch (e: any) {
       Alert.alert("Error", e?.message ?? "No se pudo guardar.")
@@ -306,6 +308,17 @@ export default function ManualScreen() {
             <Text style={[styles.selectorValue, { color: TEXT }]}>{today}</Text>
           </View>
         </View>
+
+        {/* Descripción (opcional) */}
+        <TextInput
+          style={styles.descInput}
+          placeholder="Descripción (opcional)"
+          placeholderTextColor={DIM as string}
+          value={description}
+          onChangeText={setDescription}
+          maxLength={80}
+          returnKeyType="done"
+        />
 
         {/* Monto */}
         <View style={styles.amountCard}>
@@ -431,6 +444,17 @@ const styles = StyleSheet.create({
   catDot:              { width: 24, height: 24, borderRadius: 6, alignItems: "center", justifyContent: "center" },
   selectorValue:       { fontSize: 13, fontWeight: "700", flex: 1 },
   selectorPlaceholder: { color: INDIGO, fontSize: 13, fontWeight: "600" },
+
+  descInput: {
+    backgroundColor: CARD,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: BORDER,
+    color: TEXT,
+    fontSize: 14,
+  },
 
   amountCard:    { backgroundColor: CARD, borderRadius: 12, padding: 20, alignItems: "center", borderWidth: 1, borderColor: BORDER },
   amountDisplay: { fontSize: 48, fontWeight: "800" },

@@ -2,7 +2,7 @@
  * RetrainScreen — Entrenamiento masivo (mobile)
  * Tema: dark navy
  */
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity,
   ActivityIndicator, Modal, FlatList,
@@ -203,23 +203,23 @@ function GroupCard({ group, index, total, onApplied, onSkipped }: {
 // ── Pantalla principal ────────────────────────────────────────────────────────
 export default function RetrainScreen() {
   const [appliedCount, setAppliedCount] = useState(0)
-  const [groups, setGroups]             = useState<ReviewGroup[] | null>(null)
+  const [removedKeys, setRemovedKeys]   = useState<Set<string>>(new Set())
 
-  const { isLoading } = useQuery({
+  const { isLoading, data: reviewData } = useQuery({
     queryKey: ["review-groups"],
     queryFn: getReviewGroups,
-    onSuccess: (data: ReviewGroup[]) => setGroups(data),
-  } as any)
+  })
 
   const handleApplied = useCallback((key: string, count: number) => {
-    setGroups(prev => prev ? prev.filter(g => g.canonical_key !== key) : prev)
+    setRemovedKeys(prev => new Set([...prev, key]))
     setAppliedCount(c => c + count)
   }, [])
   const handleSkipped = useCallback((key: string) => {
-    setGroups(prev => prev ? prev.filter(g => g.canonical_key !== key) : prev)
+    setRemovedKeys(prev => new Set([...prev, key]))
   }, [])
 
-  const pending = groups ?? []
+  const allGroups = reviewData ?? []
+  const pending   = allGroups.filter(g => !removedKeys.has(g.canonical_key))
 
   return (
     <SafeAreaView style={styles.safe} edges={["bottom"]}>

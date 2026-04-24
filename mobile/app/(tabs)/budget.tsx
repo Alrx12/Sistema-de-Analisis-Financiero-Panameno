@@ -480,7 +480,7 @@ export default function BudgetScreen() {
       {/* Header */}
       <View style={s.header}>
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-          <Text style={s.title}>Presupuesto {targetStr}</Text>
+          <Text style={[s.title, { flex: 1 }]} numberOfLines={1}>Presupuesto {targetStr}</Text>
           <TouchableOpacity
             style={s.manualBtn}
             onPress={() => setShowManualModal(true)}

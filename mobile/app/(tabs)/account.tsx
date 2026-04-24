@@ -6,7 +6,7 @@
 import { useState, useEffect } from "react"
 import {
   View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView,
-  Modal, FlatList, ActivityIndicator, TextInput, Switch,
+  Modal, FlatList, ActivityIndicator, TextInput, Switch, KeyboardAvoidingView, Platform,
 } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
@@ -154,6 +154,61 @@ function ActionRow({ icon, iconColor, label, onPress, chevron = true }: {
 // UpgradeModal eliminado — ahora se navega a /upgrade (pantalla completa)
 // Ver: mobile/app/upgrade.tsx
 
+// ── Multi-select picker para metas financieras ────────────────────────────────
+function MultiPickerModal({ visible, title, options, selected, onConfirm, onClose }: {
+  visible: boolean; title: string
+  options: { value: string; label: string; emoji?: string }[]
+  selected: string[]; onConfirm: (values: string[]) => void; onClose: () => void
+}) {
+  const [local, setLocal] = useState<string[]>(selected)
+
+  // Re-sync when modal opens
+  useEffect(() => { if (visible) setLocal(selected) }, [visible])
+
+  function toggle(value: string) {
+    setLocal(prev => prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value])
+  }
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <TouchableOpacity style={ms.overlay} activeOpacity={1} onPress={onClose}>
+        <View style={ms.sheet}>
+          <View style={ms.handle} />
+          <Text style={ms.title}>{title}</Text>
+          <FlatList
+            data={options}
+            keyExtractor={(i) => i.value}
+            renderItem={({ item }) => {
+              const isSelected = local.includes(item.value)
+              return (
+                <TouchableOpacity
+                  style={[ms.item, isSelected && ms.itemSelected]}
+                  onPress={() => toggle(item.value)}
+                >
+                  {item.emoji && <Text style={{ fontSize: 18 }}>{item.emoji}</Text>}
+                  <Text style={[ms.itemText, isSelected && { color: "#a5b4fc", fontWeight: "700" }]}>
+                    {item.label}
+                  </Text>
+                  {isSelected && <Ionicons name="checkmark" size={18} color={INDIGO} />}
+                </TouchableOpacity>
+              )
+            }}
+          />
+          <TouchableOpacity
+            style={{ margin: 20, backgroundColor: INDIGO, borderRadius: 10, paddingVertical: 13, alignItems: "center" }}
+            onPress={() => { onConfirm(local); onClose() }}
+            activeOpacity={0.8}
+          >
+            <Text style={{ color: "#fff", fontWeight: "700", fontSize: 15 }}>
+              Guardar ({local.length} seleccionada{local.length !== 1 ? "s" : ""})
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </TouchableOpacity>
+    </Modal>
+  )
+}
+
 // ── Modal cambiar contraseña ──────────────────────────────────────────────────
 function ChangePasswordModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const [currentPwd,    setCurrentPwd]    = useState("")
@@ -228,52 +283,55 @@ function ChangePasswordModal({ visible, onClose }: { visible: boolean; onClose: 
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={handleClose}>
-      <TouchableOpacity style={ms.overlay} activeOpacity={1} onPress={handleClose}>
-        <TouchableOpacity activeOpacity={1} onPress={() => {}}>
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
+        <TouchableOpacity style={ms.overlay} activeOpacity={1} onPress={handleClose}>
           <View style={[ms.sheet, { paddingHorizontal: 20, paddingBottom: 40 }]}>
             <View style={ms.handle} />
             <Text style={[ms.title, { marginBottom: 20 }]}>🔑 Cambiar contraseña</Text>
+            <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+              <TouchableOpacity activeOpacity={1}>
+                <PwdField
+                  label="Contraseña actual"
+                  value={currentPwd} onChangeText={setCurrentPwd}
+                  show={showCurrent} onToggle={() => setShowCurrent(v => !v)}
+                />
+                <PwdField
+                  label="Nueva contraseña (mín. 8 caracteres)"
+                  value={newPwd} onChangeText={setNewPwd}
+                  show={showNew} onToggle={() => setShowNew(v => !v)}
+                />
+                <PwdField
+                  label="Confirmar nueva contraseña"
+                  value={confirmPwd} onChangeText={setConfirmPwd}
+                  show={showConfirm} onToggle={() => setShowConfirm(v => !v)}
+                />
 
-            <PwdField
-              label="Contraseña actual"
-              value={currentPwd} onChangeText={setCurrentPwd}
-              show={showCurrent} onToggle={() => setShowCurrent(v => !v)}
-            />
-            <PwdField
-              label="Nueva contraseña (mín. 8 caracteres)"
-              value={newPwd} onChangeText={setNewPwd}
-              show={showNew} onToggle={() => setShowNew(v => !v)}
-            />
-            <PwdField
-              label="Confirmar nueva contraseña"
-              value={confirmPwd} onChangeText={setConfirmPwd}
-              show={showConfirm} onToggle={() => setShowConfirm(v => !v)}
-            />
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: INDIGO, borderRadius: 10,
+                    paddingVertical: 14, alignItems: "center",
+                    opacity: loading ? 0.6 : 1, marginTop: 4,
+                  }}
+                  onPress={handleSave}
+                  disabled={loading}
+                  activeOpacity={0.8}
+                >
+                  {loading
+                    ? <ActivityIndicator color="#fff" />
+                    : <Text style={{ color: "#fff", fontWeight: "700", fontSize: 15 }}>Guardar contraseña</Text>}
+                </TouchableOpacity>
 
-            <TouchableOpacity
-              style={{
-                backgroundColor: INDIGO, borderRadius: 10,
-                paddingVertical: 14, alignItems: "center",
-                opacity: loading ? 0.6 : 1, marginTop: 4,
-              }}
-              onPress={handleSave}
-              disabled={loading}
-              activeOpacity={0.8}
-            >
-              {loading
-                ? <ActivityIndicator color="#fff" />
-                : <Text style={{ color: "#fff", fontWeight: "700", fontSize: 15 }}>Guardar contraseña</Text>}
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={{ marginTop: 12, alignItems: "center", paddingVertical: 10 }}
-              onPress={handleClose}
-            >
-              <Text style={{ color: MUTED, fontSize: 14 }}>Cancelar</Text>
-            </TouchableOpacity>
+                <TouchableOpacity
+                  style={{ marginTop: 12, alignItems: "center", paddingVertical: 10 }}
+                  onPress={handleClose}
+                >
+                  <Text style={{ color: MUTED, fontSize: 14 }}>Cancelar</Text>
+                </TouchableOpacity>
+              </TouchableOpacity>
+            </ScrollView>
           </View>
         </TouchableOpacity>
-      </TouchableOpacity>
+      </KeyboardAvoidingView>
     </Modal>
   )
 }
@@ -423,9 +481,18 @@ export default function AccountScreen() {
     : "?"
 
   const industryLabel = INDUSTRIES.find(i => i.value === profile?.industry)
-  const goalLabel     = GOALS.find(g => g.value === profile?.primary_goal)
+  // financial_goals is an array; also support primary_goal for backwards compat
+  const selectedGoals: string[] = profile?.financial_goals?.length
+    ? profile.financial_goals
+    : (profile?.primary_goal ? [profile.primary_goal] : [])
+  const goalsLabel    = selectedGoals.length > 0
+    ? selectedGoals.map(g => GOALS.find(o => o.value === g)?.emoji ?? "").join(" ").trim() + " " + (selectedGoals.length === 1 ? (GOALS.find(o => o.value === selectedGoals[0])?.label ?? "") : `${selectedGoals.length} metas`)
+    : null
   const employLabel   = EMPLOYMENT.find(e => e.value === profile?.employment_type)
   const housingLabel  = HOUSING_TYPES.find(h => h.value === housingLocal)
+  const incomeDisplay = profile?.expected_monthly_income
+    ? `$${Number(profile.expected_monthly_income).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/mes`
+    : null
 
   return (
     <SafeAreaView style={st.safe} edges={["bottom"]}>
@@ -519,11 +586,14 @@ export default function AccountScreen() {
           <Text style={st.profileHint}>
             Personaliza tu presupuesto 50/30/20 y las recomendaciones del asistente.
           </Text>
+          {incomeDisplay && (
+            <InfoRow label="Ingreso mensual esperado" value={incomeDisplay} valueColor="#22c55e" />
+          )}
           <ActionRow icon="briefcase-outline" iconColor="#8b5cf6"
             label={industryLabel ? `${industryLabel.emoji} ${industryLabel.label}` : "Industria / Sector"}
             onPress={() => setShowIndustryPicker(true)} />
           <ActionRow icon="flag-outline" iconColor="#22c55e"
-            label={goalLabel ? `${goalLabel.emoji} ${goalLabel.label}` : "Meta principal"}
+            label={goalsLabel ?? "Metas financieras"}
             onPress={() => setShowGoalPicker(true)} />
           <ActionRow icon="person-outline" iconColor="#3b82f6"
             label={employLabel ? employLabel.label : "Tipo de empleo"}
@@ -752,8 +822,9 @@ export default function AccountScreen() {
       <PickerModal visible={showIndustryPicker} title="Industria / Sector" options={INDUSTRIES}
         selected={profile?.industry ?? ""} onSelect={(v) => updateMut.mutate({ industry: v })}
         onClose={() => setShowIndustryPicker(false)} />
-      <PickerModal visible={showGoalPicker} title="Meta principal" options={GOALS}
-        selected={profile?.primary_goal ?? ""} onSelect={(v) => updateMut.mutate({ primary_goal: v })}
+      <MultiPickerModal visible={showGoalPicker} title="Metas financieras" options={GOALS}
+        selected={selectedGoals}
+        onConfirm={(values) => updateMut.mutate({ financial_goals: values, primary_goal: values[0] ?? null })}
         onClose={() => setShowGoalPicker(false)} />
       <PickerModal visible={showEmployPicker} title="Tipo de empleo" options={EMPLOYMENT}
         selected={profile?.employment_type ?? ""} onSelect={(v) => { updateMut.mutate({ employment_type: v }); setExtDirty(true) }}

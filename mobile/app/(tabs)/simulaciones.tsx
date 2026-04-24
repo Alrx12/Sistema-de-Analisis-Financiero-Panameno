@@ -9,7 +9,7 @@
 import { useState, useMemo } from "react"
 import {
   View, Text, ScrollView, StyleSheet, TextInput,
-  TouchableOpacity, ActivityIndicator, Alert,
+  TouchableOpacity, ActivityIndicator, Alert, Modal, FlatList,
 } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useQuery } from "@tanstack/react-query"
@@ -43,6 +43,98 @@ function fmtDate(d: string) {
 }
 
 function uid() { return Math.random().toString(36).slice(2, 9) }
+
+// ── QuincenaDateModal — selector compacto de fecha sin dependencias extra ──────
+const MONTH_NAMES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"]
+
+function QuincenaDateModal({ visible, onSelect, onClose }: {
+  visible: boolean; onSelect: (d: string) => void; onClose: () => void
+}) {
+  const now = new Date()
+  const [selYear,  setSelYear]  = useState(now.getFullYear())
+  const [selMonth, setSelMonth] = useState(now.getMonth() + 1) // 1–12
+  const [selDay,   setSelDay]   = useState(now.getDate())
+
+  const years = [now.getFullYear() - 1, now.getFullYear(), now.getFullYear() + 1]
+  const daysInMonth = new Date(selYear, selMonth, 0).getDate()
+  const days = Array.from({ length: daysInMonth }, (_, i) => i + 1)
+
+  const BG2   = "#0d1426"
+  const SEL   = "#6366f1"
+  const MUT   = "rgba(255,255,255,0.45)"
+  const TX    = "#f1f5f9"
+  const BO    = "rgba(255,255,255,0.07)"
+
+  function confirm() {
+    const d = `${selYear}-${String(selMonth).padStart(2,"0")}-${String(selDay).padStart(2,"0")}`
+    onSelect(d)
+    onClose()
+  }
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <TouchableOpacity style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "flex-end" }} activeOpacity={1} onPress={onClose}>
+        <View style={{ backgroundColor: BG2, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingTop: 12, paddingBottom: 40, borderTopWidth: 1, borderColor: BO }}>
+          <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: BO, alignSelf: "center", marginBottom: 16 }} />
+          <Text style={{ color: TX, fontSize: 16, fontWeight: "700", textAlign: "center", marginBottom: 16 }}>Seleccionar fecha</Text>
+
+          {/* Year row */}
+          <Text style={{ color: MUT, fontSize: 11, fontWeight: "700", textTransform: "uppercase", letterSpacing: 1, paddingHorizontal: 20, marginBottom: 6 }}>Año</Text>
+          <View style={{ flexDirection: "row", paddingHorizontal: 16, gap: 8, marginBottom: 12 }}>
+            {years.map(y => (
+              <TouchableOpacity key={y}
+                style={{ flex: 1, paddingVertical: 10, borderRadius: 10, backgroundColor: selYear === y ? SEL : "rgba(255,255,255,0.06)", alignItems: "center" }}
+                onPress={() => setSelYear(y)}
+              >
+                <Text style={{ color: selYear === y ? "#fff" : MUT, fontWeight: "700" }}>{y}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {/* Month row */}
+          <Text style={{ color: MUT, fontSize: 11, fontWeight: "700", textTransform: "uppercase", letterSpacing: 1, paddingHorizontal: 20, marginBottom: 6 }}>Mes</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingHorizontal: 16, marginBottom: 12 }} contentContainerStyle={{ gap: 6 }}>
+            {MONTH_NAMES.map((m, i) => {
+              const mn = i + 1
+              return (
+                <TouchableOpacity key={mn}
+                  style={{ paddingHorizontal: 14, paddingVertical: 10, borderRadius: 10, backgroundColor: selMonth === mn ? SEL : "rgba(255,255,255,0.06)", minWidth: 52, alignItems: "center" }}
+                  onPress={() => { setSelMonth(mn); if (selDay > new Date(selYear, mn, 0).getDate()) setSelDay(1) }}
+                >
+                  <Text style={{ color: selMonth === mn ? "#fff" : MUT, fontWeight: "700", fontSize: 12 }}>{m}</Text>
+                </TouchableOpacity>
+              )
+            })}
+          </ScrollView>
+
+          {/* Day row */}
+          <Text style={{ color: MUT, fontSize: 11, fontWeight: "700", textTransform: "uppercase", letterSpacing: 1, paddingHorizontal: 20, marginBottom: 6 }}>Día</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingHorizontal: 16, marginBottom: 16 }} contentContainerStyle={{ gap: 5 }}>
+            {days.map(d => (
+              <TouchableOpacity key={d}
+                style={{ width: 38, height: 38, borderRadius: 8, backgroundColor: selDay === d ? SEL : "rgba(255,255,255,0.06)", alignItems: "center", justifyContent: "center" }}
+                onPress={() => setSelDay(d)}
+              >
+                <Text style={{ color: selDay === d ? "#fff" : MUT, fontWeight: "700", fontSize: 12 }}>{d}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+
+          {/* Confirm */}
+          <TouchableOpacity
+            style={{ marginHorizontal: 20, backgroundColor: SEL, borderRadius: 12, paddingVertical: 14, alignItems: "center" }}
+            onPress={confirm}
+            activeOpacity={0.8}
+          >
+            <Text style={{ color: "#fff", fontWeight: "700", fontSize: 15 }}>
+              {`Seleccionar — ${String(selDay).padStart(2,"0")} ${MONTH_NAMES[selMonth-1]} ${selYear}`}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </TouchableOpacity>
+    </Modal>
+  )
+}
 
 // ── Tokens ────────────────────────────────────────────────────────────────────
 const BG    = "#070c18"
@@ -494,6 +586,9 @@ function QuincenaTab() {
   const [pAmt,  setPAmt]  = useState("")
   const [pLbl,  setPLbl]  = useState("")
 
+  const [showDatePicker,  setShowDatePicker]  = useState(false)
+  const [datePickerTarget, setDatePickerTarget] = useState<"ingreso" | "pago">("ingreso")
+
   // Deuda liquidador
   const [showDebt,   setShowDebt]   = useState(false)
   const [debtAmt,    setDebtAmt]    = useState("")
@@ -572,7 +667,11 @@ function QuincenaTab() {
           <Text style={s.cardTitle}>Ingresos esperados</Text>
         </View>
         <View style={s.qForm}>
-          <TextInput style={[s.qInput, { flex: 1 }]} placeholder="AAAA-MM-DD" placeholderTextColor="#9ca3af" value={iDate} onChangeText={setIDate} />
+          <TouchableOpacity style={[s.qInput, { flex: 1, justifyContent: "center" }]} onPress={() => { setDatePickerTarget("ingreso"); setShowDatePicker(true) }}>
+            <Text style={{ color: iDate ? TEXT : "#9ca3af", fontSize: 12, fontWeight: iDate ? "600" : "400" }}>
+              {iDate ? fmtDate(iDate) : "📅 Fecha"}
+            </Text>
+          </TouchableOpacity>
           <TextInput style={[s.qInput, { width: 90 }]} placeholder="$" keyboardType="decimal-pad" placeholderTextColor="#9ca3af" value={iAmt} onChangeText={setIAmt} />
           <TextInput style={[s.qInput, { flex: 1 }]} placeholder="Etiqueta" placeholderTextColor="#9ca3af" value={iLbl} onChangeText={setILbl} />
           <TouchableOpacity style={s.qAddBtn} onPress={addIngreso}>
@@ -605,7 +704,11 @@ function QuincenaTab() {
           <Text style={s.cardTitle}>Compromisos de pago</Text>
         </View>
         <View style={s.qForm}>
-          <TextInput style={[s.qInput, { flex: 1 }]} placeholder="AAAA-MM-DD" placeholderTextColor="#9ca3af" value={pDate} onChangeText={setPDate} />
+          <TouchableOpacity style={[s.qInput, { flex: 1, justifyContent: "center" }]} onPress={() => { setDatePickerTarget("pago"); setShowDatePicker(true) }}>
+            <Text style={{ color: pDate ? TEXT : "#9ca3af", fontSize: 12, fontWeight: pDate ? "600" : "400" }}>
+              {pDate ? fmtDate(pDate) : "📅 Fecha"}
+            </Text>
+          </TouchableOpacity>
           <TextInput style={[s.qInput, { width: 90 }]} placeholder="$" keyboardType="decimal-pad" placeholderTextColor="#9ca3af" value={pAmt} onChangeText={setPAmt} />
           <TextInput style={[s.qInput, { flex: 1 }]} placeholder="Etiqueta" placeholderTextColor="#9ca3af" value={pLbl} onChangeText={setPLbl} />
           <TouchableOpacity style={[s.qAddBtn, { backgroundColor: RED }]} onPress={addPago}>
@@ -698,6 +801,13 @@ function QuincenaTab() {
           <Text style={s.emptyHintText}>Agrega al menos un ingreso o pago para ver el flujo proyectado</Text>
         </View>
       )}
+
+      {/* Date picker modal */}
+      <QuincenaDateModal
+        visible={showDatePicker}
+        onSelect={(d) => { datePickerTarget === "ingreso" ? setIDate(d) : setPDate(d) }}
+        onClose={() => setShowDatePicker(false)}
+      />
 
       {/* Liquidador de deuda */}
       <View style={s.card}>
@@ -861,7 +971,7 @@ const s = StyleSheet.create({
   disclaimerBanner: { flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: "#fef3c7", paddingHorizontal: 16, paddingVertical: 8 },
   disclaimerBannerText: { color: "#92400e", fontSize: 12, flex: 1 },
 
-  tabBar:        { backgroundColor: CARD, maxHeight: 52, flexGrow: 0, borderBottomWidth: 1, borderBottomColor: BORDER },
+  tabBar:        { backgroundColor: CARD, maxHeight: 52, flexGrow: 0, flexShrink: 0, borderBottomWidth: 1, borderBottomColor: BORDER },
   tabBarContent: { paddingHorizontal: 8, gap: 4, alignItems: "center" },
   tabBtn:        { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 12, paddingVertical: 14, borderBottomWidth: 2, borderBottomColor: "transparent" },
   tabBtnActive:  { borderBottomColor: ORANGE },

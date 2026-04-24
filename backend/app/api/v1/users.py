@@ -11,6 +11,7 @@ from app.core.logging_config import audit_logger
 from app.models.uploaded_file import UploadedFile
 from app.models.user import User
 from app.schemas.user import UserResponse
+from app.services.analytics_service import track_event
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +42,11 @@ def update_me(
     audit_logger.info(
         "name_updated | user_id=%s new_name=%s",
         current_user.user_id, name,
+    )
+    track_event(
+        user_id=current_user.user_id,
+        event_type="name_updated",
+        plan=getattr(current_user, "plan", "free"),
     )
     return UserResponse.model_validate(current_user)
 

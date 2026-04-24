@@ -141,6 +141,60 @@ def send_reset_email(to_email: str, reset_token: str) -> None:
         response.get("id") if isinstance(response, dict) else response,
     )
 
+def send_password_changed_email(to_email: str, full_name: str) -> None:
+    """
+    Envía un aviso de seguridad al usuario cuando su contraseña fue cambiada exitosamente.
+    Si el usuario no realizó el cambio, debe contactar soporte de inmediato.
+    """
+    from app.core.config import settings
+
+    resend = _get_resend()
+
+    html_body = f"""
+    <div style="font-family: sans-serif; max-width: 480px; margin: auto; background: #ffffff; padding: 24px; border-radius: 8px;">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <span style="font-size: 36px;">🔐</span>
+        <h2 style="color: #1c2b4b; margin: 8px 0;">Contraseña actualizada</h2>
+      </div>
+      <p style="color: #374151;">Hola {full_name},</p>
+      <p style="color: #374151;">
+        Tu contraseña de <strong>SAFPRO</strong> fue cambiada exitosamente.
+        Si realizaste este cambio, no necesitas hacer nada más.
+      </p>
+      <div style="background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; padding: 16px; margin: 24px 0;">
+        <p style="margin: 0; color: #92400e; font-weight: 600;">
+          ⚠️ Si NO realizaste este cambio, actúa de inmediato:
+        </p>
+        <ul style="color: #92400e; margin: 8px 0; padding-left: 20px;">
+          <li>Usa "¿Olvidaste tu contraseña?" para recuperar el acceso</li>
+          <li>Contacta soporte en <a href="mailto:admin@safpro.us" style="color: #e05c19;">admin@safpro.us</a></li>
+        </ul>
+      </div>
+      <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;">
+      <p style="font-size: 12px; color: #9ca3af; text-align: center;">
+        SAFPRO — Sistema de Análisis Financiero Pro
+      </p>
+    </div>
+    """
+
+    params = {
+        "from": settings.email_from,
+        "to": [to_email],
+        "subject": "⚠️ Tu contraseña de SAFPRO fue cambiada",
+        "html": html_body,
+    }
+
+    try:
+        response = resend.Emails.send(params)
+        logger.info(
+            "Email de cambio de contraseña enviado — to=%s resend_id=%s",
+            to_email,
+            response.get("id") if isinstance(response, dict) else response,
+        )
+    except Exception as exc:
+        logger.error("Error enviando email de cambio de contraseña — to=%s err=%s", to_email, exc)
+
+
 def send_cancellation_confirmation_email(
     to_email: str,
     full_name: str,

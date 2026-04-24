@@ -446,7 +446,7 @@ const s = StyleSheet.create({
 
   // Calidad tab
   confRow: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 8 },
-  confPctText: { color: TEXT, fontSize: 28, fontWeight: "800", width: 60 },
+  confPctText: { color: TEXT, fontSize: 28, fontWeight: "800", minWidth: 72 },
   confBarOuter: {
     flex: 1, height: 10, backgroundColor: "rgba(255,255,255,0.08)",
     borderRadius: 5, overflow: "hidden",

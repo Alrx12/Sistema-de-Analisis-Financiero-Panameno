@@ -539,7 +539,7 @@ function AnalyticsTab() {
           <View style={s.kpiGrid}>
             <KpiBox label="1 análisis"   value={r.users_with_1_analysis} />
             <KpiBox label="2+ análisis"  value={r.users_with_2plus_analyses} color={GREEN} />
-            <KpiBox label="Retención %"  value={`${Math.round(r.retention_rate * 100)}%`} color={GREEN} />
+            <KpiBox label="Retención %"  value={`${Math.round(r.retention_rate)}%`} color={GREEN} />
             <KpiBox label="Avg análisis" value={r.avg_analyses_per_user.toFixed(1)} />
             <KpiBox label="Avg uploads"  value={r.avg_uploads_per_user.toFixed(1)} />
           </View>
@@ -554,7 +554,7 @@ function AnalyticsTab() {
             <KpiBox label="Confianza avg" value={`${confPct}%`} color={confColor} />
             <KpiBox label="Transacciones" value={q.total_transactions} />
             <KpiBox label="Baja conf."    value={q.low_confidence_count} color={q.low_confidence_count > 0 ? RED : GREEN} />
-            <KpiBox label="Ratio baja conf." value={`${Math.round(q.low_confidence_ratio * 100)}%`} color={q.low_confidence_ratio > 0.2 ? RED : GREEN} />
+            <KpiBox label="Ratio baja conf." value={`${Math.round(q.low_confidence_ratio)}%`} color={q.low_confidence_ratio > 20 ? RED : GREEN} />
           </View>
 
           {/* Confidence bar */}
