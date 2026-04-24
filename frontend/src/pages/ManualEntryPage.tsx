@@ -412,7 +412,7 @@ export default function ManualEntryPage() {
           <div className="flex gap-2 p-1 bg-muted rounded-xl">
             <button
               type="button"
-              onClick={() => { if (movType !== "debito") { setMovType("debito"); setCategory("") } }}
+              onClick={() => { if (movType !== "debito") { setMovType("debito"); setCategory(""); setDetail("") } }}
               className={cn(
                 "flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all",
                 movType === "debito"
@@ -424,7 +424,7 @@ export default function ManualEntryPage() {
             </button>
             <button
               type="button"
-              onClick={() => { if (movType !== "credito") { setMovType("credito"); setCategory("") } }}
+              onClick={() => { if (movType !== "credito") { setMovType("credito"); setCategory(""); setDetail("") } }}
               className={cn(
                 "flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all",
                 movType === "credito"

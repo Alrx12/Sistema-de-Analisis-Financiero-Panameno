@@ -15,6 +15,7 @@ IndustryType = Literal[
     "gobierno",
     "transporte",
     "servicios",
+    "entretenimiento",
     "otro",
 ]
 
@@ -66,6 +67,7 @@ class UserProfileResponse(BaseModel):
     employment_type: Optional[str] = None
     monthly_debt_payments: Optional[float] = None
     has_pets: bool = False
+    pets_count: Optional[int] = None
     created_at: datetime
     updated_at: datetime
 
@@ -84,3 +86,4 @@ class UserProfileUpdate(BaseModel):
     employment_type: Optional[str] = Field(default=None)
     monthly_debt_payments: Optional[float] = Field(default=None, ge=0)
     has_pets: Optional[bool] = Field(default=None)
+    pets_count: Optional[int] = Field(default=None, ge=0, le=10)

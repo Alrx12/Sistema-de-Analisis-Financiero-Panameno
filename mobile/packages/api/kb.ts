@@ -1,16 +1,14 @@
 import { getApiClient } from "./client"
-import type { KBEntry } from "@safpro/types"
+import type { KBListResponse, KBGlobalListResponse } from "@safpro/types"
 
-export async function listKB(): Promise<KBEntry[]> {
+export async function listKB(): Promise<KBListResponse> {
   const res = await getApiClient().get("/kb")
-  // Backend returns KBListResponse { entries: [...], ... }, not a flat array
-  return res.data?.entries ?? []
+  return res.data
 }
 
-export async function listGlobalKB(): Promise<KBEntry[]> {
+export async function listGlobalKB(): Promise<KBGlobalListResponse> {
   const res = await getApiClient().get("/kb/global")
-  // Backend returns KBGlobalListResponse { entries: [...], ... }, not a flat array
-  return res.data?.entries ?? []
+  return res.data
 }
 
 export async function deleteKBEntry(key: string): Promise<void> {

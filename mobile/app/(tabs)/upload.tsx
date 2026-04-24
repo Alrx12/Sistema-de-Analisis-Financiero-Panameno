@@ -10,14 +10,14 @@ import {
 } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 import * as DocumentPicker from "expo-document-picker"
-import AsyncStorage from "@react-native-async-storage/async-storage"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Ionicons } from "@expo/vector-icons"
 import { uploadFile, getJob, getUploadStatus } from "@safpro/api/files"
 import type { JobStatus } from "@safpro/types"
 
 // ── Trust Layer Modal ─────────────────────────────────────────────────────────
-const TRUST_KEY = "safpro_trust_seen_v1"
+// Se muestra SIEMPRE que el usuario abre este tab, no solo la primera vez.
+// Es un recordatorio de seguridad que debe estar presente en cada visita.
 
 const TRUST_ITEMS = [
   {
@@ -196,23 +196,11 @@ export default function UploadScreen() {
   const [errorMsg, setErrorMsg]     = useState<string | null>(null)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  // ── Trust Layer — mostrar solo la primera vez ────────────────────────────
-  const [trustVisible, setTrustVisible] = useState(false)
-  const [trustChecked, setTrustChecked] = useState(false)
-  useEffect(() => {
-    AsyncStorage.getItem(TRUST_KEY)
-      .then((val) => {
-        if (!val) setTrustVisible(true)
-      })
-      .catch(() => {
-        // Si AsyncStorage falla, mostrar el modal por defecto
-        setTrustVisible(true)
-      })
-      .finally(() => setTrustChecked(true))
-  }, [])
+  // ── Trust Layer — mostrar SIEMPRE al abrir el tab ─────────────────────────
+  // El trust layer es un recordatorio de seguridad, debe aparecer cada vez.
+  const [trustVisible, setTrustVisible] = useState(true)
   function dismissTrust() {
     setTrustVisible(false)
-    AsyncStorage.setItem(TRUST_KEY, "1").catch(() => {})
   }
 
   // ── Upload status (badge) ─────────────────────────────────────────────────

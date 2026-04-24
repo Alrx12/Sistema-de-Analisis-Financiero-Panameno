@@ -165,6 +165,21 @@ export interface KBEntry {
   subtype_economic: string | null
   budget_category: string | null
   budget_role: string | null
+  entry_type: string  // "exact" | "pattern"
+}
+
+export interface KBListResponse {
+  entries: KBEntry[]
+  patterns_count: number
+  corrections_count: number
+  global_exact_matches_count: number
+  global_patterns_count: number
+}
+
+export interface KBGlobalListResponse {
+  entries: KBEntry[]
+  patterns_count: number
+  corrections_count: number
 }
 
 // ─── Bank Accounts ────────────────────────────────────────────────────────────

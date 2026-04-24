@@ -6,7 +6,7 @@
 import { useState, useEffect } from "react"
 import {
   View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView,
-  Modal, FlatList, ActivityIndicator, TextInput, Switch, KeyboardAvoidingView, Platform,
+  Modal, FlatList, ActivityIndicator, TextInput, KeyboardAvoidingView, Platform,
 } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
@@ -359,11 +359,15 @@ export default function AccountScreen() {
   const [editingName, setEditingName] = useState(false)
   const [nameInput,   setNameInput]   = useState("")
 
+  // ── Edición inline de ingreso ──────────────────────────────────────────────
+  const [editingIncome, setEditingIncome] = useState(false)
+  const [incomeInput,   setIncomeInput]   = useState("")
+
   // ── Perfil extendido — estado local ───────────────────────────────────────
   const [housingLocal, setHousingLocal] = useState("")
   const [deptsLocal,   setDeptsLocal]   = useState(0)
   const [debtLocal,    setDebtLocal]    = useState("")
-  const [petsLocal,    setPetsLocal]    = useState(false)
+  const [petsLocal,    setPetsLocal]    = useState(0)
   const [extDirty,     setExtDirty]     = useState(false)
 
   // Sincronizar cuando llega el profile
@@ -372,7 +376,7 @@ export default function AccountScreen() {
     setHousingLocal(profile.housing_type ?? "")
     setDeptsLocal(profile.dependents_count ?? 0)
     setDebtLocal(profile.monthly_debt_payments != null ? String(profile.monthly_debt_payments) : "")
-    setPetsLocal(profile.has_pets ?? false)
+    setPetsLocal(profile.has_pets ? ((profile as any).pets_count ?? 1) : 0)
   }, [profile?.profile_id])
 
   // ── Mutations ─────────────────────────────────────────────────────────────
@@ -388,6 +392,16 @@ export default function AccountScreen() {
       setEditingName(false)
     },
     onError: () => Alert.alert("Error", "No se pudo actualizar el nombre."),
+  })
+
+  const incomeMut = useMutation({
+    mutationFn: (income: number) => updateProfile({ expected_monthly_income: income }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["profile"] })
+      setEditingIncome(false)
+      Alert.alert("✅ Guardado", "Ingreso mensual actualizado.")
+    },
+    onError: () => Alert.alert("Error", "No se pudo actualizar el ingreso."),
   })
 
   const extMut = useMutation({
@@ -456,7 +470,8 @@ export default function AccountScreen() {
       housing_type:           housingLocal || null,
       dependents_count:       deptsLocal,
       monthly_debt_payments:  debtLocal ? parseFloat(debtLocal) : null,
-      has_pets:               petsLocal,
+      has_pets:               petsLocal > 0,
+      pets_count:             petsLocal,
     })
   }
 
@@ -586,8 +601,55 @@ export default function AccountScreen() {
           <Text style={st.profileHint}>
             Personaliza tu presupuesto 50/30/20 y las recomendaciones del asistente.
           </Text>
-          {incomeDisplay && (
-            <InfoRow label="Ingreso mensual esperado" value={incomeDisplay} valueColor="#22c55e" />
+          {editingIncome ? (
+            <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 10, gap: 8 }}>
+              <Text style={[st.infoLabel, { flex: 1 }]}>Ingreso mensual ($)</Text>
+              <TextInput
+                style={[st.debtInput, { width: 110 }]}
+                value={incomeInput}
+                onChangeText={setIncomeInput}
+                keyboardType="numeric"
+                placeholder="0.00"
+                placeholderTextColor={DIM as string}
+                autoFocus
+                returnKeyType="done"
+              />
+              <TouchableOpacity
+                style={[st.nameBtn, { backgroundColor: "rgba(99,102,241,0.2)" }]}
+                onPress={() => {
+                  const val = parseFloat(incomeInput)
+                  if (!isNaN(val) && val > 0) incomeMut.mutate(val)
+                }}
+                disabled={incomeMut.isPending}
+              >
+                {incomeMut.isPending
+                  ? <ActivityIndicator color={INDIGO} size="small" />
+                  : <Ionicons name="checkmark" size={16} color={INDIGO} />}
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[st.nameBtn, { backgroundColor: "rgba(239,68,68,0.12)" }]}
+                onPress={() => setEditingIncome(false)}
+              >
+                <Ionicons name="close" size={16} color="#ef4444" />
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <TouchableOpacity
+              style={st.infoRow}
+              onPress={() => {
+                setIncomeInput(profile?.expected_monthly_income ? String(profile.expected_monthly_income) : "")
+                setEditingIncome(true)
+              }}
+              activeOpacity={0.7}
+            >
+              <Text style={st.infoLabel}>Ingreso mensual esperado</Text>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                <Text style={[st.infoValue, { color: incomeDisplay ? "#22c55e" : DIM as string }]}>
+                  {incomeDisplay ?? "Toca para añadir →"}
+                </Text>
+                <Ionicons name="pencil-outline" size={13} color={DIM as string} />
+              </View>
+            </TouchableOpacity>
           )}
           <ActionRow icon="briefcase-outline" iconColor="#8b5cf6"
             label={industryLabel ? `${industryLabel.emoji} ${industryLabel.label}` : "Industria / Sector"}
@@ -650,18 +712,25 @@ export default function AccountScreen() {
             />
           </View>
 
-          {/* Mascotas — switch */}
-          <View style={st.switchRow}>
+          {/* Mascotas — stepper */}
+          <View style={st.stepperRow}>
             <View style={[st.actionIcon, { backgroundColor: "rgba(16,185,129,0.15)" }]}>
               <Ionicons name="paw-outline" size={18} color="#10b981" />
             </View>
-            <Text style={[st.actionText, { flex: 1 }]}>Tengo mascotas</Text>
-            <Switch
-              value={petsLocal}
-              onValueChange={(v) => { setPetsLocal(v); setExtDirty(true) }}
-              trackColor={{ false: "rgba(255,255,255,0.12)", true: "rgba(16,185,129,0.5)" }}
-              thumbColor={petsLocal ? "#10b981" : "#94a3b8"}
-            />
+            <Text style={st.actionText}>Mascotas</Text>
+            <TouchableOpacity
+              style={st.stepBtn}
+              onPress={() => { if (petsLocal > 0) { setPetsLocal((p: number) => p - 1); setExtDirty(true) } }}
+            >
+              <Ionicons name="remove" size={18} color={petsLocal > 0 ? TEXT : MUTED} />
+            </TouchableOpacity>
+            <Text style={st.stepValue}>{petsLocal}</Text>
+            <TouchableOpacity
+              style={st.stepBtn}
+              onPress={() => { if (petsLocal < 10) { setPetsLocal((p: number) => p + 1); setExtDirty(true) } }}
+            >
+              <Ionicons name="add" size={18} color={petsLocal < 10 ? TEXT : MUTED} />
+            </TouchableOpacity>
           </View>
 
           {/* Botón guardar extendido */}

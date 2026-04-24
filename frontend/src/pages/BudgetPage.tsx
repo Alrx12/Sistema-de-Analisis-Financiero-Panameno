@@ -173,6 +173,15 @@ function getAdjustedTargets(profile: UserProfile | null | undefined): AdjustedTa
     adjustments.push("+3% en ahorro/deuda por pagos de deuda activos")
   }
 
+  // Mascotas: incrementar necesidades (comida, veterinaria, cuidado)
+  const petsCount = (profile as any).pets_count ?? 0
+  if (petsCount > 0) {
+    const petsBump = Math.min(petsCount * 1, 4)
+    needs += petsBump
+    wants -= petsBump
+    adjustments.push(`+${petsBump}% en necesidades por ${petsCount} mascota${petsCount > 1 ? "s" : ""}`)
+  }
+
   // Garantizar mínimos razonables
   wants   = Math.max(wants,   10)
   needs   = Math.max(needs,   30)

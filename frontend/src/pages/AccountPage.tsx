@@ -40,6 +40,7 @@ const INDUSTRIES: { value: IndustryType; label: string; emoji: string }[] = [
   { value: "gobierno",     label: "Gobierno / Sector público",    emoji: "🏛️" },
   { value: "transporte",   label: "Transporte / Logística",       emoji: "🚛" },
   { value: "servicios",    label: "Servicios profesionales",      emoji: "💼" },
+  { value: "entretenimiento", label: "Entretenimiento / Creativo", emoji: "🎭" },
   { value: "otro",         label: "Otro",                         emoji: "⚡" },
 ]
 

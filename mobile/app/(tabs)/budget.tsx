@@ -60,6 +60,9 @@ function getAdjustedTargets(profile: UserProfile | undefined) {
 
   if (profile.housing_type === "own") needs -= 5
 
+  const petsCount = (profile as any).pets_count ?? 0
+  if (petsCount > 0) needs += Math.min(petsCount * 1, 4)
+
   const emp = profile.employment_type ?? ""
   if (["self_employed", "business_owner", "employed_variable"].includes(emp)) savings += 5
 
@@ -82,6 +85,9 @@ function getActiveAdjustments(profile: UserProfile): string[] {
     list.push(`${deps} dependiente${deps !== 1 ? "s" : ""} (+${Math.min(deps * 3, 12)}% necesidades)`)
   if (profile.housing_type === "own")
     list.push("Vivienda propia (−5% necesidades)")
+  const petsCount = (profile as any).pets_count ?? 0
+  if (petsCount > 0)
+    list.push(`${petsCount} mascota${petsCount !== 1 ? "s" : ""} (+${Math.min(petsCount * 1, 4)}% necesidades)`)
   const emp = profile.employment_type ?? ""
   if (["self_employed", "business_owner", "employed_variable"].includes(emp))
     list.push("Ingreso variable (+5% ahorro)")
@@ -479,21 +485,19 @@ export default function BudgetScreen() {
     <SafeAreaView style={s.safe} edges={["bottom"]}>
       {/* Header */}
       <View style={s.header}>
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-          <Text style={[s.title, { flex: 1 }]} numberOfLines={1}>Presupuesto {targetStr}</Text>
-          <TouchableOpacity
-            style={s.manualBtn}
-            onPress={() => setShowManualModal(true)}
-          >
-            <Ionicons name="add-circle-outline" size={16} color={INDIGO} />
-            <Text style={s.manualBtnText}>
-              {manualMonthly > 0 ? `+${fmtK(manualMonthly)}/mes` : "Gastos extra"}
-            </Text>
-          </TouchableOpacity>
-        </View>
+        <Text style={s.title}>Presupuesto {targetStr}</Text>
         {budgetData && (
           <Text style={s.subtitle}>Ingresos: {fmt(budgetData.income)}</Text>
         )}
+        <TouchableOpacity
+          style={[s.manualBtn, { alignSelf: "flex-start", marginTop: 8 }]}
+          onPress={() => setShowManualModal(true)}
+        >
+          <Ionicons name="add-circle-outline" size={16} color={INDIGO} />
+          <Text style={s.manualBtnText}>
+            {manualMonthly > 0 ? `+${fmtK(manualMonthly)}/mes` : "⊕ Gastos extra"}
+          </Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView

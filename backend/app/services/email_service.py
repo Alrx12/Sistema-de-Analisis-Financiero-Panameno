@@ -623,3 +623,144 @@ def send_admin_broadcast_email(
     logger.info("broadcast_email to=%s resend_id=%s", to_email, rid)
     return str(rid)
 
+
+# ── Field label mapping for profile change emails ─────────────────────────────
+_FIELD_LABELS: dict[str, str] = {
+    "expected_monthly_income": "Ingreso mensual esperado",
+    "industry": "Industria / sector",
+    "pets_count": "Número de mascotas",
+    "has_pets": "¿Tiene mascotas?",
+    "dependents_count": "Número de dependientes",
+    "housing_type": "Tipo de vivienda",
+    "employment_type": "Tipo de empleo",
+    "monthly_debt_payments": "Pagos mensuales de deuda",
+    "financial_goals": "Metas financieras",
+}
+
+
+def send_profile_changed_email(
+    to_email: str,
+    full_name: str,
+    changes: list[dict],
+) -> None:
+    """
+    Notifica al usuario que su perfil financiero fue modificado.
+
+    Args:
+        to_email  : Email del usuario.
+        full_name : Nombre completo del usuario.
+        changes   : Lista de dicts con keys: field_name, old_value, new_value.
+                    Ejemplo: [{"field_name": "industry", "old_value": "otro", "new_value": "entretenimiento"}]
+    """
+    from app.core.config import settings
+    import threading
+
+    def _send() -> None:
+        try:
+            resend = _get_resend()
+            name_display = (full_name or to_email).split()[0]
+
+            # Build change rows table
+            rows_html = ""
+            for change in changes:
+                field = change.get("field_name", "")
+                old_val = change.get("old_value") or "—"
+                new_val = change.get("new_value") or "—"
+                label = _FIELD_LABELS.get(field, field.replace("_", " ").capitalize())
+                rows_html += f"""
+                <tr>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:13px;width:45%;">
+                    {label}
+                  </td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f1f5f9;font-size:13px;
+                             text-decoration:line-through;color:#9ca3af;">
+                    {old_val}
+                  </td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f1f5f9;font-size:13px;
+                             font-weight:700;color:#10b981;">
+                    {new_val}
+                  </td>
+                </tr>"""
+
+            html_body = f"""
+            <div style="font-family:sans-serif;max-width:560px;margin:auto;background:#ffffff;
+                        border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+
+              <!-- Header -->
+              <div style="background:linear-gradient(135deg,#1c2b4b,#2d4878);padding:28px 24px;">
+                <div style="display:inline-block;background:linear-gradient(135deg,#6366f1,#8b5cf6);
+                            border-radius:8px;padding:5px 12px;margin-bottom:14px;">
+                  <span style="color:#fff;font-size:15px;font-weight:800;letter-spacing:1px;">SAFPRO</span>
+                </div>
+                <h2 style="color:#ffffff;margin:0;font-size:20px;font-weight:700;">
+                  Perfil financiero actualizado
+                </h2>
+              </div>
+
+              <!-- Body -->
+              <div style="padding:28px 24px;">
+                <p style="color:#374151;font-size:15px;margin-top:0;">
+                  Hola <strong>{name_display}</strong>,
+                </p>
+                <p style="color:#374151;font-size:14px;">
+                  Se realizaron cambios en tu perfil financiero de SAFPRO.
+                  Estos cambios afectan tus metas de presupuesto personalizadas (50/30/20)
+                  y las recomendaciones que recibirás.
+                </p>
+
+                <!-- Changes table -->
+                <div style="border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;margin:20px 0;">
+                  <div style="background:#f8fafc;padding:10px 14px;border-bottom:1px solid #e2e8f0;">
+                    <span style="font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;">
+                      Cambios registrados
+                    </span>
+                  </div>
+                  <table style="width:100%;border-collapse:collapse;">
+                    <thead>
+                      <tr style="background:#f8fafc;">
+                        <th style="padding:8px 12px;text-align:left;font-size:11px;color:#94a3b8;font-weight:600;border-bottom:1px solid #e2e8f0;">CAMPO</th>
+                        <th style="padding:8px 12px;text-align:left;font-size:11px;color:#94a3b8;font-weight:600;border-bottom:1px solid #e2e8f0;">ANTES</th>
+                        <th style="padding:8px 12px;text-align:left;font-size:11px;color:#94a3b8;font-weight:600;border-bottom:1px solid #e2e8f0;">AHORA</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rows_html}
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- Security note -->
+                <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;
+                            padding:14px 16px;margin-top:16px;">
+                  <p style="margin:0;font-size:13px;color:#92400e;">
+                    <strong>⚠️ Si no realizaste estos cambios</strong>, contacta soporte inmediatamente en
+                    <a href="mailto:admin@safpro.us" style="color:#e05c19;font-weight:700;">admin@safpro.us</a>
+                  </p>
+                </div>
+              </div>
+
+              <!-- Footer -->
+              <div style="background:#f8fafc;padding:16px 24px;border-top:1px solid #e2e8f0;text-align:center;">
+                <p style="font-size:11px;color:#94a3b8;margin:0;">
+                  SAFPRO · Sistema de Análisis Financiero Pro · Panamá
+                </p>
+              </div>
+            </div>
+            """
+
+            params: dict = {
+                "from": settings.email_from,
+                "to": [to_email],
+                "subject": "⚙️ Tu perfil financiero en SAFPRO fue actualizado",
+                "html": html_body,
+            }
+
+            response = resend.Emails.send(params)
+            rid = response.get("id") if isinstance(response, dict) else response
+            logger.info("profile_changed_email sent to=%s resend_id=%s fields=%s",
+                        to_email, rid, [c.get("field_name") for c in changes])
+        except Exception as exc:
+            logger.error("Error enviando profile_changed_email to=%s err=%s", to_email, exc)
+
+    threading.Thread(target=_send, daemon=True).start()
+

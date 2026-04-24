@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 
 
 class KBEntry(BaseModel):
-    """Una entrada exact_match del KB."""
+    """Una entrada del KB (exact_match o pattern)."""
 
     key: str = Field(description="Clave canónica (ej: TRESCUATES, SPOTIFY)")
     economic_type: str | None = None
@@ -11,12 +11,13 @@ class KBEntry(BaseModel):
     subtype_economic: str | None = None
     budget_category: str | None = None
     budget_role: str | None = None
+    entry_type: str = Field(default="exact", description="'exact' para exact_match, 'pattern' para regex")
 
 
 class KBListResponse(BaseModel):
     """Contenido del KB personal del usuario."""
 
-    entries: list[KBEntry] = Field(description="Todas las entradas exact_match del KB personal")
+    entries: list[KBEntry] = Field(description="Todas las entradas del KB personal (exact + patterns)")
     patterns_count: int = Field(description="Número de patrones regex en el KB personal")
     corrections_count: int = Field(description="Total de correcciones registradas en el KB personal")
     global_exact_matches_count: int = Field(description="Entradas en el KB global (solo lectura)")

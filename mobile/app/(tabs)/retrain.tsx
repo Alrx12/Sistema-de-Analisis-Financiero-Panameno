@@ -204,16 +204,27 @@ function GroupCard({ group, index, total, onApplied, onSkipped }: {
 export default function RetrainScreen() {
   const [appliedCount, setAppliedCount] = useState(0)
   const [removedKeys, setRemovedKeys]   = useState<Set<string>>(new Set())
+  const queryClient = useQueryClient()
 
   const { isLoading, data: reviewData } = useQuery({
     queryKey: ["review-groups"],
     queryFn: getReviewGroups,
+    staleTime: 0,
   })
 
   const handleApplied = useCallback((key: string, count: number) => {
     setRemovedKeys(prev => new Set([...prev, key]))
     setAppliedCount(c => c + count)
-  }, [])
+    // Invalidar todas las vistas que dependen del estado de clasificación:
+    // - review-groups: para que el conteo en otras tabs se actualice
+    // - analysis: snapshots con requires_review actualizado
+    // - aggregated: KPIs del dashboard
+    queryClient.invalidateQueries({ queryKey: ["review-groups"] })
+    queryClient.invalidateQueries({ queryKey: ["analysis"] })
+    queryClient.invalidateQueries({ queryKey: ["aggregated"] })
+    queryClient.invalidateQueries({ queryKey: ["kb-personal"] })
+  }, [queryClient])
+
   const handleSkipped = useCallback((key: string) => {
     setRemovedKeys(prev => new Set([...prev, key]))
   }, [])

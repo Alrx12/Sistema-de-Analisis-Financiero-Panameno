@@ -42,6 +42,7 @@ def list_kb(
     personal = clf.list_personal_kb()
     global_summary = clf.list_global_kb_summary()
 
+    # Exact matches
     entries = [
         KBEntry(
             key=key,
@@ -50,12 +51,27 @@ def list_kb(
             subtype_economic=cats.get("SubType Economic"),
             budget_category=cats.get("Categoría de presupuesto"),
             budget_role=cats.get("budget_role"),
+            entry_type="exact",
         )
         for key, cats in personal["exact_matches"].items()
     ]
 
-    # Orden estable: alfabético por clave
-    entries.sort(key=lambda e: e.key)
+    # Patterns — también se muestran para que el usuario vea todo su KB personal
+    for pat_name, pat_data in personal["patterns"].items():
+        cats = pat_data.get("categories", {})
+        # Mostrar el nombre del patrón como key (es el nombre descriptivo del merchant)
+        entries.append(KBEntry(
+            key=pat_name,
+            economic_type=cats.get("Economic Type"),
+            economic_type_detail=cats.get("Economic Type Detail"),
+            subtype_economic=cats.get("SubType Economic"),
+            budget_category=cats.get("Categoría de presupuesto"),
+            budget_role=cats.get("budget_role"),
+            entry_type="pattern",
+        ))
+
+    # Orden estable: exact primero, luego patterns; dentro de cada grupo, alfabético
+    entries.sort(key=lambda e: (0 if e.entry_type == "exact" else 1, e.key))
 
     return KBListResponse(
         entries=entries,

@@ -52,7 +52,12 @@ def update_profile(
         current = service.get_or_create(current_user.user_id)
         was_onboarded = bool(current.onboarding_completed)
 
-    profile = service.update(current_user.user_id, body)
+    profile = service.update(
+        user_id=current_user.user_id,
+        data=body,
+        user_email=current_user.email,
+        user_name=current_user.full_name or "",
+    )
 
     # Disparar evento solo en la primera vez (no en llamadas repetidas)
     if body.onboarding_completed is True and not was_onboarded:

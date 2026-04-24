@@ -43,6 +43,8 @@ class UserProfile(Base):
     monthly_debt_payments: Mapped[float | None] = mapped_column(Float, nullable=True)
     # ¿Tiene mascotas? (afecta clasificación de gastos en veterinaria/comida)
     has_pets: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    # Número de mascotas (0-10) — usado con has_pets para control de ajuste de presupuesto
+    pets_count: Mapped[int | None] = mapped_column(Integer, nullable=True, default=0)
 
     # Si el usuario completó el flujo de onboarding post-primer-análisis
     onboarding_completed: Mapped[bool] = mapped_column(
