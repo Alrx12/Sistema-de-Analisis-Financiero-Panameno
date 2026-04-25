@@ -11,6 +11,7 @@ from app.models.uploaded_file import UploadedFile
 from app.models.user import User
 from app.schemas.job import JobQueuedResponse
 from app.services.analytics_service import track_event
+from app.services.email_service import send_admin_user_action_notification
 from app.services.file_fingerprint_service import compute_checksum
 from app.services.file_service import FileService
 from app.services.processing_service import ProcessingService
@@ -65,6 +66,15 @@ def clear_uploaded_files(
         "uploads_cleared | user_id=%s records_deleted=%d files_deleted=%d",
         current_user.user_id, len(uploaded), deleted_physical,
     )
+
+    # Notificar al admin (fire-and-forget)
+    if settings.resend_api_key:
+        send_admin_user_action_notification(
+            user_email=current_user.email,
+            full_name=current_user.full_name or current_user.email,
+            action="uploads_cleared",
+            extra_info=f"{len(uploaded)} registro(s) eliminados, {deleted_physical} archivo(s) físicos.",
+        )
 
     return {
         "message": f"{len(uploaded)} estado(s) de cuenta eliminado(s). Puedes volver a subirlos.",

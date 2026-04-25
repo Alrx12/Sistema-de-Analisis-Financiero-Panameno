@@ -638,6 +638,232 @@ _FIELD_LABELS: dict[str, str] = {
 }
 
 
+def send_admin_new_user_notification(
+    user_email: str,
+    full_name: str,
+    method: str = "email",
+) -> None:
+    """
+    Notifica a admin@safpro.us cuando un nuevo usuario se registra.
+
+    Args:
+        user_email : Email del nuevo usuario.
+        full_name  : Nombre completo (o username si no tiene).
+        method     : Método de registro ("email", "oauth_google", "oauth_github").
+    """
+    import threading
+
+    def _send() -> None:
+        try:
+            ADMIN_EMAIL = "admin@safpro.us"
+            resend = _get_resend()
+
+            method_label = {
+                "email": "📧 Email / contraseña",
+                "oauth_google": "🔵 Google OAuth",
+                "oauth_github": "⚫ GitHub OAuth",
+            }.get(method, method)
+
+            from datetime import datetime, timezone as _tz
+            now_str = datetime.now(_tz.utc).strftime("%Y-%m-%d %H:%M UTC")
+
+            html_body = f"""
+            <div style="font-family:sans-serif;max-width:520px;margin:auto;color:#1a1a2e;">
+              <!-- Header -->
+              <div style="background:linear-gradient(135deg,#1c2b4b,#2d4878);padding:22px 24px;border-radius:12px 12px 0 0;">
+                <div style="display:inline-block;background:linear-gradient(135deg,#6366f1,#8b5cf6);
+                            border-radius:7px;padding:5px 12px;margin-bottom:10px;">
+                  <span style="color:#fff;font-size:14px;font-weight:800;letter-spacing:1px;">SAFPRO</span>
+                </div>
+                <h2 style="color:#ffffff;margin:0;font-size:17px;">🎉 Nuevo usuario registrado</h2>
+              </div>
+
+              <!-- Body -->
+              <div style="background:#ffffff;padding:24px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px;">
+                <div style="background:#f0fdf4;border-left:4px solid #22c55e;padding:12px 16px;border-radius:4px;margin-bottom:18px;">
+                  <p style="margin:0;font-weight:700;color:#15803d;">¡Hay un nuevo usuario en SAFPRO!</p>
+                </div>
+                <table style="width:100%;border-collapse:collapse;font-size:14px;">
+                  <tr style="border-bottom:1px solid #f3f4f6;">
+                    <td style="padding:8px 4px;color:#6b7280;width:120px;">Nombre</td>
+                    <td style="padding:8px 4px;font-weight:600;">{full_name or "—"}</td>
+                  </tr>
+                  <tr style="border-bottom:1px solid #f3f4f6;">
+                    <td style="padding:8px 4px;color:#6b7280;">Email</td>
+                    <td style="padding:8px 4px;">
+                      <a href="mailto:{user_email}" style="color:#2563eb;">{user_email}</a>
+                    </td>
+                  </tr>
+                  <tr style="border-bottom:1px solid #f3f4f6;">
+                    <td style="padding:8px 4px;color:#6b7280;">Método</td>
+                    <td style="padding:8px 4px;">{method_label}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:8px 4px;color:#6b7280;">Fecha</td>
+                    <td style="padding:8px 4px;">{now_str}</td>
+                  </tr>
+                </table>
+                <hr style="border:none;border-top:1px solid #e5e7eb;margin:18px 0;">
+                <p style="font-size:11px;color:#9ca3af;text-align:center;margin:0;">
+                  SAFPRO Monitoring — Email automático del sistema.
+                </p>
+              </div>
+            </div>
+            """
+
+            params: dict = {
+                "from": "SAFPRO Monitoring <noreply@safpro.us>",
+                "to": [ADMIN_EMAIL],
+                "subject": f"[SAFPRO] 🎉 Nuevo usuario: {user_email}",
+                "html": html_body,
+            }
+            response = resend.Emails.send(params)
+            logger.info(
+                "admin_new_user_notification sent — user=%s method=%s resend_id=%s",
+                user_email, method,
+                response.get("id") if isinstance(response, dict) else response,
+            )
+        except Exception as exc:
+            logger.error("Error enviando notif admin nuevo usuario — user=%s err=%s", user_email, exc)
+
+    threading.Thread(target=_send, daemon=True).start()
+
+
+def send_admin_user_action_notification(
+    user_email: str,
+    full_name: str,
+    action: str,
+    extra_info: str = "",
+) -> None:
+    """
+    Notifica a admin@safpro.us cuando un usuario solicita eliminar su cuenta o sus archivos.
+
+    Args:
+        user_email : Email del usuario.
+        full_name  : Nombre completo.
+        action     : "account_deleted" | "uploads_cleared" | "analysis_deleted".
+        extra_info : Información adicional (ej: "3 archivos eliminados").
+    """
+    import threading
+
+    def _send() -> None:
+        try:
+            ADMIN_EMAIL = "admin@safpro.us"
+            resend = _get_resend()
+
+            action_config = {
+                "account_deleted": {
+                    "emoji": "🗑️",
+                    "label": "Cuenta eliminada",
+                    "color": "#dc2626",
+                    "bg": "#fef2f2",
+                    "border": "#fca5a5",
+                    "text_color": "#991b1b",
+                    "desc": "El usuario solicitó eliminar su cuenta y todos sus datos de SAFPRO de forma irreversible.",
+                },
+                "uploads_cleared": {
+                    "emoji": "📁",
+                    "label": "Archivos Excel eliminados",
+                    "color": "#d97706",
+                    "bg": "#fffbeb",
+                    "border": "#fcd34d",
+                    "text_color": "#92400e",
+                    "desc": "El usuario solicitó borrar todos sus estados de cuenta subidos (los análisis se conservan).",
+                },
+                "analysis_deleted": {
+                    "emoji": "📊",
+                    "label": "Análisis eliminados",
+                    "color": "#7c3aed",
+                    "bg": "#f5f3ff",
+                    "border": "#c4b5fd",
+                    "text_color": "#5b21b6",
+                    "desc": "El usuario eliminó todos sus análisis y transacciones.",
+                },
+            }
+            cfg = action_config.get(action, {
+                "emoji": "⚠️",
+                "label": action,
+                "color": "#6b7280",
+                "bg": "#f9fafb",
+                "border": "#d1d5db",
+                "text_color": "#374151",
+                "desc": f"Acción: {action}",
+            })
+
+            from datetime import datetime, timezone as _tz
+            now_str = datetime.now(_tz.utc).strftime("%Y-%m-%d %H:%M UTC")
+
+            extra_row = ""
+            if extra_info:
+                extra_row = f"""
+                <tr>
+                  <td style="padding:8px 4px;color:#6b7280;">Detalle</td>
+                  <td style="padding:8px 4px;color:#374151;">{extra_info}</td>
+                </tr>"""
+
+            html_body = f"""
+            <div style="font-family:sans-serif;max-width:520px;margin:auto;color:#1a1a2e;">
+              <!-- Header -->
+              <div style="background:linear-gradient(135deg,#1c2b4b,#2d4878);padding:22px 24px;border-radius:12px 12px 0 0;">
+                <div style="display:inline-block;background:linear-gradient(135deg,#6366f1,#8b5cf6);
+                            border-radius:7px;padding:5px 12px;margin-bottom:10px;">
+                  <span style="color:#fff;font-size:14px;font-weight:800;letter-spacing:1px;">SAFPRO</span>
+                </div>
+                <h2 style="color:#ffffff;margin:0;font-size:17px;">{cfg["emoji"]} {cfg["label"]}</h2>
+              </div>
+
+              <!-- Body -->
+              <div style="background:#ffffff;padding:24px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px;">
+                <div style="background:{cfg["bg"]};border-left:4px solid {cfg["border"]};
+                            padding:12px 16px;border-radius:4px;margin-bottom:18px;">
+                  <p style="margin:0;font-weight:700;color:{cfg["text_color"]};">{cfg["desc"]}</p>
+                </div>
+                <table style="width:100%;border-collapse:collapse;font-size:14px;">
+                  <tr style="border-bottom:1px solid #f3f4f6;">
+                    <td style="padding:8px 4px;color:#6b7280;width:120px;">Nombre</td>
+                    <td style="padding:8px 4px;font-weight:600;">{full_name or "—"}</td>
+                  </tr>
+                  <tr style="border-bottom:1px solid #f3f4f6;">
+                    <td style="padding:8px 4px;color:#6b7280;">Email</td>
+                    <td style="padding:8px 4px;">
+                      <a href="mailto:{user_email}" style="color:#2563eb;">{user_email}</a>
+                    </td>
+                  </tr>
+                  <tr style="border-bottom:1px solid #f3f4f6;">
+                    <td style="padding:8px 4px;color:#6b7280;">Acción</td>
+                    <td style="padding:8px 4px;font-weight:700;color:{cfg["color"]};">{cfg["emoji"]} {cfg["label"]}</td>
+                  </tr>{extra_row}
+                  <tr>
+                    <td style="padding:8px 4px;color:#6b7280;">Fecha</td>
+                    <td style="padding:8px 4px;">{now_str}</td>
+                  </tr>
+                </table>
+                <hr style="border:none;border-top:1px solid #e5e7eb;margin:18px 0;">
+                <p style="font-size:11px;color:#9ca3af;text-align:center;margin:0;">
+                  SAFPRO Monitoring — Email automático del sistema.
+                </p>
+              </div>
+            </div>
+            """
+
+            params: dict = {
+                "from": "SAFPRO Monitoring <noreply@safpro.us>",
+                "to": [ADMIN_EMAIL],
+                "subject": f"[SAFPRO] {cfg['emoji']} {cfg['label']}: {user_email}",
+                "html": html_body,
+            }
+            response = resend.Emails.send(params)
+            logger.info(
+                "admin_user_action_notification sent — user=%s action=%s resend_id=%s",
+                user_email, action,
+                response.get("id") if isinstance(response, dict) else response,
+            )
+        except Exception as exc:
+            logger.error("Error enviando notif admin acción usuario — user=%s action=%s err=%s", user_email, action, exc)
+
+    threading.Thread(target=_send, daemon=True).start()
+
+
 def send_profile_changed_email(
     to_email: str,
     full_name: str,

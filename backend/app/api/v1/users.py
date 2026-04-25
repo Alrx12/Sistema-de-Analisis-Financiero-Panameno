@@ -12,6 +12,7 @@ from app.models.uploaded_file import UploadedFile
 from app.models.user import User
 from app.schemas.user import UserResponse
 from app.services.analytics_service import track_event
+from app.services.email_service import send_admin_user_action_notification
 
 logger = logging.getLogger(__name__)
 
@@ -125,4 +126,15 @@ def delete_my_account(
         user_id, email, plan,
     )
     logger.info("Cuenta eliminada — user_id=%s", user_id)
+
+    # Notificar al admin (fire-and-forget, después del commit)
+    from app.core.config import settings as _settings
+    if _settings.resend_api_key:
+        send_admin_user_action_notification(
+            user_email=email,
+            full_name=current_user.full_name or email,
+            action="account_deleted",
+            extra_info=f"Plan: {plan}",
+        )
+
     return {"message": "Cuenta eliminada correctamente."}

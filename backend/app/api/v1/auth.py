@@ -45,7 +45,12 @@ from app.schemas.auth import (
     VerifyEmailRequest,
 )
 from app.schemas.user import UserResponse
-from app.services.email_service import send_reset_email, send_verification_email, send_password_changed_email
+from app.services.email_service import (
+    send_reset_email,
+    send_verification_email,
+    send_password_changed_email,
+    send_admin_new_user_notification,
+)
 from app.services.analytics_service import track_event
 from app.core.logging_config import audit_logger
 
@@ -105,6 +110,14 @@ def register(request: Request, payload: RegisterRequest, db: Session = Depends(g
         plan=getattr(user, "plan", None),
         metadata={"method": "email"},
     )
+
+    # Notificar al admin de nuevo registro (fire-and-forget)
+    if settings.resend_api_key:
+        send_admin_new_user_notification(
+            user_email=user.email,
+            full_name=user.full_name or user.username,
+            method="email",
+        )
 
     return UserResponse.model_validate(user)
 
@@ -574,6 +587,12 @@ def google_callback(code: str | None = None, state: str | None = None, error: st
                 plan=getattr(user, "plan", None),
                 metadata={"method": "oauth_google"},
             )
+            if settings.resend_api_key:
+                send_admin_new_user_notification(
+                    user_email=user.email,
+                    full_name=user.full_name or "",
+                    method="oauth_google",
+                )
 
     token = create_access_token(subject=str(user.user_id))
     track_event(
@@ -714,6 +733,12 @@ def github_callback(code: str | None = None, state: str | None = None, error: st
                 plan=getattr(user, "plan", None),
                 metadata={"method": "oauth_github"},
             )
+            if settings.resend_api_key:
+                send_admin_new_user_notification(
+                    user_email=user.email,
+                    full_name=user.full_name or "",
+                    method="oauth_github",
+                )
 
     token = create_access_token(subject=str(user.user_id))
     track_event(
