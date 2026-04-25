@@ -112,6 +112,12 @@ export default function SnapshotDetailScreen() {
     (t.budget_category ?? "").toLowerCase().includes(search.toLowerCase())
   )
 
+  // ── useMemo MUST be before any early returns (Rules of Hooks) ─────────────────
+  const displayCats = useMemo(() => {
+    const src = aggData?.categories ?? snapshot?.categories ?? {}
+    return Object.entries(src).sort((a, b) => b[1] - a[1])
+  }, [aggData?.total_income, snapshot?.categories])
+
   if (loadingSnap) {
     return (
       <SafeAreaView style={s.safe} edges={["bottom"]}>
@@ -139,11 +145,6 @@ export default function SnapshotDetailScreen() {
   const displayIncome   = aggData?.total_income    ?? snapshot.total_income
   const displayExpenses = aggData?.total_expenses  ?? snapshot.total_expenses
   const displayBalance  = aggData?.balance         ?? snapshot.balance
-
-  const displayCats = useMemo(() => {
-    const src = aggData?.categories ?? snapshot.categories
-    return Object.entries(src).sort((a, b) => b[1] - a[1])
-  }, [aggData?.total_income, snapshot.categories])
 
   const displayTotalCat = displayCats.reduce((sum, [, v]) => sum + v, 0) || 1
 
@@ -350,7 +351,7 @@ export default function SnapshotDetailScreen() {
           )}
 
           {/* Recomendaciones del snapshot (generadas al procesar) */}
-          {snapshot.recommendations.length > 0 && (
+          {(snapshot.recommendations ?? []).length > 0 && (
             <View style={s.section}>
               <Text style={s.sectionTitle}>Alertas del análisis</Text>
               {snapshot.recommendations.map((rec, i) => {
