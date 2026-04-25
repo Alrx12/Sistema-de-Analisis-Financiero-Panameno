@@ -5,6 +5,7 @@
  * Tema: dark navy
  */
 import { useState, useMemo, useCallback } from "react"
+import { useRouter } from "expo-router"
 import {
   View, Text, ScrollView, StyleSheet, ActivityIndicator,
   TouchableOpacity, RefreshControl, TextInput, Modal,
@@ -390,6 +391,7 @@ function ManualExpensesModal({
 
 // ── Screen ─────────────────────────────────────────────────────────────────────
 export default function BudgetScreen() {
+  const router = useRouter()
   const now = new Date()
   const [selYear,  setSelYear]  = useState(now.getFullYear())
   const [selMonth, setSelMonth] = useState<number | null>(null)
@@ -792,15 +794,25 @@ export default function BudgetScreen() {
             ))}
 
             {budgetData.totals.other > 0 && (
-              <BucketBar
-                emoji={BUCKET_META.other.emoji}
-                label={BUCKET_META.other.label}
-                actual={budgetData.pcts.other}
-                target={0}
-                color={BUCKET_META.other.color}
-                amount={budgetData.totals.other}
-                categories={budgetData.details.other}
-              />
+              <>
+                <BucketBar
+                  emoji={BUCKET_META.other.emoji}
+                  label={BUCKET_META.other.label}
+                  actual={budgetData.pcts.other}
+                  target={0}
+                  color={BUCKET_META.other.color}
+                  amount={budgetData.totals.other}
+                  categories={budgetData.details.other}
+                />
+                <TouchableOpacity
+                  style={s.retrainCta}
+                  onPress={() => router.push("/(tabs)/retrain")}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name="sparkles-outline" size={15} color="#a5b4fc" />
+                  <Text style={s.retrainCtaText}>Clasificar estas transacciones en Entrenamiento →</Text>
+                </TouchableOpacity>
+              </>
             )}
 
             {/* Tips */}
@@ -950,6 +962,16 @@ const s = StyleSheet.create({
   catEmoji: { fontSize: 14, width: 20 },
   catName:  { color: MUTED, fontSize: 13, textTransform: "capitalize", flex: 1 },
   catAmt:   { color: TEXT,  fontSize: 13, fontWeight: "600" },
+
+  // Retrain CTA (shown when "Sin clasificar" bucket has transactions)
+  retrainCta: {
+    flexDirection: "row", alignItems: "center", gap: 8,
+    paddingVertical: 10, paddingHorizontal: 14,
+    backgroundColor: "rgba(99,102,241,0.1)",
+    borderRadius: 10, borderWidth: 1, borderColor: "rgba(99,102,241,0.3)",
+    marginTop: -4,
+  },
+  retrainCtaText: { color: "#a5b4fc", fontSize: 13, fontWeight: "600", flex: 1 },
 
   // Tips
   tipCard: { flexDirection: "row", gap: 10, padding: 12, borderRadius: 10, borderWidth: 1, alignItems: "flex-start" },

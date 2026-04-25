@@ -13,7 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context"
 import { useLocalSearchParams, useRouter } from "expo-router"
 import { useQuery } from "@tanstack/react-query"
 import { Ionicons } from "@expo/vector-icons"
-import { getAnalysis, getTransactions, getConfidenceStats, getAggregatedSummary } from "@safpro/api/analysis"
+import { getAnalysis, getTransactions, getConfidenceStats } from "@safpro/api/analysis"
 import type { Transaction } from "@safpro/types"
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
@@ -76,22 +76,9 @@ export default function SnapshotDetailScreen() {
     enabled: !!id,
   })
 
-  // ── Parámetros para /aggregated filtrado por banco + año/mes del snapshot ────
-  const snapYear  = snapshot?.period_start ? new Date(snapshot.period_start).getFullYear()    : undefined
-  const snapMonth = snapshot?.period_start ? new Date(snapshot.period_start).getMonth() + 1   : undefined
-  const snapBankId = snapshot?.bank_account?.account_id ?? undefined
-
-  // Datos frescos del servidor — coherentes con el Dashboard, incluye reclasificaciones
-  const { data: aggData, isLoading: loadingAgg } = useQuery({
-    queryKey: ["agg-snap", snapYear, snapMonth, snapBankId],
-    queryFn:  () => getAggregatedSummary({
-      bank_account_id: snapBankId,
-      year:  snapYear,
-      month: snapMonth,
-    }),
-    enabled: !!snapshot && !!snapYear && tab === "overview",
-    staleTime: 60_000,
-  })
+  // No usamos /aggregated aquí porque filtra por transaction.date del mes de period_start,
+  // lo que devuelve $0 para snapshots multi-mes (ej: dic 2024 – abr 2026).
+  // Usamos los datos pre-calculados del snapshot directamente.
 
   // Transacciones — lazy: solo cuando se abre el tab de Txs o Calidad
   const { data: txs, isLoading: loadingTxs } = useQuery({
@@ -114,9 +101,9 @@ export default function SnapshotDetailScreen() {
 
   // ── useMemo MUST be before any early returns (Rules of Hooks) ─────────────────
   const displayCats = useMemo(() => {
-    const src = aggData?.categories ?? snapshot?.categories ?? {}
+    const src = snapshot?.categories ?? {}
     return Object.entries(src).sort((a, b) => b[1] - a[1])
-  }, [aggData?.total_income, snapshot?.categories])
+  }, [snapshot?.categories])
 
   if (loadingSnap) {
     return (
@@ -139,16 +126,12 @@ export default function SnapshotDetailScreen() {
     )
   }
 
-  // ── KPIs: prioridad aggData > snapshot pre-calculado ─────────────────────────
-  // aggData viene de /aggregated filtrado por banco+año/mes — incluye reclasificaciones
-  // y es coherente con lo que el Dashboard muestra para ese período.
-  const displayIncome   = aggData?.total_income    ?? snapshot.total_income
-  const displayExpenses = aggData?.total_expenses  ?? snapshot.total_expenses
-  const displayBalance  = aggData?.balance         ?? snapshot.balance
+  // ── KPIs del snapshot (calculados al procesar el archivo) ────────────────────
+  const displayIncome   = snapshot.total_income
+  const displayExpenses = snapshot.total_expenses
+  const displayBalance  = snapshot.balance
 
   const displayTotalCat = displayCats.reduce((sum, [, v]) => sum + v, 0) || 1
-
-  const topMerchants = aggData?.top_merchants?.slice(0, 5) ?? []
 
   return (
     <SafeAreaView style={s.safe} edges={["bottom"]}>
@@ -304,22 +287,6 @@ export default function SnapshotDetailScreen() {
       ) : tab === "overview" ? (
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scrollContent}>
 
-          {/* Indicador de fuente de datos */}
-          {aggData ? (
-            <View style={s.liveBar}>
-              <Ionicons name="sync-circle" size={12} color={GREEN} />
-              <Text style={s.liveBarText}>
-                Datos del servidor · banco + {snapMonth}/{snapYear} · incluye reclasificaciones
-              </Text>
-            </View>
-          ) : loadingAgg ? (
-            <View style={[s.liveBar, { borderColor: "rgba(99,102,241,0.2)" }]}>
-              <ActivityIndicator size={10} color={INDIGO} />
-              <Text style={[s.liveBarText, { color: "rgba(99,102,241,0.7)" }]}>
-                Cargando datos actualizados…
-              </Text>
-            </View>
-          ) : null}
 
           {/* KPIs */}
           <View style={s.kpiRow}>
@@ -366,34 +333,6 @@ export default function SnapshotDetailScreen() {
             </View>
           )}
 
-          {/* Top comercios (solo cuando tenemos aggData) */}
-          {topMerchants.length > 0 && (
-            <View style={s.section}>
-              <Text style={s.sectionTitle}>Top comercios</Text>
-              {topMerchants.map((m, i) => {
-                const maxAmt = topMerchants[0]?.amount || 1
-                const pct = Math.round((m.amount / maxAmt) * 100)
-                return (
-                  <View key={i} style={s.catRow}>
-                    <Text style={s.catEmoji}>{CAT_EMOJI[m.category ?? ""] ?? "🏪"}</Text>
-                    <View style={{ flex: 1 }}>
-                      <View style={s.catHeader}>
-                        <Text style={s.catName} numberOfLines={1}>{m.name}</Text>
-                        <Text style={s.catAmount}>{formatCurrency(m.amount)}</Text>
-                      </View>
-                      <View style={s.catBar}>
-                        <View style={[s.catBarFill, { width: `${pct}%` as `${number}%`, backgroundColor: "#f59e0b" }]} />
-                      </View>
-                      <Text style={[s.catPct, { marginTop: 2, textAlign: "left" }]}>
-                        {m.count} tx
-                        {m.category ? ` · ${m.category.replace(/_/g, " ")}` : ""}
-                      </Text>
-                    </View>
-                  </View>
-                )
-              })}
-            </View>
-          )}
 
           {/* Categorías */}
           {displayCats.length > 0 && (
@@ -420,25 +359,6 @@ export default function SnapshotDetailScreen() {
             </View>
           )}
 
-          {/* Por tipo económico (solo con aggData) */}
-          {aggData?.by_economic_type && aggData.by_economic_type.length > 0 && (
-            <View style={s.section}>
-              <Text style={s.sectionTitle}>Por tipo de movimiento</Text>
-              {aggData.by_economic_type
-                .sort((a, b) => b.amount - a.amount)
-                .map((et) => (
-                  <View key={et.type} style={[s.catRow, { gap: 10 }]}>
-                    <View style={{ flex: 1 }}>
-                      <View style={s.catHeader}>
-                        <Text style={s.catName}>{et.type.replace(/_/g, " ")}</Text>
-                        <Text style={s.catAmount}>{formatCurrency(et.amount)}</Text>
-                      </View>
-                    </View>
-                    <Text style={s.kpiSub}>{et.count} tx</Text>
-                  </View>
-                ))}
-            </View>
-          )}
         </ScrollView>
       ) : (
         <View style={{ flex: 1 }}>
@@ -547,17 +467,6 @@ const s = StyleSheet.create({
   tabBtnTextActive: { color: TEXT },
 
   scrollContent: { padding: 12, gap: 12 },
-
-  // Live data indicator
-  liveBar: {
-    flexDirection: "row", alignItems: "center", gap: 5,
-    paddingHorizontal: 8, paddingVertical: 4, borderRadius: 20,
-    backgroundColor: "rgba(34,197,94,0.08)",
-    alignSelf: "flex-start",
-    borderWidth: 1, borderColor: "rgba(34,197,94,0.15)",
-    marginBottom: -4,
-  },
-  liveBarText: { color: "rgba(34,197,94,0.8)", fontSize: 10, fontWeight: "600" },
 
   // KPIs
   kpiRow: { flexDirection: "row", gap: 8 },

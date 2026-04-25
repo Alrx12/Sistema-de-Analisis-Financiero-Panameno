@@ -57,6 +57,9 @@ function needsReview(t: Transaction) {
   // Transactions already corrected by the user don't need review
   // (matches the same exclusion logic used by the training endpoint)
   if (t.method === "user_reclassified") return false
+  // Credits (ingresos) are excluded: /review-groups only handles debits (amount < 0).
+  // Income transactions needing review can be fixed individually from the list.
+  if ((t.amount ?? 0) > 0) return false
   return t.requires_review || t.budget_role === "revisar" || (t.budget_category ?? "").includes("desconocido")
 }
 function confColor(c: number) {
@@ -168,7 +171,7 @@ const ms = StyleSheet.create({
   pillRow:       { flexDirection: "row" },
   pill:          { borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, borderWidth: 1, borderColor: BORDER, backgroundColor: "rgba(255,255,255,0.04)", marginRight: 6 },
   pillActive:    { backgroundColor: "rgba(99,102,241,0.2)", borderColor: INDIGO },
-  pillText:      { color: MUTED, fontSize: 12, fontWeight: "500" },
+  pillText:      { color: "rgba(255,255,255,0.65)", fontSize: 12, fontWeight: "500" },
   pillTextActive:{ color: "#a5b4fc", fontWeight: "700" },
   learnRow:      { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 12, marginBottom: 8 },
   checkbox:      { width: 20, height: 20, borderRadius: 5, borderWidth: 1.5, borderColor: BORDER, alignItems: "center", justifyContent: "center" },
@@ -296,6 +299,7 @@ export default function TransactionsScreen() {
       </View>
 
       {/* Filter pills */}
+      <View style={styles.filterWrapper}>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll} contentContainerStyle={styles.filterContent}>
         {[["all","Todas"],["credit","Créditos"],["debit","Débitos"]].map(([val, lbl]) => (
           <TouchableOpacity
@@ -325,6 +329,7 @@ export default function TransactionsScreen() {
           </Text>
         </TouchableOpacity>
       </ScrollView>
+      </View>
 
       {/* List */}
       {isLoading ? (
@@ -379,6 +384,8 @@ const styles = StyleSheet.create({
   },
   searchInput: { flex: 1, color: TEXT, fontSize: 14, paddingVertical: 10, paddingHorizontal: 8 },
 
+  // Wrapper View forces BG on Android (ScrollView doesn't inherit parent bg)
+  filterWrapper: { backgroundColor: BG },
   filterScroll:  { flexGrow: 0, backgroundColor: BG },
   filterContent: { paddingHorizontal: 12, paddingVertical: 10, gap: 6, flexDirection: "row" },
   pill: {
@@ -387,7 +394,7 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: BORDER, backgroundColor: "rgba(255,255,255,0.04)",
   },
   pillActive:    { backgroundColor: "rgba(99,102,241,0.15)", borderColor: "rgba(99,102,241,0.4)" },
-  pillText:      { color: MUTED, fontSize: 12, fontWeight: "500" },
+  pillText:      { color: "rgba(255,255,255,0.65)", fontSize: 12, fontWeight: "500" },
   pillTextActive:{ color: "#a5b4fc", fontWeight: "600" },
 
   txRow: {
