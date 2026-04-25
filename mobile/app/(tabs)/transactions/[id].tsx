@@ -44,7 +44,7 @@ const CATS_INGRESO = [
 const ETYPES = ["ingreso","gasto","cargo_financiero","transferencia_propia","transferencia_tercero","reembolso"]
 const EDETAILS = ["gasto_variable","gasto_recurrente","salario","otros_ingresos","comision","impuesto","cargo_bancario","transferencia_propia","transferencia_tercero","reembolso"]
 const SUBTYPES = ["recurrente","extraordinario","variable","financiero","desconocido"]
-const BROLES   = ["presupuestable","no_presupuestable","gasto_operativo","gasto_financiero","ahorro_inversion","solo_balance","revisar"]
+const BROLES   = ["presupuestable","no_presupuestable","gasto_operativo","gasto_financiero","ahorro_inversion","solo_balance"]
 
 function cap(s: string) { return s.replace(/_/g," ").replace(/\b\w/g, c => c.toUpperCase()) }
 function fmtDate(s: string) {
@@ -54,6 +54,9 @@ function fmtCurrency(n: number) {
   return "$" + Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 function needsReview(t: Transaction) {
+  // Transactions already corrected by the user don't need review
+  // (matches the same exclusion logic used by the training endpoint)
+  if (t.method === "user_reclassified") return false
   return t.requires_review || t.budget_role === "revisar" || (t.budget_category ?? "").includes("desconocido")
 }
 function confColor(c: number) {
@@ -376,7 +379,7 @@ const styles = StyleSheet.create({
   },
   searchInput: { flex: 1, color: TEXT, fontSize: 14, paddingVertical: 10, paddingHorizontal: 8 },
 
-  filterScroll:  { flexGrow: 0 },
+  filterScroll:  { flexGrow: 0, backgroundColor: BG },
   filterContent: { paddingHorizontal: 12, paddingVertical: 10, gap: 6, flexDirection: "row" },
   pill: {
     flexDirection: "row", alignItems: "center", gap: 4,

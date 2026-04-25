@@ -4,7 +4,7 @@
  * Muestra: KPIs, recomendaciones, desglose de categorías y transacciones.
  * Tema: dark navy
  */
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity,
   ActivityIndicator, TextInput, FlatList,
@@ -13,7 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context"
 import { useLocalSearchParams, useRouter } from "expo-router"
 import { useQuery } from "@tanstack/react-query"
 import { Ionicons } from "@expo/vector-icons"
-import { getAnalysis, getTransactions, getConfidenceStats } from "@safpro/api/analysis"
+import { getAnalysis, getTransactions, getConfidenceStats, getAggregatedSummary } from "@safpro/api/analysis"
 import type { Transaction } from "@safpro/types"
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
@@ -76,10 +76,28 @@ export default function SnapshotDetailScreen() {
     enabled: !!id,
   })
 
+  // ── Parámetros para /aggregated filtrado por banco + año/mes del snapshot ────
+  const snapYear  = snapshot?.period_start ? new Date(snapshot.period_start).getFullYear()    : undefined
+  const snapMonth = snapshot?.period_start ? new Date(snapshot.period_start).getMonth() + 1   : undefined
+  const snapBankId = snapshot?.bank_account?.account_id ?? undefined
+
+  // Datos frescos del servidor — coherentes con el Dashboard, incluye reclasificaciones
+  const { data: aggData, isLoading: loadingAgg } = useQuery({
+    queryKey: ["agg-snap", snapYear, snapMonth, snapBankId],
+    queryFn:  () => getAggregatedSummary({
+      bank_account_id: snapBankId,
+      year:  snapYear,
+      month: snapMonth,
+    }),
+    enabled: !!snapshot && !!snapYear && tab === "overview",
+    staleTime: 60_000,
+  })
+
+  // Transacciones — lazy: solo cuando se abre el tab de Txs o Calidad
   const { data: txs, isLoading: loadingTxs } = useQuery({
     queryKey: ["transactions", id],
     queryFn: () => getTransactions(id),
-    enabled: !!id && tab === "transactions",
+    enabled: !!id && (tab === "transactions" || tab === "calidad"),
   })
 
   const { data: confStats, isLoading: loadingConf } = useQuery({
@@ -115,8 +133,21 @@ export default function SnapshotDetailScreen() {
     )
   }
 
-  const categories = Object.entries(snapshot.categories).sort((a, b) => b[1] - a[1])
-  const totalCat   = categories.reduce((sum, [, v]) => sum + v, 0) || 1
+  // ── KPIs: prioridad aggData > snapshot pre-calculado ─────────────────────────
+  // aggData viene de /aggregated filtrado por banco+año/mes — incluye reclasificaciones
+  // y es coherente con lo que el Dashboard muestra para ese período.
+  const displayIncome   = aggData?.total_income    ?? snapshot.total_income
+  const displayExpenses = aggData?.total_expenses  ?? snapshot.total_expenses
+  const displayBalance  = aggData?.balance         ?? snapshot.balance
+
+  const displayCats = useMemo(() => {
+    const src = aggData?.categories ?? snapshot.categories
+    return Object.entries(src).sort((a, b) => b[1] - a[1])
+  }, [aggData?.total_income, snapshot.categories])
+
+  const displayTotalCat = displayCats.reduce((sum, [, v]) => sum + v, 0) || 1
+
+  const topMerchants = aggData?.top_merchants?.slice(0, 5) ?? []
 
   return (
     <SafeAreaView style={s.safe} edges={["bottom"]}>
@@ -271,12 +302,30 @@ export default function SnapshotDetailScreen() {
         </ScrollView>
       ) : tab === "overview" ? (
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scrollContent}>
+
+          {/* Indicador de fuente de datos */}
+          {aggData ? (
+            <View style={s.liveBar}>
+              <Ionicons name="sync-circle" size={12} color={GREEN} />
+              <Text style={s.liveBarText}>
+                Datos del servidor · banco + {snapMonth}/{snapYear} · incluye reclasificaciones
+              </Text>
+            </View>
+          ) : loadingAgg ? (
+            <View style={[s.liveBar, { borderColor: "rgba(99,102,241,0.2)" }]}>
+              <ActivityIndicator size={10} color={INDIGO} />
+              <Text style={[s.liveBarText, { color: "rgba(99,102,241,0.7)" }]}>
+                Cargando datos actualizados…
+              </Text>
+            </View>
+          ) : null}
+
           {/* KPIs */}
           <View style={s.kpiRow}>
             {[
-              { label: "INGRESOS",  value: formatCurrency(snapshot.total_income),   color: GREEN },
-              { label: "GASTOS",    value: formatCurrency(snapshot.total_expenses),  color: RED },
-              { label: "BALANCE",   value: formatCurrency(snapshot.balance),          color: snapshot.balance >= 0 ? "#3b82f6" : "#f97316" },
+              { label: "INGRESOS", value: formatCurrency(displayIncome),  color: GREEN },
+              { label: "GASTOS",   value: formatCurrency(displayExpenses), color: RED },
+              { label: "BALANCE",  value: formatCurrency(displayBalance),  color: displayBalance >= 0 ? "#3b82f6" : "#f97316" },
             ].map(({ label, value, color }) => (
               <View key={label} style={[s.kpiCard, { borderTopColor: color }]}>
                 <Text style={s.kpiLabel}>{label}</Text>
@@ -285,10 +334,25 @@ export default function SnapshotDetailScreen() {
             ))}
           </View>
 
-          {/* Recomendaciones */}
+          {/* Tasa de ahorro */}
+          {displayIncome > 0 && (
+            <View style={[s.kpiCard, { borderTopColor: displayBalance >= 0 ? GREEN : RED, borderTopWidth: 2 }]}>
+              <Text style={s.kpiLabel}>TASA DE AHORRO</Text>
+              <Text style={[s.kpiValue, { color: displayBalance >= 0 ? GREEN : RED }]}>
+                {((displayBalance / displayIncome) * 100).toFixed(1)}%
+              </Text>
+              <Text style={s.kpiSub}>
+                {displayBalance >= 0
+                  ? `Guardas ${formatCurrency(displayBalance)} de ${formatCurrency(displayIncome)}`
+                  : "Gastas más de lo que ingresa"}
+              </Text>
+            </View>
+          )}
+
+          {/* Recomendaciones del snapshot (generadas al procesar) */}
           {snapshot.recommendations.length > 0 && (
             <View style={s.section}>
-              <Text style={s.sectionTitle}>Recomendaciones</Text>
+              <Text style={s.sectionTitle}>Alertas del análisis</Text>
               {snapshot.recommendations.map((rec, i) => {
                 const cfg = REC_COLORS[rec.type] ?? REC_COLORS.info
                 return (
@@ -301,12 +365,41 @@ export default function SnapshotDetailScreen() {
             </View>
           )}
 
+          {/* Top comercios (solo cuando tenemos aggData) */}
+          {topMerchants.length > 0 && (
+            <View style={s.section}>
+              <Text style={s.sectionTitle}>Top comercios</Text>
+              {topMerchants.map((m, i) => {
+                const maxAmt = topMerchants[0]?.amount || 1
+                const pct = Math.round((m.amount / maxAmt) * 100)
+                return (
+                  <View key={i} style={s.catRow}>
+                    <Text style={s.catEmoji}>{CAT_EMOJI[m.category ?? ""] ?? "🏪"}</Text>
+                    <View style={{ flex: 1 }}>
+                      <View style={s.catHeader}>
+                        <Text style={s.catName} numberOfLines={1}>{m.name}</Text>
+                        <Text style={s.catAmount}>{formatCurrency(m.amount)}</Text>
+                      </View>
+                      <View style={s.catBar}>
+                        <View style={[s.catBarFill, { width: `${pct}%` as `${number}%`, backgroundColor: "#f59e0b" }]} />
+                      </View>
+                      <Text style={[s.catPct, { marginTop: 2, textAlign: "left" }]}>
+                        {m.count} tx
+                        {m.category ? ` · ${m.category.replace(/_/g, " ")}` : ""}
+                      </Text>
+                    </View>
+                  </View>
+                )
+              })}
+            </View>
+          )}
+
           {/* Categorías */}
-          {categories.length > 0 && (
+          {displayCats.length > 0 && (
             <View style={s.section}>
               <Text style={s.sectionTitle}>Por categoría</Text>
-              {categories.map(([cat, amount]) => {
-                const pct = Math.round((amount / totalCat) * 100)
+              {displayCats.map(([cat, amount]) => {
+                const pct = Math.round((amount / displayTotalCat) * 100)
                 return (
                   <View key={cat} style={s.catRow}>
                     <Text style={s.catEmoji}>{CAT_EMOJI[cat] ?? "📦"}</Text>
@@ -323,6 +416,26 @@ export default function SnapshotDetailScreen() {
                   </View>
                 )
               })}
+            </View>
+          )}
+
+          {/* Por tipo económico (solo con aggData) */}
+          {aggData?.by_economic_type && aggData.by_economic_type.length > 0 && (
+            <View style={s.section}>
+              <Text style={s.sectionTitle}>Por tipo de movimiento</Text>
+              {aggData.by_economic_type
+                .sort((a, b) => b.amount - a.amount)
+                .map((et) => (
+                  <View key={et.type} style={[s.catRow, { gap: 10 }]}>
+                    <View style={{ flex: 1 }}>
+                      <View style={s.catHeader}>
+                        <Text style={s.catName}>{et.type.replace(/_/g, " ")}</Text>
+                        <Text style={s.catAmount}>{formatCurrency(et.amount)}</Text>
+                      </View>
+                    </View>
+                    <Text style={s.kpiSub}>{et.count} tx</Text>
+                  </View>
+                ))}
             </View>
           )}
         </ScrollView>
@@ -433,6 +546,17 @@ const s = StyleSheet.create({
   tabBtnTextActive: { color: TEXT },
 
   scrollContent: { padding: 12, gap: 12 },
+
+  // Live data indicator
+  liveBar: {
+    flexDirection: "row", alignItems: "center", gap: 5,
+    paddingHorizontal: 8, paddingVertical: 4, borderRadius: 20,
+    backgroundColor: "rgba(34,197,94,0.08)",
+    alignSelf: "flex-start",
+    borderWidth: 1, borderColor: "rgba(34,197,94,0.15)",
+    marginBottom: -4,
+  },
+  liveBarText: { color: "rgba(34,197,94,0.8)", fontSize: 10, fontWeight: "600" },
 
   // KPIs
   kpiRow: { flexDirection: "row", gap: 8 },

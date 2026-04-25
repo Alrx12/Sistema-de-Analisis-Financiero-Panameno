@@ -98,6 +98,35 @@ function getActiveAdjustments(profile: UserProfile): string[] {
   return list
 }
 
+// ── Smart Recommendations ─────────────────────────────────────────────────────
+
+type SmartRec = {
+  type: "critical" | "warning" | "success" | "info" | "strategy"
+  icon: string
+  title: string
+  detail: string
+}
+
+const SMART_COLORS: Record<SmartRec["type"], { bg: string; border: string; text: string; iconColor: string }> = {
+  critical:  { bg: "rgba(239,68,68,0.1)",   border: "rgba(239,68,68,0.3)",   text: "#fca5a5", iconColor: "#ef4444" },
+  warning:   { bg: "rgba(245,158,11,0.1)",  border: "rgba(245,158,11,0.3)",  text: "#fcd34d", iconColor: "#f59e0b" },
+  success:   { bg: "rgba(34,197,94,0.1)",   border: "rgba(34,197,94,0.3)",   text: "#86efac", iconColor: "#22c55e" },
+  info:      { bg: "rgba(99,102,241,0.1)",  border: "rgba(99,102,241,0.3)",  text: "#a5b4fc", iconColor: "#6366f1" },
+  strategy:  { bg: "rgba(168,85,247,0.1)",  border: "rgba(168,85,247,0.3)",  text: "#d8b4fe", iconColor: "#a855f7" },
+}
+
+// Busca el monto de una categoría en cualquier bucket
+function findCatAmt(
+  details: Record<string, { name: string; amount: number }[]>,
+  catName: string,
+): number {
+  for (const bucket of Object.values(details)) {
+    const found = bucket.find(c => c.name === catName)
+    if (found) return found.amount
+  }
+  return 0
+}
+
 // ── Emoji map ──────────────────────────────────────────────────────────────────
 const CAT_EMOJI: Record<string, string> = {
   alimentacion:"🛒", supermercado:"🛒", restaurantes:"🍽️", cafe:"☕",
@@ -381,6 +410,20 @@ export default function BudgetScreen() {
     staleTime: 60_000,
   })
 
+  // ── Parámetros del mes anterior para comparación ──────────────────────────
+  const prevMonthParams = useMemo(() => {
+    if (selMonth === null) return { year: selYear - 1 }
+    return selMonth === 1
+      ? { year: selYear - 1, month: 12 }
+      : { year: selYear, month: selMonth - 1 }
+  }, [selYear, selMonth])
+
+  const { data: prevData } = useQuery({
+    queryKey: ["agg-prev", prevMonthParams.year, (prevMonthParams as any).month ?? null],
+    queryFn:  () => getAggregatedSummary(prevMonthParams),
+    staleTime: 300_000,
+  })
+
   const years = [now.getFullYear() - 2, now.getFullYear() - 1, now.getFullYear()]
 
   // ── Adjusted targets ───────────────────────────────────────────────────────
@@ -464,6 +507,150 @@ export default function BudgetScreen() {
     success: { bg: "rgba(34,197,94,0.1)",  border: "rgba(34,197,94,0.3)",  text: "#86efac", icon: "checkmark-circle-outline" as const },
     info:    { bg: "rgba(99,102,241,0.1)", border: "rgba(99,102,241,0.3)", text: "#a5b4fc", icon: "information-circle-outline" as const },
   }
+
+  // ── Recomendaciones financieras estratégicas ───────────────────────────────
+  const smartRecs = useMemo((): SmartRec[] => {
+    if (!budgetData) return []
+    const recs: SmartRec[] = []
+    const { pcts, totals, details, income, aggregated } = budgetData
+    const { needs: tn, wants: tw, savings: ts } = adjusted
+    const debtPayments = profile?.monthly_debt_payments ?? 0
+    const debtPct = income > 0 ? (debtPayments / income) * 100 : 0
+
+    // 1. Balance negativo — emergencia
+    if (aggregated.balance - manualMonthly < 0) {
+      recs.push({
+        type: "critical",
+        icon: "alert-circle-outline",
+        title: "Gastas más de lo que ganas",
+        detail: `Tu balance real es ${fmt(aggregated.balance - manualMonthly)}. Identifica los 3 gastos más grandes de "Deseos" y elimina al menos uno este mes. Cada dólar que recortes mejora directamente tu solvencia.`,
+      })
+    }
+
+    // 2. Deuda muy alta → consolidación
+    const debtCatAmt = findCatAmt(details, "deudas") + findCatAmt(details, "cargo_financiero")
+    if (debtPct >= 30 || (income > 0 && debtCatAmt / income >= 0.25)) {
+      recs.push({
+        type: "critical",
+        icon: "card-outline",
+        title: "Deudas críticas — considera consolidar",
+        detail: `Tus pagos de deuda representan ~${Math.max(debtPct, income > 0 ? debtCatAmt / income * 100 : 0).toFixed(0)}% de tu ingreso. Un préstamo de consolidación (tasa única más baja) puede reducir tu pago mensual hasta un 30% y darte un solo vencimiento que manejar.`,
+      })
+    } else if (debtPct > 10 || debtCatAmt > 0) {
+      // 3. Deuda moderada → bola de nieve
+      recs.push({
+        type: "strategy",
+        icon: "trending-down-outline",
+        title: "Método bola de nieve para eliminar deudas",
+        detail: `Paga el mínimo en todas tus deudas. Destina cualquier excedente mensual a la deuda de MENOR saldo primero. Al liquidarla, mueve ese pago completo a la siguiente. Liberas flujo de caja progresivamente y mantienes motivación viendo deudas desaparecer.`,
+      })
+    }
+
+    // 4. Tasa de ahorro baja → cuenta separada
+    if (pcts.savings < ts && aggregated.balance > 0) {
+      const gap = fmt((ts - pcts.savings) / 100 * income)
+      recs.push({
+        type: "strategy",
+        icon: "wallet-outline",
+        title: "Abre una cuenta exclusiva de ahorro",
+        detail: `Meta: ${ts}% · Actual: ${pcts.savings.toFixed(0)}% (te faltan ~${gap}/mes). Abre una cuenta de ahorro separada de tu cuenta corriente y programa una transferencia automática el día que te paguen. Lo que no ves, no lo gastas.`,
+      })
+    }
+
+    // 5. Fondo de emergencia
+    const monthlyExpenses = aggregated.total_expenses || 1
+    const emergencyTarget = monthlyExpenses * 3
+    if (pcts.savings >= ts && aggregated.balance < emergencyTarget) {
+      recs.push({
+        type: "info",
+        icon: "umbrella-outline",
+        title: "Construye tu fondo de emergencia",
+        detail: `Meta: 3 meses de gastos (≈${fmt(emergencyTarget)}). Con tu ahorro actual de ${fmt(Math.max(0, aggregated.balance - manualMonthly))}/mes, podrías tenerlo en ${income > 0 ? Math.ceil(emergencyTarget / Math.max(1, (aggregated.balance - manualMonthly))) : "?"} meses. Prioriza esto antes de inversiones.`,
+      })
+    }
+
+    // 6. Gastos hormiga (café + bares + entretenimiento)
+    const hormiga = ["cafe", "bares", "entretenimiento", "restaurantes"]
+      .map(c => findCatAmt(details, c)).reduce((a, b) => a + b, 0)
+    const hormigaPct = income > 0 ? (hormiga / income) * 100 : 0
+    if (hormigaPct > 12) {
+      recs.push({
+        type: "warning",
+        icon: "cafe-outline",
+        title: `Gastos hormiga: ${hormigaPct.toFixed(0)}% de tu ingreso`,
+        detail: `Café, bares y entretenimiento suman ${fmt(hormiga)}/mes. Fija un presupuesto semanal en efectivo para estos gastos — cuando se acaba, se acaba. Reducir a 10% liberaría ${fmt((hormigaPct - 10) / 100 * income)}/mes.`,
+      })
+    }
+
+    // 7. Suscripciones excesivas
+    const subs = ["suscripciones", "streaming"].map(c => findCatAmt(details, c)).reduce((a, b) => a + b, 0)
+    const subsPct = income > 0 ? (subs / income) * 100 : 0
+    if (subsPct > 5) {
+      recs.push({
+        type: "info",
+        icon: "tv-outline",
+        title: `Revisa tus suscripciones (${fmt(subs)}/mes · ${subsPct.toFixed(0)}%)`,
+        detail: "Lista todas tus suscripciones activas. Cancela las que no usaste en el último mes — la mayoría de personas tiene 2–3 suscripciones activas olvidadas. Agrupa servicios donde puedas (ej. un plan familiar).",
+      })
+    }
+
+    // 8. Comparación mes a mes
+    if (prevData && prevData.total_income > 0 && prevData.total_expenses > 0) {
+      const prevExp  = prevData.total_expenses
+      const currExp  = aggregated.total_expenses + manualMonthly
+      const changePct = ((currExp - prevExp) / prevExp) * 100
+
+      if (changePct > 15) {
+        recs.push({
+          type: "warning",
+          icon: "trending-up-outline",
+          title: `Gastos subieron ${changePct.toFixed(0)}% vs período anterior`,
+          detail: `Antes: ${fmt(prevExp)} → Ahora: ${fmt(currExp)}. Revisa qué categorías crecieron. Si fue un gasto único (viaje, emergencia) es normal. Si se repite, actúa este mes.`,
+        })
+      } else if (changePct < -10) {
+        const saved = prevExp - currExp
+        recs.push({
+          type: "success",
+          icon: "trending-down-outline",
+          title: `¡Gastos bajaron ${Math.abs(changePct).toFixed(0)}% vs período anterior!`,
+          detail: `Ahorraste ${fmt(saved)} respecto al período anterior. Destina ese excedente a tu fondo de emergencia o a amortizar deudas anticipadamente para reducir intereses.`,
+        })
+      }
+
+      const prevBal = prevData.balance
+      const currBal = aggregated.balance - manualMonthly
+      if (prevBal < 0 && currBal > 0) {
+        recs.push({
+          type: "success",
+          icon: "checkmark-done-circle-outline",
+          title: "¡Volviste a balance positivo!",
+          detail: `El período anterior cerraste en ${fmt(prevBal)}. Este período cerraste en ${fmt(currBal)}. Consolidar este hábito por 3 meses seguidos transforma tu salud financiera.`,
+        })
+      }
+    }
+
+    // 9. Ahorro excelente → diversificar
+    if (pcts.savings >= ts + 8 && !recs.find(r => r.type === "critical")) {
+      recs.push({
+        type: "success",
+        icon: "star-outline",
+        title: `Superas tu meta de ahorro (${pcts.savings.toFixed(0)}% vs ${ts}% objetivo)`,
+        detail: "Tienes excedente de ahorro. Orden sugerido: (1) Fondo de emergencia completo — 3 meses de gastos en cuenta líquida. (2) Reducir deudas de alta tasa. (3) Inversiones: fondos indexados, CDT o cuentas de alto rendimiento según tu horizonte.",
+      })
+    }
+
+    // 10. Sin reclasificaciones → recordatorio
+    if (recs.length === 0) {
+      recs.push({
+        type: "info",
+        icon: "checkmark-circle-outline",
+        title: "Tu distribución financiera está equilibrada",
+        detail: "Sigue monitoreando mes a mes. Si algún bucket supera su meta más de 3 meses consecutivos, es señal de que tu presupuesto personalizado necesita ajuste — actualiza tu perfil en la sección Cuenta.",
+      })
+    }
+
+    return recs
+  }, [budgetData, adjusted, profile, prevData, manualMonthly])
 
   // ── PieChart data ──────────────────────────────────────────────────────────
   const pieData = budgetData
@@ -643,6 +830,38 @@ export default function BudgetScreen() {
                 </View>
               ))}
             </View>
+
+            {/* ─── Estrategias y Recomendaciones ─────────────────────────── */}
+            {smartRecs.length > 0 && (
+              <View style={s.recSection}>
+                <View style={s.recHeader}>
+                  <Ionicons name="bulb-outline" size={16} color="#a855f7" />
+                  <Text style={s.recHeaderText}>Estrategias y Recomendaciones</Text>
+                  {prevData && prevData.total_income > 0 && (
+                    <View style={s.prevBadge}>
+                      <Ionicons name="git-compare-outline" size={10} color={MUTED} />
+                      <Text style={s.prevBadgeText}>vs período anterior</Text>
+                    </View>
+                  )}
+                </View>
+
+                {smartRecs.map((rec, i) => {
+                  const cfg = SMART_COLORS[rec.type]
+                  const iconName = rec.icon as any
+                  return (
+                    <View key={i} style={[s.recCard, { backgroundColor: cfg.bg, borderColor: cfg.border }]}>
+                      <View style={[s.recIconWrap, { backgroundColor: `${cfg.iconColor}22` }]}>
+                        <Ionicons name={iconName} size={18} color={cfg.iconColor} />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[s.recTitle, { color: cfg.text }]}>{rec.title}</Text>
+                        <Text style={[s.recDetail, { color: `${cfg.text}cc` }]}>{rec.detail}</Text>
+                      </View>
+                    </View>
+                  )
+                })}
+              </View>
+            )}
           </>
         )}
 
@@ -742,6 +961,33 @@ const s = StyleSheet.create({
   summaryRow:   { flexDirection: "row", justifyContent: "space-between", paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: BORDER },
   summaryLabel: { color: MUTED, fontSize: 14 },
   summaryValue: { fontWeight: "700", color: TEXT, fontSize: 14 },
+
+  // Smart Recommendations
+  recSection: {
+    backgroundColor: CARD, borderRadius: 14, padding: 16,
+    borderWidth: 1, borderColor: "rgba(168,85,247,0.2)", gap: 10,
+  },
+  recHeader: {
+    flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 4,
+  },
+  recHeaderText: { color: "#d8b4fe", fontSize: 13, fontWeight: "700", flex: 1 },
+  prevBadge: {
+    flexDirection: "row", alignItems: "center", gap: 3,
+    backgroundColor: "rgba(255,255,255,0.06)",
+    borderRadius: 10, paddingHorizontal: 7, paddingVertical: 3,
+  },
+  prevBadgeText: { color: MUTED, fontSize: 9, fontWeight: "600" },
+  recCard: {
+    flexDirection: "row", gap: 10, padding: 12,
+    borderRadius: 10, borderWidth: 1, alignItems: "flex-start",
+  },
+  recIconWrap: {
+    width: 34, height: 34, borderRadius: 8,
+    alignItems: "center", justifyContent: "center",
+    flexShrink: 0,
+  },
+  recTitle:  { fontSize: 13, fontWeight: "700", lineHeight: 18, marginBottom: 3 },
+  recDetail: { fontSize: 12, lineHeight: 17 },
 
   // Empty
   empty:      { alignItems: "center", padding: 56 },
