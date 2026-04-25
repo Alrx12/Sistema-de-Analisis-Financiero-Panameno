@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build Android APK / AAB
 
 on:
   workflow_dispatch:
@@ -6,10 +6,11 @@ on:
       build_type:
         description: 'Tipo de build'
         required: true
-        default: 'release'
+        default: 'release-apk'
         type: choice
         options:
-          - release
+          - release-apk
+          - release-aab
           - debug
 
 jobs:
@@ -56,12 +57,12 @@ jobs:
 
       # ── RELEASE: decodificar keystore desde GitHub Secret ──────────────────
       - name: Decode keystore (solo en release)
-        if: github.event.inputs.build_type == 'release'
+        if: github.event.inputs.build_type == 'release-apk' || github.event.inputs.build_type == 'release-aab'
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > mobile/android/app/safpro-release.keystore
 
-      - name: Build release APK (firmado con keystore de release)
-        if: github.event.inputs.build_type == 'release'
+      - name: Build release APK (firmado — para instalación directa / sideload)
+        if: github.event.inputs.build_type == 'release-apk'
         working-directory: mobile/android
         env:
           JAVA_OPTS: "-Xmx4g -XX:MaxMetaspaceSize=512m"
@@ -80,11 +81,39 @@ jobs:
             --no-daemon --stacktrace
 
       - name: Upload release APK artifact
-        if: github.event.inputs.build_type == 'release'
+        if: github.event.inputs.build_type == 'release-apk'
         uses: actions/upload-artifact@v4
         with:
           name: safpro-release-apk
           path: mobile/android/app/build/outputs/apk/release/app-release.apk
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Build release AAB (firmado — para publicar en Google Play Store)
+        if: github.event.inputs.build_type == 'release-aab'
+        working-directory: mobile/android
+        env:
+          JAVA_OPTS: "-Xmx4g -XX:MaxMetaspaceSize=512m"
+          EXPO_PUBLIC_API_URL: https://safpro.us/api/v1
+          NODE_ENV: production
+          KEYSTORE_FILE: safpro-release.keystore
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          ./gradlew bundleRelease \
+            -Pandroid.injected.signing.store.file=$PWD/app/safpro-release.keystore \
+            -Pandroid.injected.signing.store.password="$KEYSTORE_PASSWORD" \
+            -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
+            -Pandroid.injected.signing.key.password="$KEY_PASSWORD" \
+            --no-daemon --stacktrace
+
+      - name: Upload release AAB artifact
+        if: github.event.inputs.build_type == 'release-aab'
+        uses: actions/upload-artifact@v4
+        with:
+          name: safpro-release-aab
+          path: mobile/android/app/build/outputs/bundle/release/app-release.aab
           retention-days: 30
           if-no-files-found: error
 
